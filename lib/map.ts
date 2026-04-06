@@ -1,6 +1,6 @@
 import { Cleaner, MarkerData } from "@/types/type";
 
-const GEOAPIFY_API_KEY = process.env.EXPO_PUBLIC_GEOAPIFY_API_KEY;
+const MAPBOX_API_KEY = process.env.EXPO_PUBLIC_MAPBOX_API_KEY;
 
 export const generateMarkersFromData = ({
   data,
@@ -12,12 +12,11 @@ export const generateMarkersFromData = ({
   userLongitude: number;
 }): MarkerData[] => {
   return data.map((cleaner) => {
-    const latOffset = (Math.random() - 0.5) * 0.01;
-    const lngOffset = (Math.random() - 0.5) * 0.01;
-
     return {
-      latitude: userLatitude + latOffset,
-      longitude: userLongitude + lngOffset,
+      latitude:
+        cleaner.location_lat || userLatitude + (Math.random() - 0.5) * 0.01,
+      longitude:
+        cleaner.location_lng || userLongitude + (Math.random() - 0.5) * 0.01,
       title: `${cleaner.first_name} ${cleaner.last_name}`,
       ...cleaner,
     };
@@ -27,13 +26,13 @@ export const generateMarkersFromData = ({
 export const calculateRegion = ({
   userLatitude,
   userLongitude,
-  destinationLatitude,
-  destinationLongitude,
+  serviceLatitude,
+  serviceLongitude,
 }: {
   userLatitude: number | null;
   userLongitude: number | null;
-  destinationLatitude?: number | null;
-  destinationLongitude?: number | null;
+  serviceLatitude?: number | null;
+  serviceLongitude?: number | null;
 }) => {
   if (!userLatitude || !userLongitude) {
     return {
@@ -44,7 +43,7 @@ export const calculateRegion = ({
     };
   }
 
-  if (!destinationLatitude || !destinationLongitude) {
+  if (!serviceLatitude || !serviceLongitude) {
     return {
       latitude: userLatitude,
       longitude: userLongitude,
@@ -53,14 +52,14 @@ export const calculateRegion = ({
     };
   }
 
-  const minLat = Math.min(userLatitude, destinationLatitude);
-  const maxLat = Math.max(userLatitude, destinationLatitude);
-  const minLng = Math.min(userLongitude, destinationLongitude);
-  const maxLng = Math.max(userLongitude, destinationLongitude);
+  const minLat = Math.min(userLatitude, serviceLatitude);
+  const maxLat = Math.max(userLatitude, serviceLatitude);
+  const minLng = Math.min(userLongitude, serviceLongitude);
+  const maxLng = Math.max(userLongitude, serviceLongitude);
 
   return {
-    latitude: (userLatitude + destinationLatitude) / 2,
-    longitude: (userLongitude + destinationLongitude) / 2,
+    latitude: (userLatitude + serviceLatitude) / 2,
+    longitude: (userLongitude + serviceLongitude) / 2,
     latitudeDelta: (maxLat - minLat) * 1.3,
     longitudeDelta: (maxLng - minLng) * 1.3,
   };
@@ -68,53 +67,31 @@ export const calculateRegion = ({
 
 export const calculateCleanerTimes = async ({
   markers,
-  userLatitude,
-  userLongitude,
-  destinationLatitude,
-  destinationLongitude,
+  serviceLatitude,
+  serviceLongitude,
 }: {
   markers: MarkerData[];
-  userLatitude: number | null;
-  userLongitude: number | null;
-  destinationLatitude: number | null;
-  destinationLongitude: number | null;
+  serviceLatitude: number | null;
+  serviceLongitude: number | null;
 }) => {
-  if (
-    !userLatitude ||
-    !userLongitude ||
-    !destinationLatitude ||
-    !destinationLongitude
-  )
-    return;
+  if (!serviceLatitude || !serviceLongitude) return;
 
   try {
     /**
-     * Call destination ONCE
-     */
-    const destinationRes = await fetch(
-      `https://api.geoapify.com/v1/routing?waypoints=${userLatitude},${userLongitude}|${destinationLatitude},${destinationLongitude}&mode=clean&apiKey=${GEOAPIFY_API_KEY}`,
-    );
-
-    const destinationData = await destinationRes.json();
-
-    const timeToDestination =
-      destinationData.features?.[0]?.properties?.time ?? 0;
-
-    /**
-     * Call each cleaner → user
+     * Call each cleaner → service location
      */
     const timesPromises = markers.map(async (marker) => {
       const res = await fetch(
-        `https://api.geoapify.com/v1/routing?waypoints=${marker.latitude},${marker.longitude}|${userLatitude},${userLongitude}&mode=clean&apiKey=${GEOAPIFY_API_KEY}`,
+        `https://api.mapbox.com/directions/v5/mapbox/driving/${marker.longitude},${marker.latitude};${serviceLongitude},${serviceLatitude}?access_token=${MAPBOX_API_KEY}&geometries=geojson&overview=full`,
       );
 
       const data = await res.json();
 
-      const timeToUser = data.features?.[0]?.properties?.time ?? 0;
+      const timeToService = data.routes?.[0]?.duration ?? 0;
 
-      const totalTime = (timeToUser + timeToDestination) / 60;
+      const totalTime = timeToService / 60; // in minutes
 
-      const price = (totalTime * 0.5).toFixed(2);
+      const price = (totalTime * 0.5).toFixed(2); // placeholder pricing
 
       return {
         ...marker,
@@ -125,6 +102,30 @@ export const calculateCleanerTimes = async ({
 
     return await Promise.all(timesPromises);
   } catch (err) {
-    console.log("Geoapify error:", err);
+    console.log("Mapbox error:", err);
+  }
+};
+
+export const reverseGeocodeWithMapbox = async (
+  latitude: number,
+  longitude: number,
+): Promise<string> => {
+  try {
+    const response = await fetch(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${MAPBOX_API_KEY}&limit=1&types=address,poi,place,neighborhood,locality,region,country`,
+    );
+
+    const data = await response.json();
+
+    if (data.features && data.features.length > 0) {
+      return data.features[0].place_name;
+    }
+
+    // Fallback if no results
+    return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+  } catch (err) {
+    console.log("Mapbox reverse geocoding error:", err);
+    // Fallback to coordinates if geocoding fails
+    return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
   }
 };

@@ -50,6 +50,7 @@ export const icons = {
   backArrow,
   chat,
   checkmark,
+  cleaning: home, // Placeholder for cleaning icon
   close,
   dollar,
   email,
@@ -75,23 +76,23 @@ export const icons = {
 export const onboarding = [
   {
     id: 1,
-    title: "The perfect service is just a tap away!",
+    title: "Professional cleaning at your fingertips!",
     description:
-      "Your journey begins with Rcleans. Find your ideal service effortlessly.",
+      "Your clean home or office is just a tap away with RCleans. Find trusted cleaners instantly.",
     image: images.onboarding1,
   },
   {
     id: 2,
-    title: "Best car in your hands with Rcleans",
+    title: "Verified cleaners, spotless results",
     description:
-      "Discover the convenience of finding your perfect service with Rcleans",
+      "Connect with vetted, professional cleaners for home, office, and deep cleaning services.",
     image: images.onboarding2,
   },
   {
     id: 3,
-    title: "Your service, your way. Let's go!",
+    title: "Clean when you need it. Your way!",
     description:
-      "Enter your destination, sit back, and let us take care of the rest.",
+      "Schedule instant cleaning or book ahead. Track your cleaner in real-time.",
     image: images.onboarding3,
   },
 ];

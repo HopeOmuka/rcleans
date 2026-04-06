@@ -24,7 +24,7 @@ const CleanerCard = ({ item, selected, setSelected }: CleanerCardProps) => {
 
           <View className="flex flex-row items-center space-x-1 ml-2">
             <Image source={icons.star} className="w-3.5 h-3.5" />
-            <Text className="text-sm font-JakartaRegular">4</Text>
+            <Text className="text-sm font-JakartaRegular">{item.rating}</Text>
           </View>
         </View>
 
@@ -49,13 +49,13 @@ const CleanerCard = ({ item, selected, setSelected }: CleanerCardProps) => {
           </Text>
 
           <Text className="text-sm font-JakartaRegular text-general-800">
-            {item.car_seats} seats
+            {item.specialties?.join(", ")}
           </Text>
         </View>
       </View>
 
       <Image
-        source={{ uri: item.car_image_url }}
+        source={icons.cleaning || icons.target}
         className="h-14 w-14"
         resizeMode="contain"
       />

@@ -1,49 +1,76 @@
 import { router } from "expo-router";
-import { Text, View } from "react-native";
+import { useEffect } from "react";
+import { Text, View, FlatList, ActivityIndicator } from "react-native";
 
+import CleanerCard from "@/components/CleanerCard";
 import CustomButton from "@/components/CustomButton";
-import GoogleTextInput from "@/components/GeoapifyTextInput";
+import Map from "@/components/Map";
 import ServiceLayout from "@/components/ServiceLayout";
-import { icons } from "@/constants";
-import { useLocationStore } from "@/store";
+import {
+  useCleanerStore,
+  useLocationStore,
+  useServiceTypeStore,
+} from "@/store";
 
 const FindService = () => {
-  const {
-    userAddress,
-    destinationAddress,
-    setDestinationLocation,
-    setUserLocation,
-  } = useLocationStore();
+  const { serviceAddress } = useLocationStore();
+  const { cleaners, selectedCleaner, setSelectedCleaner } = useCleanerStore();
+  const { selectedServiceType } = useServiceTypeStore();
+
+  useEffect(() => {
+    // Clear selected cleaner when entering this screen
+    setSelectedCleaner(null);
+  }, []);
+
+  const handleConfirmService = () => {
+    if (selectedCleaner && selectedServiceType) {
+      router.push(`/(root)/confirm-service`);
+    }
+  };
 
   return (
-    <ServiceLayout title="Service">
+    <ServiceLayout title="Find Cleaner">
       <View className="my-3">
-        <Text className="text-lg font-JakartaSemiBold mb-3">From</Text>
-
-        <GoogleTextInput
-          icon={icons.target}
-          initialLocation={userAddress!}
-          containerStyle="bg-neutral-100"
-          textInputBackgroundColor="#f5f5f5"
-          handlePress={(location) => setUserLocation(location)}
-        />
+        <Text className="text-lg font-JakartaSemiBold mb-3">
+          Service: {selectedServiceType?.name}
+        </Text>
+        <Text className="text-lg font-JakartaSemiBold mb-3">
+          Location: {serviceAddress}
+        </Text>
       </View>
 
-      <View className="my-3">
-        <Text className="text-lg font-JakartaSemiBold mb-3">To</Text>
+      <View className="flex-1">
+        <Map />
+      </View>
 
-        <GoogleTextInput
-          icon={icons.map}
-          initialLocation={destinationAddress!}
-          containerStyle="bg-neutral-100"
-          textInputBackgroundColor="transparent"
-          handlePress={(location) => setDestinationLocation(location)}
-        />
+      <View className="mt-5">
+        <Text className="text-lg font-JakartaSemiBold mb-3">
+          Available Cleaners
+        </Text>
+        {cleaners.length === 0 ? (
+          <ActivityIndicator size="small" color="#000" />
+        ) : (
+          <FlatList
+            data={cleaners}
+            renderItem={({ item }) => (
+              <CleanerCard
+                item={item}
+                selected={selectedCleaner!}
+                setSelected={() => setSelectedCleaner(item.id)}
+              />
+            )}
+            keyExtractor={(item) => item.id.toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="mb-5"
+          />
+        )}
       </View>
 
       <CustomButton
-        title="Find Now"
-        onPress={() => router.push(`/(root)/confirm-service`)}
+        title="Confirm Service"
+        onPress={handleConfirmService}
+        disabled={!selectedCleaner}
         className="mt-5"
       />
     </ServiceLayout>

@@ -13,15 +13,11 @@ import { useCleanerStore, useLocationStore } from "@/store";
 import { Cleaner, MarkerData } from "@/types/type";
 import { Platform } from "react-native";
 
-const GEOAPIFY_API_KEY = process.env.EXPO_PUBLIC_GEOAPIFY_API_KEY;
+const MAPBOX_API_KEY = process.env.EXPO_PUBLIC_MAPBOX_API_KEY;
 
 const Map = () => {
-  const {
-    userLongitude,
-    userLatitude,
-    destinationLatitude,
-    destinationLongitude,
-  } = useLocationStore();
+  const { userLongitude, userLatitude, serviceLatitude, serviceLongitude } =
+    useLocationStore();
 
   const { selectedCleaner, setCleaners } = useCleanerStore();
 
@@ -56,48 +52,39 @@ const Map = () => {
    * Calculate cleaner times + price
    */
   useEffect(() => {
-    if (markers.length === 0 || !destinationLatitude || !destinationLongitude)
-      return;
+    if (markers.length === 0 || !serviceLatitude || !serviceLongitude) return;
 
     calculateCleanerTimes({
       markers,
-      userLatitude,
-      userLongitude,
-      destinationLatitude,
-      destinationLongitude,
+      serviceLatitude,
+      serviceLongitude,
     }).then((cleanersWithTimes) => {
       setCleaners(cleanersWithTimes as MarkerData[]);
     });
-  }, [
-    markers,
-    destinationLatitude,
-    destinationLongitude,
-    userLatitude,
-    userLongitude,
-  ]);
+  }, [markers, serviceLatitude, serviceLongitude]);
 
   /**
-   * Fetch route line from Geoapify
+   * Fetch route line from Mapbox
    */
   useEffect(() => {
     const fetchRoute = async () => {
       if (
         !userLatitude ||
         !userLongitude ||
-        !destinationLatitude ||
-        !destinationLongitude
+        !serviceLatitude ||
+        !serviceLongitude
       )
         return;
 
       try {
         const res = await fetch(
-          `https://api.geoapify.com/v1/routing?waypoints=${userLatitude},${userLongitude}|${destinationLatitude},${destinationLongitude}&mode=clean&apiKey=${GEOAPIFY_API_KEY}`,
+          `https://api.mapbox.com/directions/v5/mapbox/driving/${userLongitude},${userLatitude};${serviceLongitude},${serviceLatitude}?access_token=${MAPBOX_API_KEY}&geometries=geojson&overview=full`,
         );
 
         const data = await res.json();
 
         const coords =
-          data.features?.[0]?.geometry?.coordinates?.map(
+          data.routes?.[0]?.geometry?.coordinates?.map(
             ([lng, lat]: [number, number]) => ({
               latitude: lat,
               longitude: lng,
@@ -111,7 +98,7 @@ const Map = () => {
     };
 
     fetchRoute();
-  }, [userLatitude, userLongitude, destinationLatitude, destinationLongitude]);
+  }, [userLatitude, userLongitude, serviceLatitude, serviceLongitude]);
 
   /**
    * Map region
@@ -119,8 +106,8 @@ const Map = () => {
   const region = calculateRegion({
     userLatitude,
     userLongitude,
-    destinationLatitude,
-    destinationLongitude,
+    serviceLatitude,
+    serviceLongitude,
   });
 
   /**
@@ -174,12 +161,12 @@ const Map = () => {
       ))}
 
       {/* Destination */}
-      {destinationLatitude && destinationLongitude && (
+      {serviceLatitude && serviceLongitude && (
         <>
           <Marker
             coordinate={{
-              latitude: destinationLatitude,
-              longitude: destinationLongitude,
+              latitude: serviceLatitude,
+              longitude: serviceLongitude,
             }}
             title="Destination"
             image={icons.pin}

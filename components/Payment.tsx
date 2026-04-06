@@ -8,7 +8,7 @@ import { ReactNativeModal } from "react-native-modal";
 import CustomButton from "@/components/CustomButton";
 import { images } from "@/constants";
 import { fetchAPI } from "@/lib/fetch";
-import { useLocationStore } from "@/store";
+import { useLocationStore, useServiceTypeStore } from "@/store";
 import { PaymentProps } from "@/types/type";
 
 const Payment = ({
@@ -16,17 +16,13 @@ const Payment = ({
   email,
   amount,
   cleanerId,
-  serviceTime,
+  serviceTypeId,
+  estimatedDuration,
 }: PaymentProps) => {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
-  const {
-    userAddress,
-    userLongitude,
-    userLatitude,
-    destinationLatitude,
-    destinationAddress,
-    destinationLongitude,
-  } = useLocationStore();
+  const { serviceAddress, serviceLatitude, serviceLongitude } =
+    useLocationStore();
+  const { selectedServiceType } = useServiceTypeStore();
 
   const { userId } = useAuth();
   const [success, setSuccess] = useState<boolean>(false);
@@ -93,14 +89,13 @@ const Payment = ({
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                  origin_address: userAddress,
-                  destination_address: destinationAddress,
-                  origin_latitude: userLatitude,
-                  origin_longitude: userLongitude,
-                  destination_latitude: destinationLatitude,
-                  destination_longitude: destinationLongitude,
-                  service_time: serviceTime.toFixed(0),
-                  fare_price: parseInt(amount) * 100,
+                  service_type_id: serviceTypeId,
+                  location_address: serviceAddress,
+                  location_lat: serviceLatitude,
+                  location_lng: serviceLongitude,
+                  estimated_duration: estimatedDuration,
+                  total_price: parseFloat(amount),
+                  status: "paid",
                   payment_status: "paid",
                   cleaner_id: cleanerId,
                   user_id: userId,

@@ -1,33 +1,39 @@
-import { Image, Text, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
 import { icons } from "@/constants";
 import { formatDate, formatTime } from "@/lib/utils";
 import { Service } from "@/types/type";
 
-const ServiceCard = ({ service }: { service: Service }) => {
+const ServiceCard = ({
+  service,
+  onRatePress,
+}: {
+  service: Service;
+  onRatePress?: (service: Service) => void;
+}) => {
   return (
     <View className="flex flex-row items-center justify-center bg-white rounded-lg shadow-sm shadow-neutral-300 mb-3">
       <View className="flex flex-col items-start justify-center p-3">
         <View className="flex flex-row items-center justify-between">
           <Image
             source={{
-              uri: `https://maps.geoapify.com/v1/staticmap?style=osm-bright&width=600&height=400&center=lonlat:${service.destination_longitude},${service.destination_latitude}&zoom=14&apiKey=${process.env.EXPO_PUBLIC_GEOAPIFY_API_KEY}`,
+              uri: `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${service.location_lng},${service.location_lat},14,0/600x400?access_token=${process.env.EXPO_PUBLIC_MAPBOX_API_KEY}`,
             }}
             className="w-[80px] h-[90px] rounded-lg"
           />
 
           <View className="flex flex-col mx-5 gap-y-5 flex-1">
             <View className="flex flex-row items-center gap-x-2">
-              <Image source={icons.to} className="w-5 h-5" />
+              <Image source={icons.point} className="w-5 h-5" />
               <Text className="text-md font-JakartaMedium" numberOfLines={1}>
-                {service.origin_address}
+                {service.service_type.name}
               </Text>
             </View>
 
             <View className="flex flex-row items-center gap-x-2">
-              <Image source={icons.point} className="w-5 h-5" />
+              <Image source={icons.map} className="w-5 h-5" />
               <Text className="text-md font-JakartaMedium" numberOfLines={1}>
-                {service.destination_address}
+                {service.location_address}
               </Text>
             </View>
           </View>
@@ -39,8 +45,7 @@ const ServiceCard = ({ service }: { service: Service }) => {
               Date & Time
             </Text>
             <Text className="text-md font-JakartaBold" numberOfLines={1}>
-              {formatDate(service.created_at)},{" "}
-              {formatTime(service.service_time)}
+              {formatDate(service.created_at)}
             </Text>
           </View>
 
@@ -55,10 +60,20 @@ const ServiceCard = ({ service }: { service: Service }) => {
 
           <View className="flex flex-row items-center w-full justify-between mb-5">
             <Text className="text-md font-JakartaMedium text-gray-500">
-              Car Seats
+              Status
             </Text>
-            <Text className="text-md font-JakartaBold">
-              {service.cleaner.car_seats}
+            <Text
+              className={`text-md capitalize font-JakartaBold ${
+                service.status === "completed"
+                  ? "text-green-500"
+                  : service.status === "in_progress"
+                    ? "text-blue-500"
+                    : service.status === "arrived"
+                      ? "text-yellow-500"
+                      : "text-gray-500"
+              }`}
+            >
+              {service.status}
             </Text>
           </View>
 
@@ -72,6 +87,20 @@ const ServiceCard = ({ service }: { service: Service }) => {
               {service.payment_status}
             </Text>
           </View>
+
+          {service.status === "completed" && !service.rating && (
+            <View className="flex flex-row items-center w-full justify-between mt-3 pt-3 border-t border-gray-200">
+              <TouchableOpacity
+                onPress={() => onRatePress?.(service)}
+                className="flex flex-row items-center bg-primary-500 px-4 py-2 rounded-lg"
+              >
+                <Image source={icons.star} className="w-4 h-4 mr-2" />
+                <Text className="text-white font-JakartaMedium">
+                  Rate Service
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </View>
     </View>

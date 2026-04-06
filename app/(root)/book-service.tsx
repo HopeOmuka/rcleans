@@ -6,16 +6,27 @@ import Payment from "@/components/Payment";
 import ServiceLayout from "@/components/ServiceLayout";
 import { icons } from "@/constants";
 import { formatTime } from "@/lib/utils";
-import { useCleanerStore, useLocationStore } from "@/store";
+import {
+  useCleanerStore,
+  useLocationStore,
+  useServiceTypeStore,
+} from "@/store";
 
 const BookService = () => {
   const { user } = useUser();
-  const { userAddress, destinationAddress } = useLocationStore();
+  const { serviceAddress } = useLocationStore();
   const { cleaners, selectedCleaner } = useCleanerStore();
+  const { selectedServiceType } = useServiceTypeStore();
 
   const cleanerDetails = cleaners?.filter(
     (cleaner) => +cleaner.id === selectedCleaner,
   )[0];
+
+  const estimatedPrice = selectedServiceType
+    ? selectedServiceType.base_price +
+      selectedServiceType.price_per_hour *
+        selectedServiceType.estimated_duration_hours
+    : 0;
 
   return (
     <StripeProvider
@@ -55,39 +66,39 @@ const BookService = () => {
 
           <View className="flex flex-col w-full items-start justify-center py-3 px-5 rounded-3xl bg-general-600 mt-5">
             <View className="flex flex-row items-center justify-between w-full border-b border-white py-3">
-              <Text className="text-lg font-JakartaRegular">Service Price</Text>
+              <Text className="text-lg font-JakartaRegular">Service</Text>
               <Text className="text-lg font-JakartaRegular text-[#0CC25F]">
-                ${cleanerDetails?.price}
+                {selectedServiceType?.name}
               </Text>
             </View>
 
             <View className="flex flex-row items-center justify-between w-full border-b border-white py-3">
-              <Text className="text-lg font-JakartaRegular">Pickup Time</Text>
+              <Text className="text-lg font-JakartaRegular">Service Price</Text>
+              <Text className="text-lg font-JakartaRegular text-[#0CC25F]">
+                ${estimatedPrice.toFixed(2)}
+              </Text>
+            </View>
+
+            <View className="flex flex-row items-center justify-between w-full border-b border-white py-3">
+              <Text className="text-lg font-JakartaRegular">Arrival Time</Text>
               <Text className="text-lg font-JakartaRegular">
                 {formatTime(cleanerDetails?.time!)}
               </Text>
             </View>
 
             <View className="flex flex-row items-center justify-between w-full py-3">
-              <Text className="text-lg font-JakartaRegular">Car Seats</Text>
+              <Text className="text-lg font-JakartaRegular">Experience</Text>
               <Text className="text-lg font-JakartaRegular">
-                {cleanerDetails?.car_seats}
+                {cleanerDetails?.years_experience} years
               </Text>
             </View>
           </View>
 
           <View className="flex flex-col w-full items-start justify-center mt-5">
             <View className="flex flex-row items-center justify-start mt-3 border-t border-b border-general-700 w-full py-3">
-              <Image source={icons.to} className="w-6 h-6" />
-              <Text className="text-lg font-JakartaRegular ml-2">
-                {userAddress}
-              </Text>
-            </View>
-
-            <View className="flex flex-row items-center justify-start border-b border-general-700 w-full py-3">
               <Image source={icons.point} className="w-6 h-6" />
               <Text className="text-lg font-JakartaRegular ml-2">
-                {destinationAddress}
+                {serviceAddress}
               </Text>
             </View>
           </View>
@@ -95,9 +106,12 @@ const BookService = () => {
           <Payment
             fullName={user?.fullName!}
             email={user?.emailAddresses[0].emailAddress!}
-            amount={cleanerDetails?.price!}
+            amount={estimatedPrice.toFixed(2)}
             cleanerId={cleanerDetails?.id}
-            serviceTime={cleanerDetails?.time!}
+            serviceTypeId={selectedServiceType?.id}
+            estimatedDuration={
+              selectedServiceType?.estimated_duration_hours || 0
+            }
           />
         </>
       </ServiceLayout>

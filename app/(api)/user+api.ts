@@ -14,17 +14,20 @@ export async function POST(request: Request) {
 
     const response = await sql`
       INSERT INTO users (
-        name, 
-        email, 
+        id,
+        name,
+        email,
         clerk_id
-      ) 
+      )
       VALUES (
-        ${name}, 
+        ${clerkId},
+        ${name},
         ${email},
         ${clerkId}
-     );`;
+      )
+      RETURNING id, name, email, clerk_id;`;
 
-    return new Response(JSON.stringify({ data: response }), {
+    return new Response(JSON.stringify({ data: response[0] }), {
       status: 201,
     });
   } catch (error) {
