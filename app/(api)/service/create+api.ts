@@ -15,8 +15,9 @@ export async function POST(request: Request) {
       payment_status,
       cleaner_id,
       user_id,
-      addons,
-      special_instructions,
+      addons, // Array of addon objects with id, quantity, price_at_time
+      promo_code_id,
+      discount_amount,
     } = body;
 
     if (
@@ -39,6 +40,7 @@ export async function POST(request: Request) {
 
     const sql = neon(`${process.env.DATABASE_URL}`);
 
+    // Create the service
     const serviceResponse = await sql`
       INSERT INTO services (
           service_type_id,
@@ -48,32 +50,33 @@ export async function POST(request: Request) {
           scheduled_date,
           estimated_duration,
           total_price,
+          discount_amount,
+          promo_code_id,
           status,
           payment_status,
           cleaner_id,
-          user_id,
-          special_instructions,
-          matched_at
+          user_id
       ) VALUES (
           ${service_type_id},
           ${location_address},
-          ${Number(location_lat)},
-          ${Number(location_lng)},
+          ${location_lat},
+          ${location_lng},
           ${scheduled_date || null},
-          ${Number(estimated_duration)},
-          ${Number(total_price)},
-          ${status === "paid" ? "matched" : status},
+          ${estimated_duration},
+          ${total_price},
+          ${discount_amount || 0},
+          ${promo_code_id || null},
+          ${status},
           ${payment_status},
           ${cleaner_id},
-          ${user_id},
-          ${special_instructions || null},
-          NOW()
+          ${user_id}
       )
       RETURNING *;
     `;
 
     const service = serviceResponse[0];
 
+    // Add addon selections if provided
     if (addons && addons.length > 0) {
       for (const addon of addons) {
         await sql`
@@ -86,7 +89,7 @@ export async function POST(request: Request) {
               ${service.id},
               ${addon.id},
               ${addon.quantity || 1},
-              ${Number(addon.price_at_time || addon.price)}
+              ${addon.price_at_time || addon.price}
           );
         `;
       }

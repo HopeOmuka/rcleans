@@ -19,6 +19,7 @@ const MapboxTextInput = ({
   icon,
   initialLocation,
   containerStyle,
+  textInputBackgroundColor,
   handlePress,
 }: GoogleInputProps) => {
   const [query, setQuery] = useState("");
@@ -63,18 +64,19 @@ const MapboxTextInput = ({
   return (
     <View className={`z-50 ${containerStyle}`}>
       {/* Input */}
-      <View className="flex flex-row items-center rounded-2xl px-4 bg-dark-200 border border-gray-700">
-        <Image
-          source={icon || icons.search}
-          className="w-5 h-5 mr-3"
-          tintColor="#666"
-        />
+      <View
+        className="flex flex-row items-center rounded-xl px-4"
+        style={{
+          backgroundColor: textInputBackgroundColor || "white",
+        }}
+      >
+        <Image source={icon || icons.search} className="w-5 h-5 mr-2" />
 
         <TextInput
           value={query}
           placeholder={initialLocation || "Search location"}
-          placeholderTextColor="#666"
-          className="flex-1 py-4 font-JakartaMedium text-white"
+          placeholderTextColor="gray"
+          className="flex-1 py-3 font-semibold"
           onChangeText={searchPlaces}
         />
       </View>
@@ -84,15 +86,13 @@ const MapboxTextInput = ({
         <FlatList
           data={places}
           keyExtractor={(item, index) => index.toString()}
-          className="bg-dark-200 rounded-2xl mt-2 border border-gray-700"
+          className="bg-white rounded-xl mt-2 shadow"
           renderItem={({ item }) => (
             <TouchableOpacity
               onPress={() => selectPlace(item)}
-              className="p-4 border-b border-gray-800"
+              className="p-3 border-b border-gray-100"
             >
-              <Text className="text-white font-JakartaMedium">
-                {item.place_name}
-              </Text>
+              <Text className="font-semibold">{item.place_name}</Text>
             </TouchableOpacity>
           )}
         />

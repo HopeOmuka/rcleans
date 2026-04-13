@@ -1,4 +1,4 @@
-import { useOAuth, useUser } from "@clerk/clerk-expo";
+import { useOAuth } from "@clerk/clerk-expo";
 import { router } from "expo-router";
 import { Alert, Image, Text, View } from "react-native";
 
@@ -8,38 +8,38 @@ import { googleOAuth } from "@/lib/auth";
 
 const OAuth = () => {
   const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
-  const { user } = useUser();
 
   const handleGoogleSignIn = async () => {
-    const result = await googleOAuth(startOAuthFlow, () => user);
+    const result = await googleOAuth(startOAuthFlow);
 
-    if (result.code === "session_exists" || result.success) {
-      Alert.alert("Success", "Welcome back! Redirecting to home.");
+    if (result.code === "session_exists") {
+      Alert.alert("Success", "Session exists. Redirecting to home screen.");
       router.replace("/(root)/(tabs)/home");
-    } else {
-      Alert.alert("Error", result.message);
     }
+
+    Alert.alert(result.success ? "Success" : "Error", result.message);
   };
 
   return (
-    <View className="mt-6">
-      <View className="flex flex-row justify-center items-center gap-x-3">
-        <View className="flex-1 h-[1px] bg-gray-800" />
-        <Text className="text-gray-500 text-sm">Or</Text>
-        <View className="flex-1 h-[1px] bg-gray-800" />
+    <View>
+      <View className="flex flex-row justify-center items-center mt-4 gap-x-3">
+        <View className="flex-1 h-[1px] bg-general-100" />
+        <Text className="text-lg">Or</Text>
+        <View className="flex-1 h-[1px] bg-general-100" />
       </View>
 
       <CustomButton
-        title="Continue with Google"
-        className="mt-5"
+        title="Log In with Google"
+        className="mt-5 w-full shadow-none"
         IconLeft={() => (
           <Image
             source={icons.google}
             resizeMode="contain"
-            className="w-5 h-5"
+            className="w-5 h-5 mx-2"
           />
         )}
-        bgVariant="secondary"
+        bgVariant="outline"
+        textVariant="primary"
         onPress={handleGoogleSignIn}
       />
     </View>

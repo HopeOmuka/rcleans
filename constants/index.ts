@@ -16,7 +16,6 @@ import map from "@/assets/icons/map.png";
 import marker from "@/assets/icons/marker.png";
 import out from "@/assets/icons/out.png";
 import person from "@/assets/icons/person.png";
-import phone from "@/assets/icons/phone.png";
 import pin from "@/assets/icons/pin.png";
 import point from "@/assets/icons/point.png";
 import profile from "@/assets/icons/profile.png";
@@ -51,7 +50,7 @@ export const icons = {
   backArrow,
   chat,
   checkmark,
-  cleaning: home,
+  cleaning: home, // Placeholder for cleaning icon
   close,
   dollar,
   email,
@@ -72,31 +71,28 @@ export const icons = {
   star,
   target,
   to,
-  calendar: list,
-  settings: checkmark,
-  phone: person,
 };
 
 export const onboarding = [
   {
     id: 1,
-    title: "Professional cleaning, ordered as easily as a ride",
+    title: "Professional cleaning at your fingertips!",
     description:
-      "Book trusted, professional cleaners instantly with just a few taps. RCleans connects you with vetted cleaners in seconds.",
+      "Your clean home or office is just a tap away with RCleans. Find trusted cleaners instantly.",
     image: images.onboarding1,
   },
   {
     id: 2,
-    title: "Track your cleaner in real-time",
+    title: "Verified cleaners, spotless results",
     description:
-      "Monitor arrival times, cleaner location, and service progress directly in the app. Know exactly when your cleaner arrives.",
+      "Connect with vetted, professional cleaners for home, office, and deep cleaning services.",
     image: images.onboarding2,
   },
   {
     id: 3,
-    title: "Transparent pricing, secure payments",
+    title: "Clean when you need it. Your way!",
     description:
-      "See clear, upfront pricing with no hidden fees. Pay securely through the app after your service is complete.",
+      "Schedule instant cleaning or book ahead. Track your cleaner in real-time.",
     image: images.onboarding3,
   },
 ];

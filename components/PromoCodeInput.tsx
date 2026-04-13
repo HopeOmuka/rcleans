@@ -74,47 +74,42 @@ const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
   };
 
   return (
-    <View className="p-4 bg-dark-200 rounded-2xl border border-gray-800 mb-4">
-      <Text className="text-white font-JakartaSemiBold mb-3">Promo Code</Text>
+    <View className="p-4 bg-white rounded-lg border border-gray-200 mb-4">
+      <Text className="text-lg font-JakartaSemiBold mb-3">Promo Code</Text>
 
       {!appliedPromo ? (
-        <View className="flex-row gap-2">
+        <View className="flex-row">
           <TextInput
-            className="flex-1 bg-dark-100 border border-gray-700 rounded-xl px-4 py-3 text-base text-white placeholder-gray-500"
+            className="flex-1 border border-gray-300 rounded-l-lg px-3 py-2 text-base"
             placeholder="Enter promo code"
-            placeholderTextColor="#666"
             value={promoCode}
             onChangeText={setPromoCode}
             autoCapitalize="characters"
             autoCorrect={false}
           />
-          <TouchableOpacity
+          <CustomButton
+            title={loading ? "Applying..." : "Apply"}
             onPress={applyPromoCode}
+            className="rounded-l-none rounded-r-lg px-4"
             disabled={loading}
-            className="bg-primary-500 px-4 py-3 rounded-xl justify-center"
-            style={{ opacity: loading ? 0.5 : 1 }}
-          >
-            <Text className="text-white font-JakartaSemiBold">
-              {loading ? "..." : "Apply"}
-            </Text>
-          </TouchableOpacity>
+          />
         </View>
       ) : (
-        <View className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-3">
+        <View className="bg-green-50 border border-green-200 rounded-lg p-3">
           <View className="flex-row justify-between items-center">
             <View>
-              <Text className="text-primary-500 font-JakartaSemiBold">
+              <Text className="text-green-800 font-JakartaSemiBold">
                 {appliedPromo.promoCode}
               </Text>
-              <Text className="text-green-400 text-sm">
+              <Text className="text-green-600 text-sm">
                 Save ${appliedPromo.discountAmount}
               </Text>
             </View>
             <TouchableOpacity
               onPress={removePromoCode}
-              className="bg-red-500/20 px-4 py-2 rounded-lg border border-red-500/30"
+              className="bg-red-500 px-3 py-1 rounded"
             >
-              <Text className="text-red-400 text-sm font-JakartaMedium">
+              <Text className="text-white text-sm font-JakartaMedium">
                 Remove
               </Text>
             </TouchableOpacity>

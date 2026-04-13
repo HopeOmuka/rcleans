@@ -12,26 +12,16 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.rcleans.app",
-      "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to show cleaners near you."
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#E6F4FE"
       },
-      "predictiveBackGestureEnabled": false,
-      "package": "com.rcleans.app",
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
-      "config": {
-        "googleMaps": {
-          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
-        }
-      }
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "server",
@@ -52,13 +42,7 @@
           }
         }
       ],
-      "expo-secure-store",
-      [
-        "expo-location",
-        {
-          "locationWhenInUsePermission": "Allow rcleans to access your location."
-        }
-      ]
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

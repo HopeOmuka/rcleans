@@ -56,42 +56,40 @@ const RateService = () => {
       <TouchableOpacity
         key={star}
         onPress={() => setRating(star)}
-        className="mx-2"
+        className="mx-1"
       >
         <Image
           source={icons.star}
-          className={`w-10 h-10 ${star <= rating ? "" : ""}`}
-          tintColor={star <= rating ? "#FACC15" : "#444"}
+          className={`w-8 h-8 ${star <= rating ? "tint-yellow-400" : "tint-gray-300"}`}
         />
       </TouchableOpacity>
     ));
   };
 
   return (
-    <ServiceLayout title="Rate Service">
+    <ServiceLayout title="Rate Your Service">
       <View className="p-5">
-        <Text className="text-white text-xl font-JakartaBold mb-5 text-center">
+        <Text className="text-xl font-JakartaBold mb-5 text-center">
           How was your cleaning service?
         </Text>
 
         <View className="flex-row justify-center mb-8">{renderStars()}</View>
 
-        <Text className="text-gray-400 text-lg font-JakartaSemiBold mb-3">
+        <Text className="text-lg font-JakartaSemiBold mb-3">
           Share your experience (optional)
         </Text>
         <TextInput
           value={review}
           onChangeText={setReview}
           placeholder="Tell us about your experience..."
-          placeholderTextColor="#666"
           multiline
           numberOfLines={4}
-          className="bg-dark-200 border border-gray-700 rounded-2xl p-4 mb-5 text-white"
+          className="border border-gray-300 rounded-lg p-3 mb-5"
           textAlignVertical="top"
         />
 
         <CustomButton
-          title={loading ? "Submitting..." : "Submit Rating"}
+          title="Submit Rating"
           onPress={handleSubmitRating}
           disabled={loading}
           className="mt-5"

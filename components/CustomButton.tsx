@@ -1,19 +1,19 @@
-import { TouchableOpacity, Text, View } from "react-native";
+import { TouchableOpacity, Text } from "react-native";
 
 import { ButtonProps } from "@/types/type";
 
 const getBgVariantStyle = (variant: ButtonProps["bgVariant"]) => {
   switch (variant) {
     case "secondary":
-      return "bg-dark-200 border border-gray-600";
+      return "bg-gray-500";
     case "danger":
-      return "bg-red-600";
+      return "bg-red-500";
     case "success":
-      return "bg-green-600";
+      return "bg-green-500";
     case "outline":
-      return "bg-transparent border-2 border-primary-500";
+      return "bg-transparent border-neutral-300 border-[0.5px]";
     default:
-      return "bg-primary-500";
+      return "bg-[#0286FF]";
   }
 };
 
@@ -22,11 +22,11 @@ const getTextVariantStyle = (variant: ButtonProps["textVariant"]) => {
     case "primary":
       return "text-black";
     case "secondary":
-      return "text-gray-300";
+      return "text-gray-100";
     case "danger":
-      return "text-white";
+      return "text-red-100";
     case "success":
-      return "text-white";
+      return "text-green-100";
     default:
       return "text-white";
   }
@@ -39,31 +39,20 @@ const CustomButton = ({
   textVariant = "default",
   IconLeft,
   IconRight,
-  className = "",
-  disabled = false,
+  className,
   ...props
 }: ButtonProps) => {
   return (
     <TouchableOpacity
       onPress={onPress}
-      disabled={disabled}
-      style={{ opacity: disabled ? 0.5 : 1 }}
-      className={`
-        w-full rounded-xl py-4 px-6
-        flex flex-row justify-center items-center 
-        ${getBgVariantStyle(bgVariant)} 
-        ${className}
-      `}
-      activeOpacity={0.7}
+      className={`w-full rounded-full p-3 flex flex-row justify-center items-center shadow-md shadow-neutral-400/70 ${getBgVariantStyle(bgVariant)} ${className}`}
       {...props}
     >
-      {IconLeft && <View className="mr-2">{IconLeft()}</View>}
-      <Text
-        className={`text-lg font-JakartaSemiBold ${getTextVariantStyle(textVariant)}`}
-      >
+      {IconLeft && <IconLeft />}
+      <Text className={`text-lg font-bold ${getTextVariantStyle(textVariant)}`}>
         {title}
       </Text>
-      {IconRight && <View className="ml-2">{IconRight()}</View>}
+      {IconRight && <IconRight />}
     </TouchableOpacity>
   );
 };

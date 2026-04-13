@@ -21,14 +21,14 @@ export const tokenCache = {
   },
   async saveToken(key: string, value: string) {
     try {
-      return await SecureStore.setItemAsync(key, value);
+      return SecureStore.setItemAsync(key, value);
     } catch (err) {
       return;
     }
   },
 };
 
-export const googleOAuth = async (startOAuthFlow: any, getUser: () => any) => {
+export const googleOAuth = async (startOAuthFlow: any) => {
   try {
     const { createdSessionId, setActive, signUp } = await startOAuthFlow({
       redirectUrl: Linking.createURL("/(root)/(tabs)/home"),
@@ -38,40 +38,15 @@ export const googleOAuth = async (startOAuthFlow: any, getUser: () => any) => {
       if (setActive) {
         await setActive({ session: createdSessionId });
 
-        // Get user info from Clerk after sign in
-        let userName = "Google User";
-        let userEmail = "";
-
-        if (getUser) {
-          const user = getUser();
-          userName =
-            user?.firstName && user?.lastName
-              ? `${user.firstName} ${user.lastName}`
-              : user?.fullName || "Google User";
-          userEmail = user?.emailAddresses?.[0]?.emailAddress || "";
-        }
-
-        // Fallback to signUp data if getUser not available
-        if (!userEmail && signUp.emailAddress) {
-          userEmail = signUp.emailAddress;
-        }
-        if (userName === "Google User" && signUp.firstName) {
-          userName = `${signUp.firstName} ${signUp.lastName || ""}`.trim();
-        }
-
-        if (signUp.createdUserId && userEmail) {
-          try {
-            await fetchAPI("/(api)/user", {
-              method: "POST",
-              body: JSON.stringify({
-                name: userName,
-                email: userEmail,
-                clerkId: signUp.createdUserId,
-              }),
-            });
-          } catch (userError) {
-            console.error("Error creating user in database:", userError);
-          }
+        if (signUp.createdUserId) {
+          await fetchAPI("/(api)/user", {
+            method: "POST",
+            body: JSON.stringify({
+              name: `${signUp.firstName} ${signUp.lastName}`,
+              email: signUp.emailAddress,
+              clerkId: signUp.createdUserId,
+            }),
+          });
         }
 
         return {

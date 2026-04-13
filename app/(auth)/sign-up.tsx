@@ -38,6 +38,8 @@ const SignUp = () => {
         state: "pending",
       });
     } catch (err: any) {
+      // See https://clerk.com/docs/custom-flows/error-handling
+      // for more info on error handling
       console.log(JSON.stringify(err, null, 2));
       Alert.alert("Error", err.errors[0].longMessage);
     }
@@ -70,6 +72,8 @@ const SignUp = () => {
         });
       }
     } catch (err: any) {
+      // See https://clerk.com/docs/custom-flows/error-handling
+      // for more info on error handling
       setVerification({
         ...verification,
         error: err.errors[0].longMessage,
@@ -78,12 +82,12 @@ const SignUp = () => {
     }
   };
   return (
-    <ScrollView className="flex-1 bg-dark-500">
-      <View className="flex-1">
-        <View className="relative w-full h-[200px]">
-          <View className="absolute inset-0 bg-primary-gradient opacity-80" />
-          <Text className="absolute bottom-5 left-5 text-2xl text-white font-JakartaSemiBold">
-            Join RCleans Today
+    <ScrollView className="flex-1 bg-white">
+      <View className="flex-1 bg-white">
+        <View className="relative w-full h-[250px]">
+          <Image source={images.signUpCar} className="z-0 w-full h-[250px]" />
+          <Text className="text-2xl text-black font-JakartaSemiBold absolute bottom-5 left-5">
+            Create Your Account
           </Text>
         </View>
         <View className="p-5">
@@ -93,9 +97,6 @@ const SignUp = () => {
             icon={icons.person}
             value={form.name}
             onChangeText={(value) => setForm({ ...form, name: value })}
-            containerStyle="bg-dark-200"
-            inputStyle="text-white"
-            labelStyle="text-gray-400"
           />
           <InputField
             label="Email"
@@ -104,9 +105,6 @@ const SignUp = () => {
             textContentType="emailAddress"
             value={form.email}
             onChangeText={(value) => setForm({ ...form, email: value })}
-            containerStyle="bg-dark-200"
-            inputStyle="text-white"
-            labelStyle="text-gray-400"
           />
           <InputField
             label="Password"
@@ -116,9 +114,6 @@ const SignUp = () => {
             textContentType="password"
             value={form.password}
             onChangeText={(value) => setForm({ ...form, password: value })}
-            containerStyle="bg-dark-200"
-            inputStyle="text-white"
-            labelStyle="text-gray-400"
           />
           <CustomButton
             title="Sign Up"
@@ -128,7 +123,7 @@ const SignUp = () => {
           <OAuth />
           <Link
             href="/sign-in"
-            className="text-lg text-center text-gray-400 mt-10"
+            className="text-lg text-center text-general-200 mt-10"
           >
             Already have an account?{" "}
             <Text className="text-primary-500">Log In</Text>
@@ -136,17 +131,20 @@ const SignUp = () => {
         </View>
         <ReactNativeModal
           isVisible={verification.state === "pending"}
+          // onBackdropPress={() =>
+          //   setVerification({ ...verification, state: "default" })
+          // }
           onModalHide={() => {
             if (verification.state === "success") {
               setShowSuccessModal(true);
             }
           }}
         >
-          <View className="bg-dark-200 px-7 py-9 rounded-2xl min-h-[300px] border border-gray-700">
-            <Text className="font-JakartaExtraBold text-2xl mb-2 text-white">
+          <View className="bg-white px-7 py-9 rounded-2xl min-h-[300px]">
+            <Text className="font-JakartaExtraBold text-2xl mb-2">
               Verification
             </Text>
-            <Text className="font-Jakarta mb-5 text-gray-400">
+            <Text className="font-Jakarta mb-5">
               We&apos;ve sent a verification code to {form.email}.
             </Text>
             <InputField
@@ -158,9 +156,6 @@ const SignUp = () => {
               onChangeText={(code) =>
                 setVerification({ ...verification, code })
               }
-              containerStyle="bg-dark-100"
-              inputStyle="text-white"
-              labelStyle="text-gray-400"
             />
             {verification.error && (
               <Text className="text-red-500 text-sm mt-1">
@@ -170,25 +165,24 @@ const SignUp = () => {
             <CustomButton
               title="Verify Email"
               onPress={onPressVerify}
-              className="mt-5"
+              className="mt-5 bg-success-500"
             />
           </View>
         </ReactNativeModal>
         <ReactNativeModal isVisible={showSuccessModal}>
-          <View className="bg-dark-200 px-7 py-9 rounded-2xl min-h-[300px] border border-gray-700">
+          <View className="bg-white px-7 py-9 rounded-2xl min-h-[300px]">
             <Image
               source={images.check}
               className="w-[110px] h-[110px] mx-auto my-5"
-              tintColor="#4ADE80"
             />
-            <Text className="text-3xl font-JakartaBold text-center text-white">
+            <Text className="text-3xl font-JakartaBold text-center">
               Verified
             </Text>
             <Text className="text-base text-gray-400 font-Jakarta text-center mt-2">
               You have successfully verified your account.
             </Text>
             <CustomButton
-              title="Start Booking"
+              title="Browse Home"
               onPress={() => router.push(`/(root)/(tabs)/home`)}
               className="mt-5"
             />

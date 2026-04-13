@@ -1,8 +1,7 @@
 import React from "react";
-import { View, Text, TouchableOpacity, FlatList, Image } from "react-native";
+import { View, Text, TouchableOpacity, FlatList } from "react-native";
 
 import { useFetch } from "@/lib/fetch";
-import { icons } from "@/constants";
 
 interface ServiceAddon {
   id: string;
@@ -37,37 +36,29 @@ const AddonSelector: React.FC<AddonSelectorProps> = ({
 
   const renderAddon = ({ item }: { item: ServiceAddon }) => (
     <TouchableOpacity
-      className={`flex-row items-center p-4 rounded-2xl mb-2 border ${
-        isAddonSelected(item)
-          ? "bg-primary-500/10 border-primary-500/30"
-          : "bg-dark-200 border-gray-800"
-      }`}
+      className="flex-row items-center p-4 bg-white rounded-lg border border-gray-200 mb-2"
       onPress={() => onAddonToggle(item)}
-      activeOpacity={0.8}
     >
-      <View
-        className={`w-6 h-6 border-2 rounded-lg mr-3 items-center justify-center ${
+      <TouchableOpacity
+        className={`w-6 h-6 border-2 rounded mr-3 items-center justify-center ${
           isAddonSelected(item)
             ? "bg-primary-500 border-primary-500"
-            : "border-gray-600"
+            : "border-gray-300"
         }`}
+        onPress={() => onAddonToggle(item)}
       >
         {isAddonSelected(item) && (
-          <Image
-            source={icons.checkmark}
-            className="w-3 h-3"
-            tintColor="white"
-          />
+          <Text className="text-white text-sm font-bold">✓</Text>
         )}
-      </View>
+      </TouchableOpacity>
       <View className="flex-1">
-        <Text className="text-white font-JakartaSemiBold">{item.name}</Text>
-        <Text className="text-gray-500 text-sm mt-1">{item.description}</Text>
+        <Text className="text-lg font-JakartaSemiBold">{item.name}</Text>
+        <Text className="text-sm text-gray-600">{item.description}</Text>
         <View className="flex-row justify-between mt-2">
-          <Text className="text-primary-500 font-JakartaBold">
-            +${item.price}
+          <Text className="text-base font-JakartaBold text-primary-500">
+            ${item.price}
           </Text>
-          <Text className="text-gray-500 text-sm">
+          <Text className="text-sm text-gray-500">
             +{item.estimated_duration_minutes} min
           </Text>
         </View>
@@ -78,7 +69,7 @@ const AddonSelector: React.FC<AddonSelectorProps> = ({
   if (loading) {
     return (
       <View className="p-4">
-        <Text className="text-gray-400 text-center">Loading add-ons...</Text>
+        <Text className="text-center">Loading add-ons...</Text>
       </View>
     );
   }
@@ -86,16 +77,14 @@ const AddonSelector: React.FC<AddonSelectorProps> = ({
   if (error) {
     return (
       <View className="p-4">
-        <Text className="text-red-400 text-center">Error loading add-ons</Text>
+        <Text className="text-center text-red-500">Error loading add-ons</Text>
       </View>
     );
   }
 
   return (
     <View className="p-4">
-      <Text className="text-white font-JakartaBold text-lg mb-4">
-        Extra Services
-      </Text>
+      <Text className="text-xl font-JakartaBold mb-4">Additional Services</Text>
 
       <FlatList
         data={addons}
@@ -103,27 +92,25 @@ const AddonSelector: React.FC<AddonSelectorProps> = ({
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={() => (
-          <Text className="text-gray-500 text-center">
+          <Text className="text-center text-gray-500">
             No add-ons available
           </Text>
         )}
       />
 
       {(selectedAddons.length > 0 || totalAddonPrice > 0) && (
-        <View className="mt-4 p-4 bg-dark-300 rounded-xl border border-gray-700">
-          <Text className="text-white font-JakartaBold mb-2">
-            Add-on Summary
-          </Text>
-          <View className="flex-row justify-between mb-1">
-            <Text className="text-gray-400">Additional Price:</Text>
-            <Text className="text-primary-500 font-JakartaBold">
-              +${totalAddonPrice.toFixed(2)}
+        <View className="mt-4 p-4 bg-gray-50 rounded-lg">
+          <Text className="text-lg font-JakartaBold mb-2">Add-on Summary</Text>
+          <View className="flex-row justify-between">
+            <Text className="text-base">Additional Price:</Text>
+            <Text className="text-base font-JakartaBold">
+              ${totalAddonPrice}
             </Text>
           </View>
           <View className="flex-row justify-between">
-            <Text className="text-gray-400">Additional Time:</Text>
-            <Text className="text-white font-JakartaMedium">
-              +{totalAddonDuration} min
+            <Text className="text-base">Additional Time:</Text>
+            <Text className="text-base font-JakartaBold">
+              {totalAddonDuration} min
             </Text>
           </View>
         </View>

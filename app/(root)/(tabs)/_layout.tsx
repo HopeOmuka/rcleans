@@ -11,16 +11,16 @@ const TabIcon = ({
   focused: boolean;
 }) => (
   <View
-    className={`flex flex-row justify-center items-center rounded-full ${focused ? "bg-primary-500" : ""}`}
+    className={`flex flex-row justify-center items-center rounded-full ${focused ? "bg-general-300" : ""}`}
   >
     <View
-      className={`rounded-full w-12 h-12 items-center justify-center ${focused ? "bg-primary-600" : "bg-dark-300"}`}
+      className={`rounded-full w-12 h-12 items-center justify-center ${focused ? "bg-general-400" : ""}`}
     >
       <Image
         source={source}
-        tintColor={focused ? "white" : "#666"}
+        tintColor="white"
         resizeMode="contain"
-        className="w-6 h-6"
+        className="w-7 h-7"
       />
     </View>
   </View>
@@ -31,13 +31,13 @@ export default function Layout() {
     <Tabs
       initialRouteName="home"
       screenOptions={{
-        tabBarActiveTintColor: "#4ADE80",
-        tabBarInactiveTintColor: "#666",
+        tabBarActiveTintColor: "white",
+        tabBarInactiveTintColor: "white",
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: "#1F1F1F",
+          backgroundColor: "#333333",
           borderRadius: 50,
-          paddingBottom: 0,
+          paddingBottom: 0, // ios only
           overflow: "hidden",
           marginHorizontal: 20,
           marginBottom: 20,
@@ -47,9 +47,7 @@ export default function Layout() {
           alignItems: "center",
           flexDirection: "row",
           position: "absolute",
-          borderTopWidth: 0,
         },
-        headerShown: false,
       }}
     >
       <Tabs.Screen
@@ -65,7 +63,7 @@ export default function Layout() {
       <Tabs.Screen
         name="services"
         options={{
-          title: "Bookings",
+          title: "Services",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
             <TabIcon source={icons.list} focused={focused} />
