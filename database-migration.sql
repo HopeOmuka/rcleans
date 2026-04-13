@@ -360,12 +360,20 @@ FROM services;
 -- Example RLS policies (uncomment and modify as needed):
 
 -- Users can only see their own data
--- ALTER TABLE users ENABLE ROW LEVEL SECURITY;
--- CREATE POLICY users_own_data ON users FOR ALL TO authenticated USING (id = auth.uid());
+CREATE POLICY "Users can view own data" ON users
+    FOR SELECT USING (auth.uid()::text = id);
 
 -- Cleaners can only see their own data
--- ALTER TABLE cleaners ENABLE ROW LEVEL SECURITY;
--- CREATE POLICY cleaners_own_data ON cleaners FOR ALL TO authenticated USING (id = auth.uid());
+CREATE POLICY "Cleaners can view own data" ON cleaners
+    FOR SELECT USING (auth.uid()::text = id);
+
+-- Users can view their own services
+CREATE POLICY "Users can view own services" ON services
+    FOR SELECT USING (auth.uid()::text = user_id);
+
+-- Cleaners can view their assigned services
+CREATE POLICY "Cleaners can view assigned services" ON services
+    FOR SELECT USING (auth.uid()::text = cleaner_id);
 
 
 -- =========================================

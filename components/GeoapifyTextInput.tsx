@@ -13,7 +13,7 @@ import {
 import { icons } from "@/constants";
 import { GoogleInputProps } from "@/types/type";
 
-const MAPBOX_API_KEY = import.meta.env.EXPO_PUBLIC_MAPBOX_API_KEY;
+const MAPBOX_API_KEY = process.env.EXPO_PUBLIC_MAPBOX_API_KEY;
 
 const MapboxTextInput = ({
   icon,

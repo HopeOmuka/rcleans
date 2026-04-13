@@ -5,13 +5,13 @@
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo run:android",
-    "ios": "expo run:ios",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint"
   },
   "dependencies": {
-    "@clerk/clerk-expo": "^2.19.31",
+    "@clerk/clerk-expo": "^1.0.0",
     "@expo/vector-icons": "^15.0.3",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@neondatabase/serverless": "^1.0.2",
@@ -20,7 +20,7 @@
     "@react-navigation/native": "^7.1.8",
     "@stripe/stripe-react-native": "0.50.3",
     "babel-preset-expo": "~54.0.10",
-    "clerk": "^0.8.3",
+    "clerk": "^0.6.1",
     "expo": "~54.0.33",
     "expo-auth-session": "~7.0.10",
     "expo-constants": "~18.0.13",
@@ -61,7 +61,6 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
-    "@types/node-fetch": "^2.6.13",
     "@types/react": "~19.1.0",
     "@types/react-native-modal": "^3.1.1",
     "@types/stripe": "^8.0.416",

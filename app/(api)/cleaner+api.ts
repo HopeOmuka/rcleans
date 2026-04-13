@@ -9,10 +9,10 @@ export async function GET(request: Request) {
         first_name,
         last_name,
         profile_image_url,
-        rating::float as rating,
+        rating,
         specialties,
-        location_lat::float as location_lat,
-        location_lng::float as location_lng,
+        location_lat,
+        location_lng,
         is_available,
         completed_jobs,
         years_experience
