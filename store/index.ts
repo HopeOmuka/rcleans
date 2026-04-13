@@ -60,7 +60,7 @@ export const useLocationStore = create<LocationStore>((set) => ({
 export const useCleanerStore = create<CleanerStore>((set) => ({
   cleaners: [] as MarkerData[],
   selectedCleaner: null,
-  setSelectedCleaner: (cleanerId: number) =>
+  setSelectedCleaner: (cleanerId: string) =>
     set(() => ({ selectedCleaner: cleanerId })),
   setCleaners: (cleaners: MarkerData[]) => set(() => ({ cleaners })),
   clearSelectedCleaner: () => set(() => ({ selectedCleaner: null })),

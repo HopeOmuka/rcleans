@@ -66,14 +66,11 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
 
   const toggleDayAvailability = (dayIndex: number) => {
     const existingSlot = getAvailabilityForDay(dayIndex);
-
     if (existingSlot) {
-      // Remove availability for this day
       setAvailability(
         availability.filter((slot) => slot.day_of_week !== dayIndex),
       );
     } else {
-      // Add default availability for this day
       const newSlot: AvailabilitySlot = {
         id: `temp-${dayIndex}`,
         day_of_week: dayIndex,
@@ -89,10 +86,7 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
     setAvailability(
       availability.map((slot) =>
         slot.day_of_week === dayIndex
-          ? {
-              ...slot,
-              [isStartTime ? "start_time" : "end_time"]: time,
-            }
+          ? { ...slot, [isStartTime ? "start_time" : "end_time"]: time }
           : slot,
       ),
     );
@@ -101,7 +95,6 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
   const saveAvailability = async () => {
     setSaving(true);
     try {
-      // Save each availability slot
       for (const slot of availability) {
         await fetchAPI("/(api)/cleaner/availability", {
           method: "POST",
@@ -115,7 +108,6 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
           }),
         });
       }
-
       Alert.alert("Success", "Availability updated successfully!");
     } catch (error) {
       console.error("Error saving availability:", error);
@@ -127,15 +119,15 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <Text>Loading availability...</Text>
+      <View className="flex-1 justify-center items-center bg-dark-500">
+        <Text className="text-gray-400">Loading availability...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 p-4">
-      <Text className="text-2xl font-JakartaBold mb-6">
+    <ScrollView className="flex-1 p-4 bg-dark-500">
+      <Text className="text-white text-2xl font-JakartaBold mb-6">
         Set Your Availability
       </Text>
 
@@ -146,19 +138,23 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
         return (
           <View
             key={index}
-            className="mb-4 p-4 bg-white rounded-lg border border-gray-200"
+            className="mb-4 p-4 bg-dark-200 rounded-2xl border border-gray-800"
           >
             <View className="flex-row justify-between items-center mb-3">
-              <Text className="text-lg font-JakartaSemiBold">{day}</Text>
+              <Text className="text-white font-JakartaSemiBold text-lg">
+                {day}
+              </Text>
               <TouchableOpacity
                 onPress={() => toggleDayAvailability(index)}
-                className={`px-3 py-1 rounded-full ${
-                  isAvailable ? "bg-green-100" : "bg-gray-100"
+                className={`px-4 py-2 rounded-xl ${
+                  isAvailable
+                    ? "bg-primary-500/20 border border-primary-500/30"
+                    : "bg-dark-300 border border-gray-700"
                 }`}
               >
                 <Text
                   className={`text-sm font-JakartaMedium ${
-                    isAvailable ? "text-green-700" : "text-gray-600"
+                    isAvailable ? "text-primary-500" : "text-gray-400"
                   }`}
                 >
                   {isAvailable ? "Available" : "Unavailable"}
@@ -167,23 +163,25 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
             </View>
 
             {isAvailable && (
-              <View className="space-y-3">
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-sm font-JakartaMedium mr-2">From:</Text>
+              <View className="flex-row gap-4">
+                <View className="flex-1">
+                  <Text className="text-gray-500 text-sm mb-2">From</Text>
                   <TextInput
-                    className="flex-1 p-2 bg-gray-50 rounded border text-center"
+                    className="bg-dark-100 p-3 rounded-xl border border-gray-700 text-white text-center"
                     value={slot.start_time}
                     onChangeText={(text) => updateTime(index, true, text)}
-                    placeholder="HH:MM"
+                    placeholder="09:00"
+                    placeholderTextColor="#666"
                   />
                 </View>
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-sm font-JakartaMedium mr-2">To:</Text>
+                <View className="flex-1">
+                  <Text className="text-gray-500 text-sm mb-2">To</Text>
                   <TextInput
-                    className="flex-1 p-2 bg-gray-50 rounded border text-center"
+                    className="bg-dark-100 p-3 rounded-xl border border-gray-700 text-white text-center"
                     value={slot.end_time}
                     onChangeText={(text) => updateTime(index, false, text)}
-                    placeholder="HH:MM"
+                    placeholder="17:00"
+                    placeholderTextColor="#666"
                   />
                 </View>
               </View>
@@ -195,7 +193,7 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
       <CustomButton
         title={saving ? "Saving..." : "Save Availability"}
         onPress={saveAvailability}
-        className="mt-6"
+        className="mt-6 mb-10"
         disabled={saving}
       />
     </ScrollView>

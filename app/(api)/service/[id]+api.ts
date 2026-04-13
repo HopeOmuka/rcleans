@@ -4,7 +4,7 @@ export async function GET(
   request: Request,
   { params }: { params?: { id?: string } } = {},
 ) {
-  const id = params?.id;
+  const id = params?.id ? decodeURIComponent(params.id) : null;
 
   if (!id) {
     return Response.json({ error: "Missing required fields" }, { status: 400 });

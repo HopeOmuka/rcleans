@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --primary: #4ade80;
+  --accent: #3b82f6;
+  --dark: #0d0d0d;
+}
+
+body {
+  background-color: #030303;
+  color: white;
+}
+
+input,
+textarea,
+select {
+  background-color: #1f1f1f !important;
+  color: white !important;
+}

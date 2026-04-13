@@ -29,7 +29,6 @@ const SignIn = () => {
         await setActive({ session: signInAttempt.createdSessionId });
         router.replace("/(root)/(tabs)/home");
       } else {
-        // See https://clerk.com/docs/custom-flows/error-handling for more info on error handling
         console.log(JSON.stringify(signInAttempt, null, 2));
         Alert.alert("Error", "Log in failed. Please try again.");
       }
@@ -40,12 +39,12 @@ const SignIn = () => {
   }, [isLoaded, signIn, form.email, form.password, setActive]);
 
   return (
-    <ScrollView className="flex-1 bg-white">
-      <View className="flex-1 bg-white">
-        <View className="relative w-full h-[250px]">
-          <Image source={images.signUpCar} className="z-0 w-full h-[250px]" />
-          <Text className="text-2xl text-black font-JakartaSemiBold absolute bottom-5 left-5">
-            Welcome 👋
+    <ScrollView className="flex-1 bg-dark-500">
+      <View className="flex-1">
+        <View className="relative w-full h-[200px]">
+          <View className="absolute inset-0 bg-primary-gradient opacity-80" />
+          <Text className="absolute bottom-5 left-5 text-2xl text-white font-JakartaSemiBold">
+            Welcome to RCleans 👋
           </Text>
         </View>
 
@@ -57,6 +56,9 @@ const SignIn = () => {
             textContentType="emailAddress"
             value={form.email}
             onChangeText={(value) => setForm({ ...form, email: value })}
+            containerStyle="bg-dark-200"
+            inputStyle="text-white"
+            labelStyle="text-gray-400"
           />
 
           <InputField
@@ -67,6 +69,9 @@ const SignIn = () => {
             textContentType="password"
             value={form.password}
             onChangeText={(value) => setForm({ ...form, password: value })}
+            containerStyle="bg-dark-200"
+            inputStyle="text-white"
+            labelStyle="text-gray-400"
           />
 
           <CustomButton
@@ -79,10 +84,18 @@ const SignIn = () => {
 
           <Link
             href="/sign-up"
-            className="text-lg text-center text-general-200 mt-10"
+            className="text-lg text-center text-gray-400 mt-10"
           >
             Don&apos;t have an account?{" "}
             <Text className="text-primary-500">Sign Up</Text>
+          </Link>
+
+          <Link
+            href="/(cleaner)/sign-in"
+            className="text-lg text-center text-gray-500 mt-6"
+          >
+            Are you a cleaner?{" "}
+            <Text className="text-accent-500">Sign in here</Text>
           </Link>
         </View>
       </View>

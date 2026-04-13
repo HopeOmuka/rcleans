@@ -1,7 +1,7 @@
 import { TextInputProps, TouchableOpacityProps } from "react-native";
 
 declare interface Cleaner {
-  id: number;
+  id: string;
   first_name: string;
   last_name: string;
   profile_image_url: string;
@@ -26,8 +26,8 @@ declare interface ServiceType {
 declare interface MarkerData {
   latitude: number;
   longitude: number;
-  id: number;
-  title: string;
+  id: string;
+  title?: string;
   profile_image_url: string;
   rating: number;
   first_name: string;
@@ -225,8 +225,8 @@ declare interface LocationStore {
 
 declare interface CleanerStore {
   cleaners: MarkerData[];
-  selectedCleaner: number | null;
-  setSelectedCleaner: (cleanerId: number) => void;
+  selectedCleaner: string | null;
+  setSelectedCleaner: (cleanerId: string) => void;
   setCleaners: (cleaners: MarkerData[]) => void;
   clearSelectedCleaner: () => void;
 }
@@ -240,6 +240,6 @@ declare interface ServiceTypeStore {
 
 declare interface CleanerCardProps {
   item: MarkerData;
-  selected: number;
+  selected: string;
   setSelected: () => void;
 }

@@ -10,10 +10,12 @@ import { Service } from "@/types/type";
 import React from "react";
 
 const Services = () => {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
 
   const { data: recentServices, loading } = useFetch<Service[]>(
-    `/(api)/service/${user?.id}`,
+    isLoaded && user?.id
+      ? `/(api)/service/${encodeURIComponent(user.id)}`
+      : null,
   );
 
   const handleRatePress = (service: Service) => {
@@ -22,10 +24,18 @@ const Services = () => {
     );
   };
 
+  if (!isLoaded) {
+    return (
+      <SafeAreaView className="flex-1 bg-dark-500 items-center justify-center">
+        <ActivityIndicator size="small" color="#4ADE80" />
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-dark-500">
       <FlatList
-        data={recentServices}
+        data={recentServices || []}
         renderItem={({ item }) => (
           <ServiceCard service={item} onRatePress={handleRatePress} />
         )}
@@ -36,25 +46,30 @@ const Services = () => {
           paddingBottom: 100,
         }}
         ListEmptyComponent={() => (
-          <View className="flex flex-col items-center justify-center">
+          <View className="flex flex-col items-center justify-center py-20">
             {!loading ? (
               <>
                 <Image
                   source={images.noResult}
-                  className="w-40 h-40"
+                  className="w-32 h-32 opacity-50"
                   alt="No recent services found"
                   resizeMode="contain"
+                  tintColor="#666"
                 />
-                <Text className="text-sm">No recent services found</Text>
+                <Text className="text-gray-500 mt-4">
+                  No cleaning services booked yet
+                </Text>
               </>
             ) : (
-              <ActivityIndicator size="small" color="#000" />
+              <ActivityIndicator size="small" color="#4ADE80" />
             )}
           </View>
         )}
         ListHeaderComponent={
           <>
-            <Text className="text-2xl font-JakartaBold my-5">All Services</Text>
+            <Text className="text-2xl font-JakartaBold text-white my-5">
+              Your Bookings
+            </Text>
           </>
         }
       />

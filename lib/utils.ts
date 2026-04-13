@@ -11,13 +11,15 @@ export const sortServices = (services: Service[]): Service[] => {
 };
 
 export function formatTime(minutes: number): string {
-  const formattedMinutes = +minutes?.toFixed(0) || 0;
+  if (!minutes || typeof minutes !== "number") return "0 min";
 
-  if (formattedMinutes < 60) {
-    return `${minutes} min`;
+  const mins = Math.round(minutes);
+
+  if (mins < 60) {
+    return `${mins} min`;
   } else {
-    const hours = Math.floor(formattedMinutes / 60);
-    const remainingMinutes = formattedMinutes % 60;
+    const hours = Math.floor(mins / 60);
+    const remainingMinutes = mins % 60;
     return `${hours}h ${remainingMinutes}m`;
   }
 }

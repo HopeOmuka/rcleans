@@ -11,14 +11,25 @@ export const generateMarkersFromData = ({
   userLatitude: number;
   userLongitude: number;
 }): MarkerData[] => {
-  return data.map((cleaner) => {
+  return data.map((cleaner, index) => {
+    const lat = Number(cleaner.location_lat);
+    const lng = Number(cleaner.location_lng);
+
+    const hasValidLocation =
+      !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+
     return {
-      latitude:
-        cleaner.location_lat || userLatitude + (Math.random() - 0.5) * 0.01,
-      longitude:
-        cleaner.location_lng || userLongitude + (Math.random() - 0.5) * 0.01,
+      latitude: hasValidLocation ? lat : userLatitude + index * 0.005 - 0.01,
+      longitude: hasValidLocation ? lng : userLongitude + index * 0.005 - 0.01,
       title: `${cleaner.first_name} ${cleaner.last_name}`,
-      ...cleaner,
+      rating: Number(cleaner.rating) || 0,
+      id: cleaner.id,
+      first_name: cleaner.first_name,
+      last_name: cleaner.last_name,
+      profile_image_url: cleaner.profile_image_url || "",
+      specialties: cleaner.specialties || [],
+      is_available: cleaner.is_available ?? true,
+      time: hasValidLocation ? 10 + index * 5 : 15 + index * 5,
     };
   });
 };
@@ -74,35 +85,41 @@ export const calculateCleanerTimes = async ({
   serviceLatitude: number | null;
   serviceLongitude: number | null;
 }) => {
-  if (!serviceLatitude || !serviceLongitude) return;
+  if (!serviceLatitude || !serviceLongitude) return markers;
 
   try {
-    /**
-     * Call each cleaner → service location
-     */
-    const timesPromises = markers.map(async (marker) => {
-      const res = await fetch(
-        `https://api.mapbox.com/directions/v5/mapbox/driving/${marker.longitude},${marker.latitude};${serviceLongitude},${serviceLatitude}?access_token=${MAPBOX_API_KEY}&geometries=geojson&overview=full`,
-      );
+    const timesPromises = markers.map(async (marker, index) => {
+      try {
+        const res = await fetch(
+          `https://api.mapbox.com/directions/v5/mapbox/driving/${marker.longitude},${marker.latitude};${serviceLongitude},${serviceLatitude}?access_token=${MAPBOX_API_KEY}&geometries=geojson&overview=full`,
+        );
 
-      const data = await res.json();
+        const data = await res.json();
 
-      const timeToService = data.routes?.[0]?.duration ?? 0;
+        const timeToService = data.routes?.[0]?.duration ?? 0;
+        const totalTime = timeToService / 60;
 
-      const totalTime = timeToService / 60; // in minutes
-
-      const price = (totalTime * 0.5).toFixed(2); // placeholder pricing
-
-      return {
-        ...marker,
-        time: totalTime,
-        price,
-      };
+        return {
+          ...marker,
+          time: totalTime || 15 + index * 5,
+          price: (totalTime * 0.5).toFixed(2),
+        };
+      } catch {
+        return {
+          ...marker,
+          time: 15 + index * 5,
+          price: (15 + index * 5) * 0.5,
+        };
+      }
     });
 
     return await Promise.all(timesPromises);
   } catch (err) {
     console.log("Mapbox error:", err);
+    return markers.map((marker, index) => ({
+      ...marker,
+      time: 15 + index * 5,
+    }));
   }
 };
 
@@ -129,3 +146,5 @@ export const reverseGeocodeWithMapbox = async (
     return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
   }
 };
+
+export { MAPBOX_API_KEY };
