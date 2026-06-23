@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+import { jsonResponse, errorResponse, AppError } from "@/lib/api-error";
 
 export async function POST(request: Request) {
   try {
@@ -6,7 +7,7 @@ export async function POST(request: Request) {
     const { cleanerId, isAvailable } = body;
 
     if (!cleanerId) {
-      return Response.json({ error: "Cleaner ID required" }, { status: 400 });
+      throw new AppError(400, "Cleaner ID required", "VALIDATION_ERROR");
     }
 
     const sql = neon(`${process.env.DATABASE_URL}`);
@@ -19,12 +20,12 @@ export async function POST(request: Request) {
     `;
 
     if (result.length === 0) {
-      return Response.json({ error: "Cleaner not found" }, { status: 404 });
+      throw new AppError(404, "Cleaner not found", "NOT_FOUND");
     }
 
-    return Response.json({ data: result[0] });
+    return jsonResponse({ data: result[0] });
   } catch (error) {
-    console.error("Error updating availability:", error);
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+    if (error instanceof AppError) throw error;
+    return errorResponse(error, "Error updating availability");
   }
 }

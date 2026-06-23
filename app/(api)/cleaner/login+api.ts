@@ -1,4 +1,15 @@
 import { neon } from "@neondatabase/serverless";
+import { jsonResponse, errorResponse, AppError } from "@/lib/api-error";
+import { randomBytes } from "node:crypto";
+import { createHash } from "node:crypto";
+
+function generateToken(cleanerId: number): string {
+  const timestamp = Date.now();
+  const random = randomBytes(16).toString("hex");
+  const raw = `${cleanerId}:${timestamp}:${random}`;
+  const signature = createHash("sha256").update(raw).digest("hex");
+  return Buffer.from(`${raw}:${signature}`).toString("base64url");
+}
 
 export async function POST(request: Request) {
   try {
@@ -6,10 +17,11 @@ export async function POST(request: Request) {
     const { email, phone } = body;
 
     if (!email || !phone) {
-      return Response.json(
-        { error: "Email and phone required" },
-        { status: 400 },
-      );
+      throw new AppError(400, "Email and phone required", "VALIDATION_ERROR");
+    }
+
+    if (typeof email !== "string" || !email.includes("@")) {
+      throw new AppError(400, "Invalid email format", "VALIDATION_ERROR");
     }
 
     const sql = neon(`${process.env.DATABASE_URL}`);
@@ -19,13 +31,13 @@ export async function POST(request: Request) {
     `;
 
     if (cleaners.length === 0) {
-      return Response.json({ error: "Invalid credentials" }, { status: 401 });
+      throw new AppError(401, "Invalid credentials", "AUTH_ERROR");
     }
 
     const cleaner = cleaners[0];
-    const token = Buffer.from(`${cleaner.id}:${Date.now()}`).toString("base64");
+    const token = generateToken(cleaner.id);
 
-    return Response.json({
+    return jsonResponse({
       data: {
         cleaner: {
           id: cleaner.id,
@@ -43,7 +55,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Cleaner login error:", error);
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+    if (error instanceof AppError) throw error;
+    return errorResponse(error, "Cleaner login error");
   }
 }

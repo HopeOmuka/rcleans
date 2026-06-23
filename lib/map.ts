@@ -1,6 +1,14 @@
 import { Cleaner, MarkerData } from "@/types/type";
+import { fetchAPI } from "@/lib/fetch";
 
 const MAPBOX_API_KEY = process.env.EXPO_PUBLIC_MAPBOX_API_KEY;
+
+interface Region {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+}
 
 export const generateMarkersFromData = ({
   data,
@@ -11,16 +19,14 @@ export const generateMarkersFromData = ({
   userLatitude: number;
   userLongitude: number;
 }): MarkerData[] => {
-  return data.map((cleaner) => {
-    return {
-      latitude:
-        cleaner.location_lat || userLatitude + (Math.random() - 0.5) * 0.01,
-      longitude:
-        cleaner.location_lng || userLongitude + (Math.random() - 0.5) * 0.01,
-      title: `${cleaner.first_name} ${cleaner.last_name}`,
-      ...cleaner,
-    };
-  });
+  return data.map((cleaner) => ({
+    latitude:
+      cleaner.location_lat || userLatitude + (Math.random() - 0.5) * 0.01,
+    longitude:
+      cleaner.location_lng || userLongitude + (Math.random() - 0.5) * 0.01,
+    title: `${cleaner.first_name} ${cleaner.last_name}`,
+    ...cleaner,
+  }));
 };
 
 export const calculateRegion = ({
@@ -33,7 +39,7 @@ export const calculateRegion = ({
   userLongitude: number | null;
   serviceLatitude?: number | null;
   serviceLongitude?: number | null;
-}) => {
+}): Region => {
   if (!userLatitude || !userLongitude) {
     return {
       latitude: 37.78825,
@@ -65,6 +71,10 @@ export const calculateRegion = ({
   };
 };
 
+interface DirectionsResponse {
+  routes?: Array<{ duration: number }>;
+}
+
 export const calculateCleanerTimes = async ({
   markers,
   serviceLatitude,
@@ -73,31 +83,20 @@ export const calculateCleanerTimes = async ({
   markers: MarkerData[];
   serviceLatitude: number | null;
   serviceLongitude: number | null;
-}) => {
-  if (!serviceLatitude || !serviceLongitude) return;
+}): Promise<MarkerData[] | undefined> => {
+  if (!serviceLatitude || !serviceLongitude || !MAPBOX_API_KEY) return;
 
   try {
-    /**
-     * Call each cleaner → service location
-     */
     const timesPromises = markers.map(async (marker) => {
-      const res = await fetch(
+      const data = await fetchAPI(
         `https://api.mapbox.com/directions/v5/mapbox/driving/${marker.longitude},${marker.latitude};${serviceLongitude},${serviceLatitude}?access_token=${MAPBOX_API_KEY}&geometries=geojson&overview=full`,
       );
+      const directions = data as DirectionsResponse;
+      const timeToService = directions.routes?.[0]?.duration ?? 0;
+      const totalTime = timeToService / 60;
+      const price = (totalTime * 0.5).toFixed(2);
 
-      const data = await res.json();
-
-      const timeToService = data.routes?.[0]?.duration ?? 0;
-
-      const totalTime = timeToService / 60; // in minutes
-
-      const price = (totalTime * 0.5).toFixed(2); // placeholder pricing
-
-      return {
-        ...marker,
-        time: totalTime,
-        price,
-      };
+      return { ...marker, time: totalTime, price };
     });
 
     return await Promise.all(timesPromises);
@@ -106,26 +105,33 @@ export const calculateCleanerTimes = async ({
   }
 };
 
+interface GeocodingFeature {
+  place_name: string;
+}
+
+interface GeocodingResponse {
+  features?: GeocodingFeature[];
+}
+
 export const reverseGeocodeWithMapbox = async (
   latitude: number,
   longitude: number,
 ): Promise<string> => {
+  if (!MAPBOX_API_KEY) {
+    return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+  }
+
   try {
-    const response = await fetch(
+    const data = await fetchAPI(
       `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${MAPBOX_API_KEY}&limit=1&types=address,poi,place,neighborhood,locality,region,country`,
     );
-
-    const data = await response.json();
-
-    if (data.features && data.features.length > 0) {
-      return data.features[0].place_name;
+    const geo = data as GeocodingResponse;
+    if (geo.features && geo.features.length > 0) {
+      return geo.features[0].place_name;
     }
-
-    // Fallback if no results
     return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
   } catch (err) {
     console.log("Mapbox reverse geocoding error:", err);
-    // Fallback to coordinates if geocoding fails
     return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
   }
 };

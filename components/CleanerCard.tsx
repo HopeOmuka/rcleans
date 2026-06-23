@@ -54,11 +54,7 @@ const CleanerCard = ({ item, selected, setSelected }: CleanerCardProps) => {
         </View>
       </View>
 
-      <Image
-        source={icons.cleaning || icons.target}
-        className="h-14 w-14"
-        resizeMode="contain"
-      />
+      <Image source={icons.star} className="h-14 w-14" resizeMode="contain" />
     </TouchableOpacity>
   );
 };

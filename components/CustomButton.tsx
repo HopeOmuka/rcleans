@@ -1,4 +1,4 @@
-import { TouchableOpacity, Text } from "react-native";
+import { ActivityIndicator, TouchableOpacity, Text } from "react-native";
 
 import { ButtonProps } from "@/types/type";
 
@@ -11,9 +11,9 @@ const getBgVariantStyle = (variant: ButtonProps["bgVariant"]) => {
     case "success":
       return "bg-green-500";
     case "outline":
-      return "bg-transparent border-neutral-300 border-[0.5px]";
+      return "bg-transparent border-secondary-300 border-[0.5px]";
     default:
-      return "bg-[#0286FF]";
+      return "bg-accent-500";
   }
 };
 
@@ -40,18 +40,31 @@ const CustomButton = ({
   IconLeft,
   IconRight,
   className,
+  disabled,
   ...props
 }: ButtonProps) => {
+  const isDisabled = disabled || props.loading;
   return (
     <TouchableOpacity
-      onPress={onPress}
-      className={`w-full rounded-full p-3 flex flex-row justify-center items-center shadow-md shadow-neutral-400/70 ${getBgVariantStyle(bgVariant)} ${className}`}
+      onPress={isDisabled ? undefined : onPress}
+      disabled={isDisabled}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: isDisabled }}
+      className={`w-full rounded-full p-3 flex flex-row justify-center items-center shadow-md shadow-neutral-400/70 ${getBgVariantStyle(bgVariant)} ${isDisabled ? "opacity-50" : ""} ${className}`}
       {...props}
     >
       {IconLeft && <IconLeft />}
-      <Text className={`text-lg font-bold ${getTextVariantStyle(textVariant)}`}>
-        {title}
-      </Text>
+      {props.loading ? (
+        <ActivityIndicator size="small" color="white" />
+      ) : (
+        <Text
+          className={`text-lg font-JakartaBold ${getTextVariantStyle(textVariant)}`}
+        >
+          {title}
+        </Text>
+      )}
       {IconRight && <IconRight />}
     </TouchableOpacity>
   );

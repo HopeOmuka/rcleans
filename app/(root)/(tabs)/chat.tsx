@@ -8,14 +8,21 @@ const Chat = () => {
     <SafeAreaView className="flex-1 bg-white p-5">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <Text className="text-2xl font-JakartaBold">Chat</Text>
-        <View className="flex-1 h-fit flex justify-center items-center">
+        <View
+          accessibilityLabel="No messages yet"
+          className="flex-1 h-fit flex justify-center items-center"
+        >
           <Image
             source={images.message}
             alt="message"
+            accessibilityLabel="No messages illustration"
             className="w-full h-40"
             resizeMode="contain"
           />
-          <Text className="text-3xl font-JakartaBold mt-3">
+          <Text
+            accessibilityLabel="No Messages Yet"
+            className="text-3xl font-JakartaBold mt-3"
+          >
             No Messages Yet
           </Text>
           <Text className="text-base mt-2 text-center px-7">

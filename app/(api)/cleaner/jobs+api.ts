@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+import { jsonResponse, errorResponse, AppError } from "@/lib/api-error";
 
 export async function GET(request: Request) {
   try {
@@ -6,22 +7,17 @@ export async function GET(request: Request) {
     const cleanerId = searchParams.get("cleanerId");
 
     if (!cleanerId) {
-      return Response.json({ error: "Cleaner ID required" }, { status: 400 });
+      throw new AppError(400, "Cleaner ID required", "VALIDATION_ERROR");
     }
 
     const sql = neon(`${process.env.DATABASE_URL}`);
 
     const jobs = await sql`
-      SELECT 
-        s.id,
-        s.scheduled_date,
-        s.estimated_duration,
-        s.total_price,
-        s.status,
-        s.location_address,
+      SELECT
+        s.id, s.scheduled_date, s.estimated_duration, s.total_price,
+        s.status, s.location_address,
         st.name as service_type_name,
-        u.name as user_name,
-        u.phone as user_phone,
+        u.name as user_name, u.phone as user_phone,
         u.profile_image_url as user_avatar
       FROM services s
       JOIN service_types st ON s.service_type_id = st.id
@@ -30,12 +26,12 @@ export async function GET(request: Request) {
       WHERE s.status IN ('requested', 'matched')
         AND (s.cleaner_id IS NULL OR s.cleaner_id = ${cleanerId})
         AND s.scheduled_date >= NOW() - INTERVAL '24 hours'
-      ORDER BY s.scheduled_date ASC
+      ORDER BY s.scheduled_date
     `;
 
-    return Response.json({ data: jobs });
+    return jsonResponse({ data: jobs });
   } catch (error) {
-    console.error("Error fetching cleaner jobs:", error);
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+    if (error instanceof AppError) throw error;
+    return errorResponse(error, "Error fetching available jobs");
   }
 }

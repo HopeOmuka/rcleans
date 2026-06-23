@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+import { jsonResponse, errorResponse, AppError } from "@/lib/api-error";
 
 export async function POST(request: Request) {
   try {
@@ -6,32 +7,26 @@ export async function POST(request: Request) {
     const { name, email, clerkId } = await request.json();
 
     if (!name || !email || !clerkId) {
-      return Response.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
+      throw new AppError(400, "Missing required fields", "VALIDATION_ERROR");
+    }
+
+    if (typeof name !== "string" || name.trim().length === 0) {
+      throw new AppError(400, "Invalid name", "VALIDATION_ERROR");
+    }
+
+    if (typeof email !== "string" || !email.includes("@")) {
+      throw new AppError(400, "Invalid email address", "VALIDATION_ERROR");
     }
 
     const response = await sql`
-      INSERT INTO users (
-        id,
-        name,
-        email,
-        clerk_id
-      )
-      VALUES (
-        ${clerkId},
-        ${name},
-        ${email},
-        ${clerkId}
-      )
-      RETURNING id, name, email, clerk_id;`;
+      INSERT INTO users (id, name, email, clerk_id)
+      VALUES (${clerkId}, ${name.trim()}, ${email.trim()}, ${clerkId})
+      RETURNING id, name, email, clerk_id;
+    `;
 
-    return new Response(JSON.stringify({ data: response[0] }), {
-      status: 201,
-    });
+    return jsonResponse({ data: response[0] }, 201);
   } catch (error) {
-    console.error("Error creating user:", error);
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+    if (error instanceof AppError) throw error;
+    return errorResponse(error, "Error creating user");
   }
 }

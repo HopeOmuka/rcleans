@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+import { jsonResponse, errorResponse, AppError } from "@/lib/api-error";
 
 export async function POST(request: Request) {
   try {
@@ -6,63 +7,53 @@ export async function POST(request: Request) {
     const { userId, cleanerId, serviceId, type, title, message, data } = body;
 
     if (!type || !title || !message) {
-      return Response.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
+      throw new AppError(400, "Missing required fields", "VALIDATION_ERROR");
     }
 
     if (!userId && !cleanerId) {
-      return Response.json(
-        { error: "Either userId or cleanerId is required" },
-        { status: 400 },
-      );
+      throw new AppError(400, "Either userId or cleanerId is required", "VALIDATION_ERROR");
     }
 
     const sql = neon(`${process.env.DATABASE_URL}`);
 
     const response = await sql`
       INSERT INTO notifications (user_id, cleaner_id, service_id, type, title, message, data)
-      VALUES (${userId || null}, ${cleanerId || null}, ${serviceId || null}, ${type}, ${title}, ${message}, ${data || null})
+      VALUES (${userId || null}, ${cleanerId || null}, ${serviceId || null},
+        ${type}, ${title}, ${message}, ${data || null})
       RETURNING *;
     `;
 
-    // In a real app, you'd also send push notifications here
-    // For now, we'll just store in database
-
-    return Response.json({ data: response[0] });
+    return jsonResponse({ data: response[0] }, 201);
   } catch (error) {
-    console.error("Error creating notification:", error);
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+    if (error instanceof AppError) throw error;
+    return errorResponse(error, "Error creating notification");
   }
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("userId");
-  const cleanerId = searchParams.get("cleanerId");
-  const limit = parseInt(searchParams.get("limit") || "20");
-
-  if (!userId && !cleanerId) {
-    return Response.json(
-      { error: "Either userId or cleanerId is required" },
-      { status: 400 },
-    );
-  }
-
   try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+    const cleanerId = searchParams.get("cleanerId");
+    const rawLimit = parseInt(searchParams.get("limit") || "20", 10);
+    const limit = isNaN(rawLimit) ? 20 : Math.min(Math.max(rawLimit, 1), 100);
+
+    if (!userId && !cleanerId) {
+      throw new AppError(400, "Either userId or cleanerId is required", "VALIDATION_ERROR");
+    }
+
     const sql = neon(`${process.env.DATABASE_URL}`);
 
     const response = await sql`
       SELECT * FROM notifications
-      WHERE (user_id = ${userId} OR cleaner_id = ${cleanerId})
+      WHERE ${userId ? sql`user_id = ${userId}` : sql`cleaner_id = ${cleanerId}`}
       ORDER BY created_at DESC
       LIMIT ${limit};
     `;
 
-    return Response.json({ data: response });
+    return jsonResponse({ data: response });
   } catch (error) {
-    console.error("Error fetching notifications:", error);
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+    if (error instanceof AppError) throw error;
+    return errorResponse(error, "Error fetching notifications");
   }
 }

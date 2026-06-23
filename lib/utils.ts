@@ -1,13 +1,11 @@
 import { Service } from "@/types/type";
 
 export const sortServices = (services: Service[]): Service[] => {
-  const result = services.sort((a, b) => {
-    const dateA = new Date(`${a.created_at}T${a.service_time}`);
-    const dateB = new Date(`${b.created_at}T${b.service_time}`);
-    return dateB.getTime() - dateA.getTime();
+  return [...services].sort((a, b) => {
+    return (
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
   });
-
-  return result.reverse();
 };
 
 export function formatTime(minutes: number): string {

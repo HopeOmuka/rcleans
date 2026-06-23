@@ -1,7 +1,7 @@
 import { useUser, useAuth } from "@clerk/clerk-expo";
 import * as Location from "expo-location";
 import { router } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Text,
   View,
@@ -10,6 +10,7 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -18,10 +19,15 @@ import GoogleTextInput from "@/components/MapboxTextInput";
 import Map from "@/components/Map";
 import PromoCodeInput from "@/components/PromoCodeInput";
 import ServiceCard from "@/components/ServiceCard";
+import SkeletonLoader from "@/components/SkeletonLoader";
 import { reverseGeocodeWithMapbox } from "@/lib/map";
 import { icons, images } from "@/constants";
 import { useFetch } from "@/lib/fetch";
-import { useLocationStore, useServiceTypeStore } from "@/store";
+import {
+  useCleanerStore,
+  useLocationStore,
+  useServiceTypeStore,
+} from "@/store";
 import { Service, ServiceType } from "@/types/type";
 
 const Home = () => {
@@ -35,40 +41,58 @@ const Home = () => {
     setServiceTypes,
     setSelectedServiceType,
   } = useServiceTypeStore();
+  const cleanerStore = useCleanerStore();
 
-  const DEFAULT_LOCATION = {
-    latitude: -1.2921, // Nairobi latitude
-    longitude: 36.8219, // Nairobi longitude
-    address: "Nairobi, Kenya",
-  };
+  const DEFAULT_LOCATION = useMemo(
+    () => ({
+      latitude: -1.2921,
+      longitude: 36.8219,
+      address: "Nairobi, Kenya",
+    }),
+    [],
+  );
 
   const handleSignOut = () => {
-    signOut();
-    router.replace("/(auth)/sign-in");
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: () => {
+          cleanerStore.setCleaners([]);
+          cleanerStore.clearSelectedCleaner();
+          setSelectedServiceType(null);
+          signOut();
+          router.replace("/(auth)/sign-in");
+        },
+      },
+    ]);
   };
 
   const handleServiceTypeSelect = (serviceType: ServiceType) => {
     setSelectedServiceType(serviceType);
-    setSelectedAddons([]); // Reset addons when service type changes
-    setAppliedPromo(null); // Reset promo when service type changes
+    setSelectedAddons([]);
+    setAppliedPromo(null);
   };
 
   const [isScheduled, setIsScheduled] = useState(false);
-  const [scheduledDate, setScheduledDate] = useState(new Date());
+  const [scheduledDate] = useState(new Date());
   const [selectedAddons, setSelectedAddons] = useState<any[]>([]);
   const [showAddons, setShowAddons] = useState(false);
   const [appliedPromo, setAppliedPromo] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const {
     data: recentServices,
     loading,
-    error,
+    refetch: refetchServices,
   } = useFetch<Service[]>(`/(api)/service/${user?.id}`);
 
   const {
     data: fetchedServiceTypes,
     loading: serviceTypesLoading,
     error: serviceTypesError,
+    refetch: refetchServiceTypes,
   } = useFetch<ServiceType[]>(`/(api)/service-type`);
 
   useEffect(() => {
@@ -88,13 +112,12 @@ const Home = () => {
             "Please enable location services to find cleaners near you and get accurate service locations.",
             [{ text: "OK", style: "default" }],
           );
-          setUserLocation(DEFAULT_LOCATION); // fallback
+          setUserLocation(DEFAULT_LOCATION);
           return;
         }
 
         const location = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
-          timeout: 15000, // 15 seconds timeout
         });
 
         const address = await reverseGeocodeWithMapbox(
@@ -110,7 +133,6 @@ const Home = () => {
       } catch (err) {
         console.error("Location error:", err);
 
-        // Provide more specific error handling
         if (err instanceof Error) {
           if (err.message.includes("unavailable")) {
             console.log(
@@ -121,7 +143,7 @@ const Home = () => {
           }
         }
 
-        setUserLocation(DEFAULT_LOCATION); // fallback
+        setUserLocation(DEFAULT_LOCATION);
       }
     })();
   }, [DEFAULT_LOCATION, setUserLocation]);
@@ -136,7 +158,13 @@ const Home = () => {
       return;
     }
     setServiceLocation(location);
-    router.push("/(root)/find-service");
+    router.push({
+      pathname: "/(root)/find-service",
+      params: {
+        isScheduled: isScheduled.toString(),
+        scheduledDate: scheduledDate.toISOString(),
+      },
+    });
   };
 
   const handleAddonToggle = (addon: any) => {
@@ -155,6 +183,12 @@ const Home = () => {
     setAppliedPromo(null);
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refetchServices(), refetchServiceTypes()]);
+    setRefreshing(false);
+  };
+
   const totalAddonPrice = selectedAddons.reduce(
     (sum, addon) => sum + addon.price,
     0,
@@ -169,16 +203,23 @@ const Home = () => {
   const finalPrice = subtotal - discountAmount;
 
   return (
-    <SafeAreaView className="bg-general-500">
+    <SafeAreaView className="bg-general-50">
       <FlatList
         data={recentServices?.slice(0, 5)}
         renderItem={({ item }) => <ServiceCard service={item} />}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item.id}
         className="px-5"
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
           paddingBottom: 100,
         }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#4ADE80"
+          />
+        }
         ListEmptyComponent={() => (
           <View className="flex flex-col items-center justify-center">
             {!loading ? (
@@ -192,7 +233,7 @@ const Home = () => {
                 <Text className="text-sm">No recent services found</Text>
               </>
             ) : (
-              <ActivityIndicator size="small" color="#000" />
+              <ActivityIndicator size="small" color="black" />
             )}
           </View>
         )}
@@ -200,10 +241,12 @@ const Home = () => {
           <>
             <View className="flex flex-row items-center justify-between my-5">
               <Text className="text-2xl font-JakartaExtraBold">
-                Welcome {user?.firstName}👋
+                Welcome {user?.firstName}
               </Text>
               <View className="flex-row items-center">
                 <TouchableOpacity
+                  accessibilityLabel="Emergency SOS"
+                  accessibilityRole="button"
                   onPress={() =>
                     Alert.alert("Emergency", "Emergency contact: +1-800-CLEAN")
                   }
@@ -214,6 +257,8 @@ const Home = () => {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
+                  accessibilityLabel="Sign out"
+                  accessibilityRole="button"
                   onPress={handleSignOut}
                   className="justify-center items-center w-10 h-10 rounded-full bg-white"
                 >
@@ -232,12 +277,23 @@ const Home = () => {
                 </Text>
               </View>
             ) : serviceTypesLoading ? (
-              <ActivityIndicator size="small" color="#000" className="mb-5" />
+              <View className="flex-row mb-5 gap-3">
+                {[1, 2, 3].map((i) => (
+                  <SkeletonLoader
+                    key={i}
+                    width={112}
+                    height={80}
+                    borderRadius={8}
+                  />
+                ))}
+              </View>
             ) : (
               <FlatList
                 data={serviceTypes}
                 renderItem={({ item }) => (
                   <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={`${item.name} service, from ${item.base_price} dollars`}
                     onPress={() => handleServiceTypeSelect(item)}
                     className={`mr-3 p-4 rounded-lg border ${
                       selectedServiceType?.id === item.id
@@ -376,7 +432,6 @@ const Home = () => {
                 </Text>
                 <TouchableOpacity
                   onPress={() => {
-                    // Simple date picker - in real app, use a proper date picker
                     Alert.alert("Schedule", "Date picker would go here");
                   }}
                   className="border border-gray-300 rounded-lg p-3"

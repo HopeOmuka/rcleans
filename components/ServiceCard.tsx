@@ -1,7 +1,14 @@
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import { icons } from "@/constants";
-import { formatDate, formatTime } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { Service } from "@/types/type";
 
 const ServiceCard = ({
@@ -11,16 +18,39 @@ const ServiceCard = ({
   service: Service;
   onRatePress?: (service: Service) => void;
 }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
   return (
-    <View className="flex flex-row items-center justify-center bg-white rounded-lg shadow-sm shadow-neutral-300 mb-3">
+    <TouchableOpacity
+      activeOpacity={0.7}
+      className="flex flex-row items-center justify-center bg-white rounded-lg shadow-sm shadow-secondary-200 mb-3"
+    >
       <View className="flex flex-col items-start justify-center p-3">
         <View className="flex flex-row items-center justify-between">
-          <Image
-            source={{
-              uri: `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${service.location_lng},${service.location_lat},14,0/600x400?access_token=${process.env.EXPO_PUBLIC_MAPBOX_API_KEY}`,
-            }}
-            className="w-[80px] h-[90px] rounded-lg"
-          />
+          <View className="w-[80px] h-[90px] rounded-lg bg-general-100 items-center justify-center overflow-hidden">
+            {!imageLoaded && !imageError && (
+              <ActivityIndicator size="small" color="#9CA3AF" />
+            )}
+            {imageError ? (
+              <View className="items-center justify-center">
+                <Image
+                  source={icons.map}
+                  className="w-6 h-6 opacity-40"
+                  tintColor="#9CA3AF"
+                />
+              </View>
+            ) : (
+              <Image
+                source={{
+                  uri: `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${service.location_lng},${service.location_lat},14,0/600x400?access_token=${process.env.EXPO_PUBLIC_MAPBOX_API_KEY}`,
+                }}
+                className="w-[80px] h-[90px] rounded-lg"
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageError(true)}
+              />
+            )}
+          </View>
 
           <View className="flex flex-col mx-5 gap-y-5 flex-1">
             <View className="flex flex-row items-center gap-x-2">
@@ -39,9 +69,9 @@ const ServiceCard = ({
           </View>
         </View>
 
-        <View className="flex flex-col w-full mt-5 bg-general-500 rounded-lg p-3 items-start justify-center">
+        <View className="flex flex-col w-full mt-5 bg-general-50 rounded-lg p-3 items-start justify-center">
           <View className="flex flex-row items-center w-full justify-between mb-5">
-            <Text className="text-md font-JakartaMedium text-gray-500">
+            <Text className="text-md font-JakartaMedium text-general-500">
               Date & Time
             </Text>
             <Text className="text-md font-JakartaBold" numberOfLines={1}>
@@ -50,16 +80,16 @@ const ServiceCard = ({
           </View>
 
           <View className="flex flex-row items-center w-full justify-between mb-5">
-            <Text className="text-md font-JakartaMedium text-gray-500">
+            <Text className="text-md font-JakartaMedium text-general-500">
               Cleaner
             </Text>
             <Text className="text-md font-JakartaBold">
-              {service.cleaner.first_name} {service.cleaner.last_name}
+              {service.cleaner?.first_name} {service.cleaner?.last_name}
             </Text>
           </View>
 
           <View className="flex flex-row items-center w-full justify-between mb-5">
-            <Text className="text-md font-JakartaMedium text-gray-500">
+            <Text className="text-md font-JakartaMedium text-general-500">
               Status
             </Text>
             <Text
@@ -78,7 +108,7 @@ const ServiceCard = ({
           </View>
 
           <View className="flex flex-row items-center w-full justify-between">
-            <Text className="text-md font-JakartaMedium text-gray-500">
+            <Text className="text-md font-JakartaMedium text-general-500">
               Payment Status
             </Text>
             <Text
@@ -103,7 +133,7 @@ const ServiceCard = ({
           )}
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

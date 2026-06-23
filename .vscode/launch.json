@@ -1,0 +1,50 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "expo",
+      "request": "attach",
+      "name": "Debug Expo app",
+      "projectRoot": "${workspaceFolder}",
+      "bundlerPort": "8081",
+      "bundlerHost": "127.0.0.1"
+    },
+    {
+      "name": "Run Windows - Experimental",
+      "request": "launch",
+      "type": "reactnative",
+      "cwd": "${workspaceFolder}",
+      "enableDebug": false,
+      "platform": "windows"
+    },
+    {
+      "command": "npx expo start -c",
+      "name": "Run App",
+      "request": "launch",
+      "type": "node-terminal"
+    },
+    {
+      "command": "npm start",
+      "name": "Run App npm",
+      "request": "launch",
+      "type": "node-terminal"
+    },
+    {
+      "type": "expo",
+      "request": "attach",
+      "name": "Inspect Expo app",
+      "projectRoot": {
+        "$mid": 1,
+        "fsPath": "d:\\Projects-Code\\rcleans",
+        "_sep": 1,
+        "external": "file:///d%3A/Projects-Code/rcleans",
+        "path": "/d:/Projects-Code/rcleans",
+        "scheme": "file"
+      },
+      "bundlerHost": "127.0.0.1"
+    }
+  ]
+}

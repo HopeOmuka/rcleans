@@ -17,6 +17,24 @@ const Layout = () => {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="rate-service"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="availability"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="service-settings"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 };

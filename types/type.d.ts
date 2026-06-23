@@ -33,6 +33,7 @@ declare interface MarkerData {
   first_name: string;
   last_name: string;
   specialties: string[];
+  years_experience?: number;
   time?: number; // estimated arrival time in minutes
   price?: string;
   is_available: boolean;
@@ -51,7 +52,7 @@ declare interface MapProps {
 declare interface Service {
   id: string;
   user_id: string;
-  cleaner_id?: number;
+  cleaner_id?: string;
   service_type_id: string;
   location_address: string;
   location_lat: number;
@@ -95,6 +96,7 @@ declare interface ButtonProps extends TouchableOpacityProps {
   IconLeft?: React.ComponentType<any>;
   IconRight?: React.ComponentType<any>;
   className?: string;
+  loading?: boolean;
 }
 
 declare interface GoogleInputProps {
@@ -102,6 +104,7 @@ declare interface GoogleInputProps {
   initialLocation?: string;
   containerStyle?: string;
   textInputBackgroundColor?: string;
+  placeholder?: string;
   handlePress: ({
     latitude,
     longitude,
@@ -128,9 +131,10 @@ declare interface PaymentProps {
   fullName: string;
   email: string;
   amount: string;
-  cleanerId: number;
-  serviceTypeId: string;
+  cleanerId?: string;
+  serviceTypeId?: string;
   estimatedDuration: number;
+  stripe?: any;
 }
 
 declare interface LocationStore {
@@ -152,81 +156,10 @@ declare interface LocationStore {
   }) => void;
 }
 
-declare interface ButtonProps extends TouchableOpacityProps {
-  title: string;
-  bgVariant?: "primary" | "secondary" | "danger" | "outline" | "success";
-  textVariant?: "primary" | "default" | "secondary" | "danger" | "success";
-  IconLeft?: React.ComponentType<any>;
-  IconRight?: React.ComponentType<any>;
-  className?: string;
-}
-
-declare interface GoogleInputProps {
-  icon?: string;
-  initialLocation?: string;
-  containerStyle?: string;
-  textInputBackgroundColor?: string;
-  handlePress: ({
-    latitude,
-    longitude,
-    address,
-  }: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  }) => void;
-}
-
-declare interface InputFieldProps extends TextInputProps {
-  label: string;
-  icon?: any;
-  secureTextEntry?: boolean;
-  labelStyle?: string;
-  containerStyle?: string;
-  inputStyle?: string;
-  iconStyle?: string;
-  className?: string;
-}
-
-declare interface PaymentProps {
-  fullName: string;
-  email: string;
-  amount: string;
-  cleanerId: number;
-  serviceTime: number;
-}
-
-declare interface LocationStore {
-  userLatitude: number | null;
-  userLongitude: number | null;
-  userAddress: string | null;
-  serviceLatitude: number | null;
-  serviceLongitude: number | null;
-  serviceAddress: string | null;
-  setUserLocation: ({
-    latitude,
-    longitude,
-    address,
-  }: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  }) => void;
-  setServiceLocation: ({
-    latitude,
-    longitude,
-    address,
-  }: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  }) => void;
-}
-
 declare interface CleanerStore {
   cleaners: MarkerData[];
   selectedCleaner: number | null;
-  setSelectedCleaner: (cleanerId: number) => void;
+  setSelectedCleaner: (cleanerId: number | null) => void;
   setCleaners: (cleaners: MarkerData[]) => void;
   clearSelectedCleaner: () => void;
 }
@@ -242,4 +175,5 @@ declare interface CleanerCardProps {
   item: MarkerData;
   selected: number;
   setSelected: () => void;
+  accessibilityLabel?: string;
 }

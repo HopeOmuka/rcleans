@@ -86,12 +86,16 @@ const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
             onChangeText={setPromoCode}
             autoCapitalize="characters"
             autoCorrect={false}
+            accessibilityLabel="Promo code input"
           />
           <CustomButton
             title={loading ? "Applying..." : "Apply"}
             onPress={applyPromoCode}
             className="rounded-l-none rounded-r-lg px-4"
             disabled={loading}
+            accessibilityLabel={
+              loading ? "Applying promo code" : "Apply promo code"
+            }
           />
         </View>
       ) : (

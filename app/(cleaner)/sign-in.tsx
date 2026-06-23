@@ -1,11 +1,12 @@
 import { Link, router } from "expo-router";
 import { useCallback, useState } from "react";
-import { Alert, Image, ScrollView, Text, View } from "react-native";
+import { Alert, ScrollView, Text, View } from "react-native";
 import * as SecureStore from "expo-secure-store";
 
 import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
-import { icons, images } from "@/constants";
+import { icons } from "@/constants";
+import { fetchAPI } from "@/lib/fetch";
 
 const SignIn = () => {
   const [form, setForm] = useState({
@@ -13,25 +14,41 @@ const SignIn = () => {
     phone: "",
   });
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({ email: "", phone: "" });
+
+  const validate = (): boolean => {
+    const newErrors = { email: "", phone: "" };
+    let valid = true;
+
+    if (!form.email.trim()) {
+      newErrors.email = "Email is required";
+      valid = false;
+    }
+
+    if (!form.phone.trim()) {
+      newErrors.phone = "Phone number is required";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
 
   const onSignInPress = useCallback(async () => {
-    if (!form.email || !form.phone) {
-      Alert.alert("Error", "Please enter email and phone number");
+    if (!validate()) {
       return;
     }
 
     setLoading(true);
     try {
-      const response = await fetch("/(api)/cleaner/login", {
+      const result = await fetchAPI("/(api)/cleaner/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: form.email,
-          phone: form.phone,
+          email: form.email.trim(),
+          phone: form.phone.trim(),
         }),
       });
-
-      const result = await response.json();
 
       if (result.data && result.data.cleaner) {
         await SecureStore.setItemAsync(
@@ -72,10 +89,17 @@ const SignIn = () => {
             icon={icons.email}
             textContentType="emailAddress"
             value={form.email}
-            onChangeText={(value) => setForm({ ...form, email: value })}
+            onChangeText={(value) => {
+              setForm({ ...form, email: value });
+              if (errors.email) setErrors({ ...errors, email: "" });
+            }}
             containerStyle="bg-dark-200"
             inputStyle="text-white"
+            accessibilityLabel="Email address"
           />
+          {errors.email ? (
+            <Text className="text-red-400 text-sm mt-1">{errors.email}</Text>
+          ) : null}
 
           <InputField
             label="Phone"
@@ -83,16 +107,24 @@ const SignIn = () => {
             icon={icons.phone || icons.person}
             textContentType="telephoneNumber"
             value={form.phone}
-            onChangeText={(value) => setForm({ ...form, phone: value })}
+            onChangeText={(value) => {
+              setForm({ ...form, phone: value });
+              if (errors.phone) setErrors({ ...errors, phone: "" });
+            }}
             containerStyle="bg-dark-200"
             inputStyle="text-white"
+            accessibilityLabel="Phone number"
           />
+          {errors.phone ? (
+            <Text className="text-red-400 text-sm mt-1">{errors.phone}</Text>
+          ) : null}
 
           <CustomButton
             title={loading ? "Signing in..." : "Sign In"}
             onPress={onSignInPress}
             disabled={loading}
             className="mt-6"
+            accessibilityLabel="Sign in"
           />
 
           <Link

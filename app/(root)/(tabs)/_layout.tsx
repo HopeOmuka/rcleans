@@ -31,11 +31,11 @@ export default function Layout() {
     <Tabs
       initialRouteName="home"
       screenOptions={{
-        tabBarActiveTintColor: "white",
-        tabBarInactiveTintColor: "white",
+        tabBarActiveTintColor: "#4ADE80",
+        tabBarInactiveTintColor: "#9CA3AF",
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: "#333333",
+          backgroundColor: "#1F1F1F",
           borderRadius: 50,
           paddingBottom: 0, // ios only
           overflow: "hidden",
@@ -58,6 +58,7 @@ export default function Layout() {
           tabBarIcon: ({ focused }) => (
             <TabIcon source={icons.home} focused={focused} />
           ),
+          tabBarAccessibilityLabel: "Home",
         }}
       />
       <Tabs.Screen
@@ -68,6 +69,7 @@ export default function Layout() {
           tabBarIcon: ({ focused }) => (
             <TabIcon source={icons.list} focused={focused} />
           ),
+          tabBarAccessibilityLabel: "Services",
         }}
       />
       <Tabs.Screen
@@ -78,6 +80,7 @@ export default function Layout() {
           tabBarIcon: ({ focused }) => (
             <TabIcon source={icons.chat} focused={focused} />
           ),
+          tabBarAccessibilityLabel: "Chat",
         }}
       />
       <Tabs.Screen
@@ -88,6 +91,7 @@ export default function Layout() {
           tabBarIcon: ({ focused }) => (
             <TabIcon source={icons.profile} focused={focused} />
           ),
+          tabBarAccessibilityLabel: "Profile",
         }}
       />
     </Tabs>

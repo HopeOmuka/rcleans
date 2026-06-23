@@ -1,17 +1,11 @@
 import * as Linking from "expo-linking";
 import * as SecureStore from "expo-secure-store";
-
 import { fetchAPI } from "@/lib/fetch";
 
 export const tokenCache = {
   async getToken(key: string) {
     try {
       const item = await SecureStore.getItemAsync(key);
-      if (item) {
-        console.log(`${key} was used 🔐 \n`);
-      } else {
-        console.log("No values stored under key: " + key);
-      }
       return item;
     } catch (error) {
       console.error("SecureStore get item error: ", error);
@@ -22,13 +16,37 @@ export const tokenCache = {
   async saveToken(key: string, value: string) {
     try {
       return SecureStore.setItemAsync(key, value);
-    } catch (err) {
+    } catch {
       return;
     }
   },
 };
 
-export const googleOAuth = async (startOAuthFlow: any) => {
+interface OAuthFlowResult {
+  createdSessionId?: string;
+  setActive?: (session: { session: string }) => Promise<void>;
+  signUp?: {
+    createdUserId?: string;
+    firstName?: string;
+    lastName?: string;
+    emailAddress?: string;
+  };
+}
+
+interface OAuthError {
+  code?: string;
+  errors?: Array<{ longMessage?: string }>;
+}
+
+interface OAuthResult {
+  success: boolean;
+  code?: string;
+  message?: string;
+}
+
+export const googleOAuth = async (
+  startOAuthFlow: (params: { redirectUrl: string }) => Promise<OAuthFlowResult>,
+): Promise<OAuthResult> => {
   try {
     const { createdSessionId, setActive, signUp } = await startOAuthFlow({
       redirectUrl: Linking.createURL("/(root)/(tabs)/home"),
@@ -38,11 +56,11 @@ export const googleOAuth = async (startOAuthFlow: any) => {
       if (setActive) {
         await setActive({ session: createdSessionId });
 
-        if (signUp.createdUserId) {
+        if (signUp?.createdUserId) {
           await fetchAPI("/(api)/user", {
             method: "POST",
             body: JSON.stringify({
-              name: `${signUp.firstName} ${signUp.lastName}`,
+              name: `${signUp.firstName || ""} ${signUp.lastName || ""}`.trim(),
               email: signUp.emailAddress,
               clerkId: signUp.createdUserId,
             }),
@@ -61,12 +79,13 @@ export const googleOAuth = async (startOAuthFlow: any) => {
       success: false,
       message: "An error occurred while signing in with Google",
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(err);
+    const oauthError = err as OAuthError;
     return {
       success: false,
-      code: err.code,
-      message: err?.errors[0]?.longMessage,
+      code: oauthError.code,
+      message: oauthError.errors?.[0]?.longMessage,
     };
   }
 };

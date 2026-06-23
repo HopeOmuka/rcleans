@@ -1,9 +1,11 @@
 import { router } from "expo-router";
 import { useEffect } from "react";
-import { Text, View, FlatList, ActivityIndicator } from "react-native";
+import { Text, View, FlatList } from "react-native";
 
 import CleanerCard from "@/components/CleanerCard";
 import CustomButton from "@/components/CustomButton";
+import EmptyState from "@/components/EmptyState";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import Map from "@/components/Map";
 import ServiceLayout from "@/components/ServiceLayout";
 import {
@@ -18,13 +20,12 @@ const FindService = () => {
   const { selectedServiceType } = useServiceTypeStore();
 
   useEffect(() => {
-    // Clear selected cleaner when entering this screen
     setSelectedCleaner(null);
   }, []);
 
   const handleConfirmService = () => {
     if (selectedCleaner && selectedServiceType) {
-      router.push(`/(root)/confirm-service`);
+      router.push("/(root)/confirm-service");
     }
   };
 
@@ -48,15 +49,16 @@ const FindService = () => {
           Available Cleaners
         </Text>
         {cleaners.length === 0 ? (
-          <ActivityIndicator size="small" color="#000" />
+          <LoadingSpinner text="Finding cleaners near you..." />
         ) : (
           <FlatList
             data={cleaners}
             renderItem={({ item }) => (
               <CleanerCard
                 item={item}
-                selected={selectedCleaner!}
+                selected={selectedCleaner ?? 0}
                 setSelected={() => setSelectedCleaner(item.id)}
+                accessibilityLabel={`Select ${item.title}, rated ${item.rating} stars`}
               />
             )}
             keyExtractor={(item) => item.id.toString()}
@@ -72,6 +74,8 @@ const FindService = () => {
         onPress={handleConfirmService}
         disabled={!selectedCleaner}
         className="mt-5"
+        accessibilityLabel="Confirm selected cleaner and proceed to service confirmation"
+        accessibilityRole="button"
       />
     </ServiceLayout>
   );

@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+import { jsonResponse, errorResponse, AppError } from "@/lib/api-error";
 
 export async function POST(request: Request) {
   try {
@@ -6,15 +7,16 @@ export async function POST(request: Request) {
     const { code, serviceTypeId, orderAmount } = body;
 
     if (!code || !orderAmount) {
-      return Response.json(
-        { error: "Promo code and order amount required" },
-        { status: 400 },
-      );
+      throw new AppError(400, "Promo code and order amount required", "VALIDATION_ERROR");
+    }
+
+    const parsedAmount = Number(orderAmount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      throw new AppError(400, "Invalid order amount", "VALIDATION_ERROR");
     }
 
     const sql = neon(`${process.env.DATABASE_URL}`);
 
-    // Find the promo code
     const promoCodes = await sql`
       SELECT * FROM promo_codes
       WHERE code = ${code}
@@ -25,70 +27,52 @@ export async function POST(request: Request) {
     `;
 
     if (promoCodes.length === 0) {
-      return Response.json(
-        { error: "Invalid or expired promo code" },
-        { status: 400 },
-      );
+      throw new AppError(400, "Invalid or expired promo code", "PROMO_INVALID");
     }
 
     const promo = promoCodes[0];
 
-    // Check minimum order amount
-    if (orderAmount < promo.minimum_order_amount) {
-      return Response.json(
-        {
-          error: `Minimum order amount of $${promo.minimum_order_amount} required`,
-        },
-        { status: 400 },
+    if (parsedAmount < promo.minimum_order_amount) {
+      throw new AppError(
+        400,
+        `Minimum order amount of $${promo.minimum_order_amount} required`,
+        "PROMO_MINIMUM",
       );
     }
 
-    // Check if applicable to service type
-    if (
-      promo.applicable_service_types &&
-      promo.applicable_service_types.length > 0
-    ) {
+    if (promo.applicable_service_types?.length > 0) {
       if (!promo.applicable_service_types.includes(serviceTypeId)) {
-        return Response.json(
-          {
-            error: "Promo code not applicable to this service type",
-          },
-          { status: 400 },
-        );
+        throw new AppError(400, "Promo code not applicable to this service type", "PROMO_NOT_APPLICABLE");
       }
     }
 
-    // Calculate discount
     let discountAmount = 0;
     if (promo.discount_type === "percentage") {
-      discountAmount = (orderAmount * promo.discount_value) / 100;
+      discountAmount = (parsedAmount * promo.discount_value) / 100;
     } else if (promo.discount_type === "fixed_amount") {
       discountAmount = promo.discount_value;
     }
 
-    // Apply maximum discount limit if set
-    if (
-      promo.maximum_discount_amount &&
-      discountAmount > promo.maximum_discount_amount
-    ) {
+    if (promo.maximum_discount_amount && discountAmount > promo.maximum_discount_amount) {
       discountAmount = promo.maximum_discount_amount;
     }
 
-    // Ensure discount doesn't exceed order amount
-    discountAmount = Math.min(discountAmount, orderAmount);
+    discountAmount = Math.min(discountAmount, parsedAmount);
 
-    const finalAmount = orderAmount - discountAmount;
+    await sql`
+      UPDATE promo_codes SET usage_count = usage_count + 1 WHERE code = ${code}
+    `;
 
-    return Response.json({
+    return jsonResponse({
       data: {
         promoCode: promo,
         discountAmount,
-        finalAmount,
-        originalAmount: orderAmount,
+        finalAmount: parsedAmount - discountAmount,
+        originalAmount: parsedAmount,
       },
     });
   } catch (error) {
-    console.error("Error validating promo code:", error);
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+    if (error instanceof AppError) throw error;
+    return errorResponse(error, "Error validating promo code");
   }
 }

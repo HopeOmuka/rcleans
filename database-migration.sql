@@ -92,7 +92,11 @@ CREATE TABLE IF NOT EXISTS services (
     payment_status TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'refunded', 'failed')),
     payment_method TEXT, -- 'card', 'wallet', etc.
     stripe_payment_intent_id TEXT,
+    discount_amount DECIMAL(10,2) DEFAULT 0 CHECK (discount_amount >= 0),
+    promo_code_id TEXT,
     special_instructions TEXT,
+    rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+    review TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     matched_at TIMESTAMP WITH TIME ZONE,
     started_at TIMESTAMP WITH TIME ZONE,
@@ -177,7 +181,26 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 
 -- =========================================
--- 9. PROMO CODES TABLE
+-- 9. MESSAGES TABLE
+-- =========================================
+-- Chat messages between users and cleaners for a service
+CREATE TABLE IF NOT EXISTS messages (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    service_id TEXT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+    sender_id TEXT NOT NULL,
+    sender_type TEXT NOT NULL CHECK (sender_type IN ('user', 'cleaner')),
+    recipient_id TEXT,
+    content TEXT NOT NULL CHECK (char_length(content) > 0 AND char_length(content) <= 5000),
+    is_read BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_messages_service ON messages(service_id);
+CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id, sender_type);
+CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(created_at DESC);
+
+-- =========================================
+-- 10. PROMO CODES TABLE
 -- =========================================
 -- Discount codes and promotions
 CREATE TABLE IF NOT EXISTS promo_codes (

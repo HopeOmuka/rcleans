@@ -8,11 +8,13 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 
 import { icons } from "@/constants";
+import { fetchAPI } from "@/lib/fetch";
 import CustomButton from "@/components/CustomButton";
 
 interface CleanerJob {
@@ -31,7 +33,9 @@ const Dashboard = () => {
   const [cleaner, setCleaner] = useState<any>(null);
   const [jobs, setJobs] = useState<CleanerJob[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [accepting, setAccepting] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadCleanerSession();
@@ -55,30 +59,37 @@ const Dashboard = () => {
 
   const fetchAvailableJobs = async (cleanerId: string) => {
     try {
-      const response = await fetch(
+      setError(null);
+      const result = await fetchAPI(
         `/(api)/cleaner/jobs?cleanerId=${cleanerId}`,
       );
-      const result = await response.json();
       if (result.data) {
         setJobs(result.data);
       }
     } catch (error) {
       console.error("Error fetching jobs:", error);
+      setError("Failed to load jobs. Please try again.");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
+
+  const onRefresh = useCallback(() => {
+    if (!cleaner) return;
+    setRefreshing(true);
+    fetchAvailableJobs(cleaner.id);
+  }, [cleaner]);
 
   const handleAcceptJob = async (jobId: string) => {
     try {
       setAccepting(jobId);
-      const response = await fetch("/(api)/cleaner/accept-job", {
+      const result = await fetchAPI("/(api)/cleaner/accept-job", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobId, cleanerId: cleaner.id }),
       });
 
-      const result = await response.json();
       if (result.data) {
         Alert.alert("Success", "Job accepted! Check your jobs tab.");
         fetchAvailableJobs(cleaner.id);
@@ -131,14 +142,21 @@ const Dashboard = () => {
   };
 
   const renderJobCard = ({ item }: { item: CleanerJob }) => (
-    <View className="bg-dark-200 rounded-xl p-4 mb-4 border border-gray-700">
+    <View
+      className="bg-dark-200 rounded-xl p-4 mb-4 border border-gray-700"
+      accessibilityLabel={`Job: ${item.service_type_name}, status: ${item.status.replaceAll("_", " ")}`}
+    >
       <View className="flex-row justify-between items-start mb-3">
         <View className="flex-1">
           <Text className="text-white font-JakartaSemiBold text-lg">
             {item.service_type_name}
           </Text>
           <View className="flex-row items-center mt-1">
-            <Image source={icons.point} className="w-4 h-4" tintColor="#666" />
+            <Image
+              source={icons.point}
+              className="w-4 h-4"
+              tintColor="#9CA3AF"
+            />
             <Text className="text-gray-400 text-sm ml-1" numberOfLines={1}>
               {item.location_address}
             </Text>
@@ -148,14 +166,18 @@ const Dashboard = () => {
           className={`px-3 py-1 rounded-full ${getStatusColor(item.status)}`}
         >
           <Text className="text-white text-xs font-JakartaMedium capitalize">
-            {item.status.replace("_", " ")}
+            {item.status.replaceAll("_", " ")}
           </Text>
         </View>
       </View>
 
       <View className="flex-row justify-between items-center mb-3">
         <View className="flex-row items-center">
-          <Image source={icons.calendar} className="w-4 h-4" tintColor="#666" />
+          <Image
+            source={icons.calendar}
+            className="w-4 h-4"
+            tintColor="#9CA3AF"
+          />
           <Text className="text-gray-400 text-sm ml-2">
             {formatDate(item.scheduled_date)}
           </Text>
@@ -164,7 +186,7 @@ const Dashboard = () => {
           <Image
             source={icons.dollar}
             className="w-4 h-4"
-            tintColor="#4ADE80"
+            tintColor="#22C55E"
           />
           <Text className="text-primary-500 font-JakartaBold ml-1">
             ${item.total_price}
@@ -173,7 +195,7 @@ const Dashboard = () => {
       </View>
 
       <View className="flex-row items-center mb-4">
-        <Image source={icons.person} className="w-4 h-4" tintColor="#666" />
+        <Image source={icons.person} className="w-4 h-4" tintColor="#9CA3AF" />
         <Text className="text-gray-400 text-sm ml-2">{item.user_name}</Text>
         <Text className="text-gray-500 text-sm ml-1">• {item.user_phone}</Text>
       </View>
@@ -184,6 +206,7 @@ const Dashboard = () => {
           onPress={() => handleAcceptJob(item.id)}
           disabled={accepting === item.id}
           bgVariant="success"
+          accessibilityLabel={`Accept job ${item.service_type_name}`}
         />
       )}
     </View>
@@ -192,7 +215,7 @@ const Dashboard = () => {
   if (!cleaner) {
     return (
       <SafeAreaView className="flex-1 bg-dark-500 items-center justify-center">
-        <ActivityIndicator size="large" color="#4ADE80" />
+        <ActivityIndicator size="large" color="#22C55E" />
       </SafeAreaView>
     );
   }
@@ -225,7 +248,7 @@ const Dashboard = () => {
             <Image
               source={icons.star}
               className="w-4 h-4"
-              tintColor="#FACC15"
+              tintColor="#FBBF24"
             />
             <Text className="text-white font-JakartaBold text-lg ml-1">
               {typeof cleaner.rating === "number"
@@ -253,12 +276,38 @@ const Dashboard = () => {
         renderItem={renderJobCard}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#22C55E"
+          />
+        }
         ListEmptyComponent={
           loading ? (
-            <ActivityIndicator className="mt-10" color="#4ADE80" />
-          ) : (
+            <ActivityIndicator className="mt-10" color="#22C55E" />
+          ) : error ? (
             <View className="items-center mt-10">
-              <Text className="text-gray-500">No jobs available right now</Text>
+              <Text className="text-red-400 text-center">{error}</Text>
+              <CustomButton
+                title="Retry"
+                onPress={() => fetchAvailableJobs(cleaner.id)}
+                className="mt-4"
+              />
+            </View>
+          ) : (
+            <View className="items-center mt-10 px-6">
+              <Image
+                source={icons.list}
+                className="w-16 h-16 mb-4"
+                tintColor="#6B7280"
+              />
+              <Text className="text-general-500 text-center font-JakartaMedium">
+                No jobs available right now
+              </Text>
+              <Text className="text-general-600 text-sm text-center mt-1">
+                New jobs will appear here when customers book services
+              </Text>
             </View>
           )
         }

@@ -1,7 +1,14 @@
 import { useSignUp } from "@clerk/clerk-expo";
 import { Link, router } from "expo-router";
 import { useState } from "react";
-import { Alert, Image, ScrollView, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { ReactNativeModal } from "react-native-modal";
 
 import CustomButton from "@/components/CustomButton";
@@ -13,6 +20,7 @@ import { fetchAPI } from "@/lib/fetch";
 const SignUp = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -27,6 +35,7 @@ const SignUp = () => {
 
   const onSignUpPress = async () => {
     if (!isLoaded) return;
+    setLoading(true);
     try {
       await signUp.create({
         emailAddress: form.email,
@@ -38,10 +47,13 @@ const SignUp = () => {
         state: "pending",
       });
     } catch (err: any) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
       console.log(JSON.stringify(err, null, 2));
-      Alert.alert("Error", err.errors[0].longMessage);
+      Alert.alert(
+        "Error",
+        err?.errors?.[0]?.longMessage || "An error occurred",
+      );
+    } finally {
+      setLoading(false);
     }
   };
   const onPressVerify = async () => {
@@ -76,7 +88,7 @@ const SignUp = () => {
       // for more info on error handling
       setVerification({
         ...verification,
-        error: err.errors[0].longMessage,
+        error: err?.errors?.[0]?.longMessage || "An error occurred",
         state: "failed",
       });
     }
@@ -116,13 +128,15 @@ const SignUp = () => {
             onChangeText={(value) => setForm({ ...form, password: value })}
           />
           <CustomButton
-            title="Sign Up"
+            title={loading ? "Signing Up..." : "Sign Up"}
             onPress={onSignUpPress}
+            disabled={loading}
             className="mt-6"
           />
+          {loading && <ActivityIndicator size="small" className="mt-2" />}
           <OAuth />
           <Link
-            href="/sign-in"
+            href="/(auth)/sign-in"
             className="text-lg text-center text-general-200 mt-10"
           >
             Already have an account?{" "}

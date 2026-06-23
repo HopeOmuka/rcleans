@@ -1,7 +1,14 @@
 import { useSignIn } from "@clerk/clerk-expo";
 import { Link, router } from "expo-router";
 import { useCallback, useState } from "react";
-import { Alert, Image, ScrollView, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 
 import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
@@ -10,6 +17,7 @@ import { icons, images } from "@/constants";
 
 const SignIn = () => {
   const { signIn, setActive, isLoaded } = useSignIn();
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     email: "",
@@ -19,6 +27,7 @@ const SignIn = () => {
   const onSignInPress = useCallback(async () => {
     if (!isLoaded) return;
 
+    setLoading(true);
     try {
       const signInAttempt = await signIn.create({
         identifier: form.email,
@@ -29,13 +38,17 @@ const SignIn = () => {
         await setActive({ session: signInAttempt.createdSessionId });
         router.replace("/(root)/(tabs)/home");
       } else {
-        // See https://clerk.com/docs/custom-flows/error-handling for more info on error handling
         console.log(JSON.stringify(signInAttempt, null, 2));
         Alert.alert("Error", "Log in failed. Please try again.");
       }
     } catch (err: any) {
       console.log(JSON.stringify(err, null, 2));
-      Alert.alert("Error", err.errors[0].longMessage);
+      Alert.alert(
+        "Error",
+        err?.errors?.[0]?.longMessage || "An error occurred",
+      );
+    } finally {
+      setLoading(false);
     }
   }, [isLoaded, signIn, form.email, form.password, setActive]);
 
@@ -70,15 +83,17 @@ const SignIn = () => {
           />
 
           <CustomButton
-            title="Sign In"
+            title={loading ? "Signing In..." : "Sign In"}
             onPress={onSignInPress}
+            disabled={loading}
             className="mt-6"
           />
+          {loading && <ActivityIndicator size="small" className="mt-2" />}
 
           <OAuth />
 
           <Link
-            href="/sign-up"
+            href="/(auth)/sign-up"
             className="text-lg text-center text-general-200 mt-10"
           >
             Don&apos;t have an account?{" "}

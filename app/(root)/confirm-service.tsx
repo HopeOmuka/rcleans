@@ -1,7 +1,8 @@
 import { router } from "expo-router";
-import { Text, View, Image } from "react-native";
+import { View, Image, Text } from "react-native";
 
 import CustomButton from "@/components/CustomButton";
+import EmptyState from "@/components/EmptyState";
 import ServiceLayout from "@/components/ServiceLayout";
 import { icons } from "@/constants";
 import {
@@ -20,9 +21,13 @@ const ConfirmService = () => {
   if (!selectedCleanerData || !selectedServiceType) {
     return (
       <ServiceLayout title="Confirm Service">
-        <View className="flex-1 justify-center items-center">
-          <Text>No service selected</Text>
-        </View>
+        <EmptyState
+          title="No Service Selected"
+          description="Please go back and select a service type and cleaner to continue."
+          icon={icons.pin}
+          actionLabel="Go Back"
+          onAction={() => router.back()}
+        />
       </ServiceLayout>
     );
   }
@@ -59,6 +64,7 @@ const ConfirmService = () => {
           <Image
             source={{ uri: selectedCleanerData.profile_image_url }}
             className="w-16 h-16 rounded-full mr-4"
+            accessibilityLabel={`Profile picture of ${selectedCleanerData.title}`}
           />
           <View className="flex-1">
             <Text className="text-lg font-JakartaSemiBold">
@@ -81,6 +87,14 @@ const ConfirmService = () => {
           <CustomButton
             title="Book Service"
             onPress={() => router.push("/(root)/book-service")}
+            accessibilityLabel="Confirm and proceed to book this service"
+          />
+          <CustomButton
+            title="Back"
+            onPress={() => router.back()}
+            bgVariant="outline"
+            className="mt-3"
+            accessibilityLabel="Go back to the previous screen"
           />
         </View>
       </View>

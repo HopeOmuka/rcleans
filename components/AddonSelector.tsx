@@ -38,19 +38,21 @@ const AddonSelector: React.FC<AddonSelectorProps> = ({
     <TouchableOpacity
       className="flex-row items-center p-4 bg-white rounded-lg border border-gray-200 mb-2"
       onPress={() => onAddonToggle(item)}
+      accessibilityLabel={`Toggle addon ${item.name}`}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: isAddonSelected(item) }}
     >
-      <TouchableOpacity
+      <View
         className={`w-6 h-6 border-2 rounded mr-3 items-center justify-center ${
           isAddonSelected(item)
             ? "bg-primary-500 border-primary-500"
             : "border-gray-300"
         }`}
-        onPress={() => onAddonToggle(item)}
       >
         {isAddonSelected(item) && (
           <Text className="text-white text-sm font-bold">✓</Text>
         )}
-      </TouchableOpacity>
+      </View>
       <View className="flex-1">
         <Text className="text-lg font-JakartaSemiBold">{item.name}</Text>
         <Text className="text-sm text-gray-600">{item.description}</Text>

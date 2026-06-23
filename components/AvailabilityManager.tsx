@@ -8,7 +8,6 @@ import {
   TextInput,
 } from "react-native";
 
-import CustomButton from "@/components/CustomButton";
 import { fetchAPI } from "@/lib/fetch";
 
 interface AvailabilitySlot {
@@ -21,6 +20,7 @@ interface AvailabilitySlot {
 
 interface AvailabilityManagerProps {
   cleanerId: string;
+  onDataChange?: () => void;
 }
 
 const DAYS_OF_WEEK = [
@@ -35,10 +35,10 @@ const DAYS_OF_WEEK = [
 
 const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
   cleanerId,
+  onDataChange,
 }) => {
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
   const loadAvailability = useCallback(async () => {
     try {
@@ -83,6 +83,7 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
       };
       setAvailability([...availability, newSlot]);
     }
+    onDataChange?.();
   };
 
   const updateTime = (dayIndex: number, isStartTime: boolean, time: string) => {
@@ -96,33 +97,7 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
           : slot,
       ),
     );
-  };
-
-  const saveAvailability = async () => {
-    setSaving(true);
-    try {
-      // Save each availability slot
-      for (const slot of availability) {
-        await fetchAPI("/(api)/cleaner/availability", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            cleanerId,
-            dayOfWeek: slot.day_of_week,
-            startTime: slot.start_time,
-            endTime: slot.end_time,
-            isAvailable: slot.is_available,
-          }),
-        });
-      }
-
-      Alert.alert("Success", "Availability updated successfully!");
-    } catch (error) {
-      console.error("Error saving availability:", error);
-      Alert.alert("Error", "Failed to save availability");
-    } finally {
-      setSaving(false);
-    }
+    onDataChange?.();
   };
 
   if (loading) {
@@ -191,13 +166,6 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
           </View>
         );
       })}
-
-      <CustomButton
-        title={saving ? "Saving..." : "Save Availability"}
-        onPress={saveAvailability}
-        className="mt-6"
-        disabled={saving}
-      />
     </ScrollView>
   );
 };

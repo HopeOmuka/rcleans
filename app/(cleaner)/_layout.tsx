@@ -11,7 +11,7 @@ const TabIcon = ({
   focused: boolean;
 }) => (
   <View
-    className={`flex flex-row justify-center items-center rounded-full ${focused ? "bg-primary-500" : ""}`}
+    className={`flex flex-row justify-center items-center rounded-full ${focused ? "bg-primary-500" : "bg-dark-300"}`}
   >
     <View
       className={`rounded-full w-12 h-12 items-center justify-center ${focused ? "bg-primary-600" : ""}`}
@@ -78,6 +78,12 @@ export default function Layout() {
           tabBarIcon: ({ focused }) => (
             <TabIcon source={icons.profile} focused={focused} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="sign-in"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

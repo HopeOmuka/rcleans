@@ -1,9 +1,7 @@
 import { create } from "zustand";
-
-import {
-  CleanerStore,
+import type {
   LocationStore,
-  MarkerData,
+  CleanerStore,
   ServiceTypeStore,
 } from "@/types/type";
 
@@ -14,62 +12,45 @@ export const useLocationStore = create<LocationStore>((set) => ({
   serviceLatitude: null,
   serviceLongitude: null,
   serviceAddress: null,
-  setUserLocation: ({
-    latitude,
-    longitude,
-    address,
-  }: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  }) => {
+
+  setUserLocation: ({ latitude, longitude, address }) =>
     set(() => ({
       userLatitude: latitude,
       userLongitude: longitude,
       userAddress: address,
-    }));
+    })),
 
-    // if cleaner is selected and now new location is set, clear the selected cleaner
-    const { selectedCleaner, clearSelectedCleaner } =
-      useCleanerStore.getState();
-    if (selectedCleaner) clearSelectedCleaner();
-  },
-
-  setServiceLocation: ({
-    latitude,
-    longitude,
-    address,
-  }: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  }) => {
+  setServiceLocation: ({ latitude, longitude, address }) =>
     set(() => ({
       serviceLatitude: latitude,
       serviceLongitude: longitude,
       serviceAddress: address,
-    }));
-
-    // if cleaner is selected and now new location is set, clear the selected cleaner
-    const { selectedCleaner, clearSelectedCleaner } =
-      useCleanerStore.getState();
-    if (selectedCleaner) clearSelectedCleaner();
-  },
+    })),
 }));
 
 export const useCleanerStore = create<CleanerStore>((set) => ({
-  cleaners: [] as MarkerData[],
+  cleaners: [],
   selectedCleaner: null,
-  setSelectedCleaner: (cleanerId: number) =>
-    set(() => ({ selectedCleaner: cleanerId })),
-  setCleaners: (cleaners: MarkerData[]) => set(() => ({ cleaners })),
-  clearSelectedCleaner: () => set(() => ({ selectedCleaner: null })),
+  setSelectedCleaner: (cleanerId) => set(() => ({ selectedCleaner: cleanerId })),
+  setCleaners: (cleaners) =>
+    set(() => ({
+      cleaners,
+    })),
+  clearSelectedCleaner: () =>
+    set(() => ({
+      selectedCleaner: null,
+    })),
 }));
 
 export const useServiceTypeStore = create<ServiceTypeStore>((set) => ({
   serviceTypes: [],
   selectedServiceType: null,
-  setServiceTypes: (serviceTypes) => set(() => ({ serviceTypes })),
-  setSelectedServiceType: (selectedServiceType) =>
-    set(() => ({ selectedServiceType })),
+  setServiceTypes: (serviceTypes) =>
+    set(() => ({
+      serviceTypes,
+    })),
+  setSelectedServiceType: (serviceType) =>
+    set(() => ({
+      selectedServiceType: serviceType,
+    })),
 }));

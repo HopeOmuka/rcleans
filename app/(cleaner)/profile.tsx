@@ -13,13 +13,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 
 import { icons } from "@/constants";
-import InputField from "@/components/InputField";
+import { fetchAPI } from "@/lib/fetch";
 import CustomButton from "@/components/CustomButton";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const CleanerProfile = () => {
   const [cleaner, setCleaner] = useState<any>(null);
   const [isAvailable, setIsAvailable] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadCleanerSession();
@@ -37,6 +39,7 @@ const CleanerProfile = () => {
       }
     } catch (error) {
       console.error("Error loading session:", error);
+      setError("Failed to load profile data.");
       router.replace("/(cleaner)/sign-in");
     } finally {
       setLoading(false);
@@ -44,8 +47,23 @@ const CleanerProfile = () => {
   };
 
   const handleAvailabilityToggle = async (value: boolean) => {
+    if (!value) {
+      Alert.alert("Go Offline?", "You won't receive new job requests.", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Go Offline",
+          style: "destructive",
+          onPress: () => updateAvailability(value),
+        },
+      ]);
+      return;
+    }
+    await updateAvailability(value);
+  };
+
+  const updateAvailability = async (value: boolean) => {
     try {
-      const response = await fetch("/(api)/cleaner/availability", {
+      const result = await fetchAPI("/(api)/cleaner/availability-update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -54,7 +72,6 @@ const CleanerProfile = () => {
         }),
       });
 
-      const result = await response.json();
       if (result.data) {
         setIsAvailable(value);
         const updatedCleaner = { ...cleaner, is_available: value };
@@ -92,7 +109,24 @@ const CleanerProfile = () => {
   if (loading || !cleaner) {
     return (
       <SafeAreaView className="flex-1 bg-dark-500 items-center justify-center">
-        <Text className="text-white">Loading...</Text>
+        <LoadingSpinner />
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView className="flex-1 bg-dark-500 items-center justify-center">
+        <Text className="text-red-400 text-center">{error}</Text>
+        <CustomButton
+          title="Retry"
+          onPress={() => {
+            setLoading(true);
+            setError(null);
+            loadCleanerSession();
+          }}
+          className="mt-4"
+        />
       </SafeAreaView>
     );
   }
@@ -137,7 +171,7 @@ const CleanerProfile = () => {
               <Image
                 source={icons.star}
                 className="w-4 h-4"
-                tintColor="#FACC15"
+                tintColor="#FBBF24"
               />
               <Text className="text-white font-JakartaBold ml-1">
                 {typeof cleaner.rating === "number"
@@ -169,8 +203,9 @@ const CleanerProfile = () => {
             <Switch
               value={isAvailable}
               onValueChange={handleAvailabilityToggle}
-              trackColor={{ false: "#333", true: "#4ADE80" }}
+              trackColor={{ false: "#374151", true: "#4ADE80" }}
               thumbColor="white"
+              accessibilityLabel="Toggle availability for jobs"
             />
           </View>
         </View>
@@ -212,7 +247,7 @@ const CleanerProfile = () => {
               <Image
                 source={icons.settings}
                 className="w-5 h-5"
-                tintColor="#666"
+                tintColor="#9CA3AF"
               />
               <Text className="text-white font-JakartaMedium ml-3">
                 Service Settings
@@ -221,7 +256,7 @@ const CleanerProfile = () => {
             <Image
               source={icons.arrowUp}
               className="w-4 h-4"
-              tintColor="#666"
+              tintColor="#9CA3AF"
               style={{ transform: [{ rotate: "90deg" }] }}
             />
           </TouchableOpacity>
@@ -234,7 +269,7 @@ const CleanerProfile = () => {
               <Image
                 source={icons.out}
                 className="w-5 h-5"
-                tintColor="#F87171"
+                tintColor="#EF4444"
               />
               <Text className="text-red-400 font-JakartaMedium ml-3">
                 Sign Out

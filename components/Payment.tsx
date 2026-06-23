@@ -1,5 +1,5 @@
 import { useAuth } from "@clerk/clerk-expo";
-import { useStripe } from "@stripe/stripe-react-native";
+import type { useStripe } from "@stripe/stripe-react-native";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { Alert, Image, Text, View } from "react-native";
@@ -8,7 +8,7 @@ import { ReactNativeModal } from "react-native-modal";
 import CustomButton from "@/components/CustomButton";
 import { images } from "@/constants";
 import { fetchAPI } from "@/lib/fetch";
-import { useLocationStore, useServiceTypeStore } from "@/store";
+import { useLocationStore } from "@/store";
 import { PaymentProps } from "@/types/type";
 
 const Payment = ({
@@ -18,14 +18,15 @@ const Payment = ({
   cleanerId,
   serviceTypeId,
   estimatedDuration,
-}: PaymentProps) => {
-  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  stripe,
+}: PaymentProps & { stripe: ReturnType<typeof useStripe> }) => {
+  const { initPaymentSheet, presentPaymentSheet } = stripe;
+  const [success, setSuccess] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const { serviceAddress, serviceLatitude, serviceLongitude } =
     useLocationStore();
-  const { selectedServiceType } = useServiceTypeStore();
 
   const { userId } = useAuth();
-  const [success, setSuccess] = useState<boolean>(false);
 
   const openPaymentSheet = async () => {
     await initializePaymentSheet();
@@ -41,16 +42,16 @@ const Payment = ({
 
   const initializePaymentSheet = async () => {
     const { error } = await initPaymentSheet({
-      merchantDisplayName: "Example, Inc.",
+      merchantDisplayName: "RCleans",
       intentConfiguration: {
         mode: {
           amount: parseInt(amount) * 100,
           currencyCode: "usd",
         },
         confirmHandler: async (
-          paymentMethod,
-          shouldSavePaymentMethod,
-          intentCreationCallback,
+          paymentMethod: any,
+          shouldSavePaymentMethod: any,
+          intentCreationCallback: any,
         ) => {
           const { paymentIntent, customer } = await fetchAPI(
             "/(api)/(stripe)/create",
@@ -68,61 +69,68 @@ const Payment = ({
             },
           );
 
-          if (paymentIntent.client_secret) {
-            const { result } = await fetchAPI("/(api)/(stripe)/pay", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                payment_method_id: paymentMethod.id,
-                payment_intent_id: paymentIntent.id,
-                customer_id: customer,
-                client_secret: paymentIntent.client_secret,
-              }),
-            });
-
-            if (result.client_secret) {
-              await fetchAPI("/(api)/service/create", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  service_type_id: serviceTypeId,
-                  location_address: serviceAddress,
-                  location_lat: serviceLatitude,
-                  location_lng: serviceLongitude,
-                  estimated_duration: estimatedDuration,
-                  total_price: parseFloat(amount),
-                  status: "paid",
-                  payment_status: "paid",
-                  cleaner_id: cleanerId,
-                  user_id: userId,
-                }),
-              });
-
-              intentCreationCallback({
-                clientSecret: result.client_secret,
-              });
-            }
+          if (!paymentIntent?.client_secret) {
+            Alert.alert("Error", "Failed to create payment intent.");
+            return;
           }
+
+          const { result } = await fetchAPI("/(api)/(stripe)/pay", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              payment_method_id: paymentMethod.id,
+              payment_intent_id: paymentIntent.id,
+              customer_id: customer,
+              client_secret: paymentIntent.client_secret,
+            }),
+          });
+
+          if (!result?.client_secret) {
+            Alert.alert("Error", "Payment processing failed.");
+            return;
+          }
+
+          await fetchAPI("/(api)/service/create", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              service_type_id: serviceTypeId,
+              location_address: serviceAddress,
+              location_lat: serviceLatitude,
+              location_lng: serviceLongitude,
+              estimated_duration: estimatedDuration,
+              total_price: parseFloat(amount),
+              status: "paid",
+              payment_status: "paid",
+              cleaner_id: cleanerId,
+              user_id: userId,
+            }),
+          });
+
+          intentCreationCallback({
+            clientSecret: result.client_secret,
+          });
         },
       },
       returnURL: "myapp://book-service",
     });
 
     if (!error) {
-      // setLoading(true);
+      setLoading(true);
     }
   };
 
   return (
     <>
       <CustomButton
-        title="Confirm Service"
+        title={loading ? "Processing..." : "Confirm Service"}
         className="my-10"
         onPress={openPaymentSheet}
+        disabled={loading}
       />
 
       <ReactNativeModal
