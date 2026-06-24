@@ -86,7 +86,7 @@ const Home = () => {
     data: recentServices,
     loading,
     refetch: refetchServices,
-  } = useFetch<Service[]>(`/(api)/service/${user?.id}`);
+  } = useFetch<Service[]>(`/(api)/services?user_id=${user?.id}`);
 
   const {
     data: fetchedServiceTypes,
@@ -116,18 +116,29 @@ const Home = () => {
           return;
         }
 
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
+        let coords: { latitude: number; longitude: number };
+
+        try {
+          const current = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+            timeout: 5000,
+          });
+          coords = current.coords;
+        } catch {
+          const last = await Location.getLastKnownPositionAsync({
+            maxAge: 600000,
+          });
+          coords = last?.coords ?? { latitude: -1.2921, longitude: 36.8219 };
+        }
 
         const address = await reverseGeocodeWithMapbox(
-          location.coords.latitude,
-          location.coords.longitude,
+          coords.latitude,
+          coords.longitude,
         );
 
         setUserLocation({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
           address: address,
         });
       } catch (err) {

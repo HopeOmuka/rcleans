@@ -40,8 +40,7 @@ export async function POST(request: Request) {
       service_id,
       sender_id,
       sender_type,
-      receiver_id,
-      receiver_type,
+      recipient_id,
       content,
     } = body;
 
@@ -49,8 +48,7 @@ export async function POST(request: Request) {
       !service_id ||
       !sender_id ||
       !sender_type ||
-      !receiver_id ||
-      !receiver_type ||
+      !recipient_id ||
       !content
     ) {
       return Response.json(
@@ -62,8 +60,8 @@ export async function POST(request: Request) {
     const sql = neon(`${process.env.DATABASE_URL}`);
 
     const result = await sql`
-      INSERT INTO messages (service_id, sender_id, sender_type, receiver_id, receiver_type, content)
-      VALUES (${service_id}, ${sender_id}, ${sender_type}, ${receiver_id}, ${receiver_type}, ${content})
+      INSERT INTO messages (service_id, sender_id, sender_type, recipient_id, content)
+      VALUES (${service_id}, ${sender_id}, ${sender_type}, ${recipient_id}, ${content})
       RETURNING *
     `;
 

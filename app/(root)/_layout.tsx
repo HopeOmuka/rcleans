@@ -29,12 +29,6 @@ const Layout = () => {
           headerShown: false,
         }}
       />
-      <Stack.Screen
-        name="service-settings"
-        options={{
-          headerShown: false,
-        }}
-      />
     </Stack>
   );
 };

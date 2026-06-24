@@ -29,7 +29,7 @@
         "CAMERA"
       ],
       "predictiveBackGestureEnabled": false,
-      "newArchEnabled": false,
+      "newArchEnabled": true,
       "package": "com.anonymous.rcleans"
     },
     "web": {
@@ -58,6 +58,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ba45b8fc-a8db-49df-9f9e-bed0047c77e7"
+      }
     }
   }
 }

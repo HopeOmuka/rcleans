@@ -20,7 +20,7 @@ const Services = () => {
     loading,
     error,
     refetch,
-  } = useFetch<Service[]>(`/(api)/service/${user?.id}`);
+  } = useFetch<Service[]>(`/(api)/services?user_id=${user?.id}`);
 
   const handleRatePress = (service: Service) => {
     router.push(

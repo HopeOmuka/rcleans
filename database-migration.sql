@@ -137,6 +137,7 @@ CREATE TABLE IF NOT EXISTS cleaner_availability (
     end_time TIME NOT NULL,
     is_available BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
 
     CHECK (start_time < end_time),
     UNIQUE(cleaner_id, day_of_week)
@@ -314,6 +315,7 @@ CREATE TRIGGER update_service_types_updated_at BEFORE UPDATE ON service_types FO
 CREATE TRIGGER update_service_ratings_updated_at BEFORE UPDATE ON service_ratings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_saved_locations_updated_at BEFORE UPDATE ON saved_locations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_promo_codes_updated_at BEFORE UPDATE ON promo_codes FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_cleaner_availability_updated_at BEFORE UPDATE ON cleaner_availability FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- =========================================
 -- SAMPLE DATA INSERTION
@@ -372,33 +374,6 @@ SELECT
 FROM services;
 
 -- =========================================
--- ROW LEVEL SECURITY (RLS) POLICIES
--- =========================================
--- Note: Enable RLS if using Supabase or similar
--- ALTER TABLE users ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE cleaners ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE services ENABLE ROW LEVEL SECURITY;
--- etc.
-
--- Example RLS policies (uncomment and modify as needed):
-
--- Users can only see their own data
-CREATE POLICY "Users can view own data" ON users
-    FOR SELECT USING (auth.uid()::text = id);
-
--- Cleaners can only see their own data
-CREATE POLICY "Cleaners can view own data" ON cleaners
-    FOR SELECT USING (auth.uid()::text = id);
-
--- Users can view their own services
-CREATE POLICY "Users can view own services" ON services
-    FOR SELECT USING (auth.uid()::text = user_id);
-
--- Cleaners can view their assigned services
-CREATE POLICY "Cleaners can view assigned services" ON services
-    FOR SELECT USING (auth.uid()::text = cleaner_id);
-
-
 -- =========================================
 -- FUNCTIONS
 -- =========================================

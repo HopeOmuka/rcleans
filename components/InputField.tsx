@@ -48,7 +48,6 @@ const InputField = ({
               className={`rounded-full p-4 font-JakartaSemiBold text-[15px] flex-1 ${inputStyle} text-left`}
               secureTextEntry={secureTextEntry}
               accessibilityLabel={label}
-              accessibilityRole="textbox"
               {...props}
             />
           </View>

@@ -1,13 +1,12 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import {
   ActivityIndicator,
   Image,
   Text,
   View,
-  Platform,
   TouchableOpacity,
 } from "react-native";
-import MapView, { Marker, PROVIDER_DEFAULT, Polyline } from "react-native-maps";
+import MapboxGL from "@rnmapbox/maps";
 
 import { icons } from "@/constants";
 import { fetchAPI, useFetch } from "@/lib/fetch";
@@ -19,13 +18,14 @@ import {
 import { useCleanerStore, useLocationStore } from "@/store";
 import { Cleaner, MarkerData } from "@/types/type";
 
-const MAPBOX_API_KEY = process.env.EXPO_PUBLIC_MAPBOX_API_KEY;
+MapboxGL.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_API_KEY!);
 
 const Map = () => {
   const { userLongitude, userLatitude, serviceLatitude, serviceLongitude } =
     useLocationStore();
 
   const { selectedCleaner, setCleaners } = useCleanerStore();
+  const cameraRef = useRef<MapboxGL.Camera>(null);
 
   const {
     data: cleaners,
@@ -41,9 +41,6 @@ const Map = () => {
   const [routeLoading, setRouteLoading] = useState(false);
   const [routeError, setRouteError] = useState(false);
 
-  /**
-   * Generate cleaner markers
-   */
   useEffect(() => {
     if (!Array.isArray(cleaners)) return;
     if (!userLatitude || !userLongitude) return;
@@ -57,9 +54,6 @@ const Map = () => {
     setMarkers(newMarkers);
   }, [cleaners, userLatitude, userLongitude]);
 
-  /**
-   * Calculate cleaner times + price
-   */
   useEffect(() => {
     if (markers.length === 0 || !serviceLatitude || !serviceLongitude) return;
 
@@ -72,9 +66,6 @@ const Map = () => {
     });
   }, [markers, serviceLatitude, serviceLongitude]);
 
-  /**
-   * Fetch route line from Mapbox
-   */
   useEffect(() => {
     const fetchRoute = async () => {
       if (
@@ -90,7 +81,7 @@ const Map = () => {
 
       try {
         const data = await fetchAPI(
-          `https://api.mapbox.com/directions/v5/mapbox/driving/${userLongitude},${userLatitude};${serviceLongitude},${serviceLatitude}?access_token=${MAPBOX_API_KEY}&geometries=geojson&overview=full`,
+          `https://api.mapbox.com/directions/v5/mapbox/driving/${userLongitude},${userLatitude};${serviceLongitude},${serviceLatitude}?access_token=${process.env.EXPO_PUBLIC_MAPBOX_API_KEY}&geometries=geojson&overview=full`,
         );
 
         const coords =
@@ -113,9 +104,6 @@ const Map = () => {
     fetchRoute();
   }, [userLatitude, userLongitude, serviceLatitude, serviceLongitude]);
 
-  /**
-   * Map region
-   */
   const region = useMemo(
     () =>
       calculateRegion({
@@ -127,9 +115,26 @@ const Map = () => {
     [userLatitude, userLongitude, serviceLatitude, serviceLongitude],
   );
 
-  /**
-   * Loading state
-   */
+  const routeGeoJSON = useMemo(() => {
+    if (routeCoords.length === 0) return null;
+    return {
+      type: "Feature",
+      properties: {},
+      geometry: {
+        type: "LineString",
+        coordinates: routeCoords.map((c) => [c.longitude, c.latitude]),
+      },
+    };
+  }, [routeCoords]);
+
+  const onMarkerPress = useCallback(
+    (marker: MarkerData) => {
+      useCleanerStore.setState({ selectedCleaner: +marker.id });
+      cameraRef.current?.flyTo([marker.longitude, marker.latitude], 600);
+    },
+    [],
+  );
+
   if (loading || (!userLatitude && !userLongitude)) {
     return (
       <View className="flex justify-center items-center w-full h-full">
@@ -138,9 +143,6 @@ const Map = () => {
     );
   }
 
-  /**
-   * Error state
-   */
   if (error) {
     return (
       <View className="flex justify-center items-center w-full h-full bg-gray-100 px-6">
@@ -167,60 +169,69 @@ const Map = () => {
     );
   }
 
-  /**
-   * Render map
-   */
   return (
     <View className="flex-1">
-      <MapView
-        provider={PROVIDER_DEFAULT}
-        className="w-full h-full rounded-2xl"
-        initialRegion={region}
-        showsUserLocation
-        showsPointsOfInterest={false}
-        userInterfaceStyle="light"
-        mapType={Platform.OS === "android" ? "standard" : "mutedStandard"}
+      <MapboxGL.MapView
+        style={{ flex: 1 }}
+        styleURL={MapboxGL.StyleURL.Streets}
+        logoEnabled={false}
+        attributionEnabled={false}
       >
-        {/* Cleaners */}
+        <MapboxGL.Camera
+          ref={cameraRef}
+          defaultSettings={{
+            centerCoordinate: [region.longitude, region.latitude],
+            zoomLevel: 12,
+          }}
+        />
+
         {markers.map((marker) => (
-          <Marker
-            key={marker.id}
-            coordinate={{
-              latitude: marker.latitude,
-              longitude: marker.longitude,
-            }}
-            title={marker.title}
-            image={
-              selectedCleaner === +marker.id
-                ? icons.selectedMarker
-                : icons.marker
-            }
-          />
+          <MapboxGL.PointAnnotation
+            key={String(marker.id)}
+            id={String(marker.id)}
+            coordinate={[marker.longitude, marker.latitude]}
+            onSelected={() => onMarkerPress(marker)}
+          >
+            <Image
+              source={
+                selectedCleaner === +marker.id
+                  ? icons.selectedMarker
+                  : icons.marker
+              }
+              className="w-8 h-8"
+              resizeMode="contain"
+            />
+          </MapboxGL.PointAnnotation>
         ))}
 
-        {/* Destination */}
         {serviceLatitude && serviceLongitude && (
-          <>
-            <Marker
-              coordinate={{
-                latitude: serviceLatitude,
-                longitude: serviceLongitude,
-              }}
-              title="Destination"
-              image={icons.pin}
+          <MapboxGL.PointAnnotation
+            id="destination"
+            coordinate={[serviceLongitude, serviceLatitude]}
+          >
+            <Image
+              source={icons.pin}
+              className="w-8 h-8"
+              resizeMode="contain"
             />
-
-            {/* Route line */}
-            <Polyline
-              coordinates={routeCoords}
-              strokeWidth={4}
-              strokeColor="#3B82F6"
-            />
-          </>
+          </MapboxGL.PointAnnotation>
         )}
-      </MapView>
 
-      {/* Route loading indicator */}
+        {routeGeoJSON && (
+          <MapboxGL.ShapeSource id="routeSource" shape={routeGeoJSON}>
+            <MapboxGL.LineLayer
+              id="routeLine"
+              style={{
+                lineColor: "#3B82F6",
+                lineWidth: 4,
+                lineCap: "round",
+                lineJoin: "round",
+              }}
+            />
+          </MapboxGL.ShapeSource>
+        )}
+      </MapboxGL.MapView>
+
       {routeLoading && (
         <View className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 px-4 py-2 rounded-full flex-row items-center shadow-sm">
           <ActivityIndicator size="small" color="#3B82F6" className="mr-2" />
@@ -230,7 +241,6 @@ const Map = () => {
         </View>
       )}
 
-      {/* Route error toast */}
       {routeError && !routeLoading && (
         <View className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-red-50 border border-red-200 px-4 py-2 rounded-full">
           <Text className="text-sm font-JakartaMedium text-red-600">
