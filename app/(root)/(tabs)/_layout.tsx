@@ -10,20 +10,23 @@ const TabIcon = ({
 }: {
   source: ImageSourcePropType;
   focused: boolean;
-}) => (
-  <View
-    className={`w-9 h-9 rounded-full items-center justify-center ${
-      focused ? "bg-primary-500" : "bg-transparent"
-    }`}
-  >
-    <Image
-      source={source}
-      tintColor={focused ? "#FFFFFF" : "#6B7280"}
-      resizeMode="contain"
-      className="w-5 h-5"
-    />
-  </View>
-);
+}) => {
+  const { theme } = useTheme();
+  return (
+    <View
+      className={`w-9 h-9 rounded-full items-center justify-center ${
+        focused ? "bg-primary-500" : "bg-transparent"
+      }`}
+    >
+      <Image
+        source={source}
+        tintColor={focused ? theme.colors.primaryContrast : theme.colors.textMuted}
+        resizeMode="contain"
+        className="w-5 h-5"
+      />
+    </View>
+  );
+};
 
 export default function Layout() {
   const { theme } = useTheme();
