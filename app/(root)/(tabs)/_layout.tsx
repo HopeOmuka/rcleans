@@ -20,7 +20,9 @@ const TabIcon = ({
     >
       <Image
         source={source}
-        tintColor={focused ? theme.colors.primaryContrast : theme.colors.textMuted}
+        tintColor={
+          focused ? theme.colors.primaryContrast : theme.colors.textMuted
+        }
         resizeMode="contain"
         className="w-5 h-5"
       />
