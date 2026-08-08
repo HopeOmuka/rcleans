@@ -1,30 +1,42 @@
 import { Tabs } from "expo-router";
-import { Image, ImageSourcePropType, View } from "react-native";
+import { View } from "react-native";
 
-import { icons } from "@/constants";
+import BootstrapIcon, {
+  type BootstrapIconProps,
+} from "@/components/BootstrapIcon";
 import { useTheme } from "@/lib/theme";
 
+const TAB_ICONS: {
+  [key: string]: {
+    outline: BootstrapIconProps["name"];
+    fill: BootstrapIconProps["name"];
+  };
+} = {
+  home: { outline: "house", fill: "house-fill" },
+  services: { outline: "grid-3x3-gap", fill: "grid-3x3-gap-fill" },
+  chat: { outline: "chat-dots", fill: "chat-dots-fill" },
+  profile: { outline: "person", fill: "person-fill" },
+};
+
 const TabIcon = ({
-  source,
+  route,
   focused,
 }: {
-  source: ImageSourcePropType;
+  route: keyof typeof TAB_ICONS;
   focused: boolean;
 }) => {
   const { theme } = useTheme();
+  const icon = TAB_ICONS[route];
   return (
     <View
       className={`w-9 h-9 rounded-full items-center justify-center ${
         focused ? "bg-primary-500" : "bg-transparent"
       }`}
     >
-      <Image
-        source={source}
-        tintColor={
-          focused ? theme.colors.primaryContrast : theme.colors.textMuted
-        }
-        resizeMode="contain"
-        className="w-5 h-5"
+      <BootstrapIcon
+        name={focused ? icon.fill : icon.outline}
+        size={20}
+        color={focused ? theme.colors.primaryContrast : theme.colors.textMuted}
       />
     </View>
   );
@@ -54,7 +66,7 @@ export default function Layout() {
           title: "Home",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon source={icons.home} focused={focused} />
+            <TabIcon route="home" focused={focused} />
           ),
           tabBarAccessibilityLabel: "Home",
         }}
@@ -65,7 +77,7 @@ export default function Layout() {
           title: "Services",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon source={icons.list} focused={focused} />
+            <TabIcon route="services" focused={focused} />
           ),
           tabBarAccessibilityLabel: "Services",
         }}
@@ -76,7 +88,7 @@ export default function Layout() {
           title: "Chat",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon source={icons.chat} focused={focused} />
+            <TabIcon route="chat" focused={focused} />
           ),
           tabBarAccessibilityLabel: "Chat",
         }}
@@ -87,7 +99,7 @@ export default function Layout() {
           title: "Profile",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon source={icons.profile} focused={focused} />
+            <TabIcon route="profile" focused={focused} />
           ),
           tabBarAccessibilityLabel: "Profile",
         }}

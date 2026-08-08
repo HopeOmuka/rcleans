@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import CancelBookingModal from "@/components/CancelBookingModal";
+import BootstrapIcon from "@/components/BootstrapIcon";
 import EmptyState from "@/components/EmptyState";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import RatingStars from "@/components/RatingStars";
@@ -384,7 +385,7 @@ const ServiceDetails = () => {
           }
           className="mt-4 flex-row items-center justify-center py-2.5 rounded-lg bg-primary-500"
         >
-          <Image source={icons.chat} className="w-4 h-4" tintColor="white" />
+          <BootstrapIcon name="chat-dots" size={18} color="#FFFFFF" />
           <Text className="text-white font-JakartaMedium ml-2">Message</Text>
         </TouchableOpacity>
       </View>

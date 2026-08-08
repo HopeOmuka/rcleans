@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import AddonSelector from "@/components/AddonSelector";
+import BootstrapIcon from "@/components/BootstrapIcon";
 import CancelBookingModal from "@/components/CancelBookingModal";
 import GoogleTextInput from "@/components/MapboxTextInput";
 import Map from "@/components/Map";
@@ -494,11 +495,7 @@ const Home = () => {
               }
               className="flex-1 flex-row items-center justify-center py-2.5 rounded-lg bg-primary-500"
             >
-              <Image
-                source={icons.chat}
-                className="w-4 h-4"
-                tintColor="white"
-              />
+              <BootstrapIcon name="chat-dots" size={18} color="#FFFFFF" />
               <Text className="text-white font-JakartaMedium ml-2">
                 Message
               </Text>
@@ -673,11 +670,7 @@ const Home = () => {
                     onPress={() => router.push("/notifications" as Href)}
                     className="justify-center items-center w-11 h-11 rounded-full bg-white/25 border border-white/30"
                   >
-                    <Image
-                      source={icons.list}
-                      className="w-5 h-5"
-                      tintColor="white"
-                    />
+                    <BootstrapIcon name="bell" size={20} color="#FFFFFF" />
                     {unreadCount > 0 && (
                       <View className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-red-500 items-center justify-center px-1 border border-white/60">
                         <Text className="text-white text-[10px] font-JakartaBold">
@@ -692,7 +685,11 @@ const Home = () => {
                     onPress={handleSignOut}
                     className="justify-center items-center w-11 h-11 rounded-full bg-white/25 border border-white/30"
                   >
-                    <Image source={icons.out} className="w-5 h-5" />
+                    <BootstrapIcon
+                      name="box-arrow-right"
+                      size={20}
+                      color="#FFFFFF"
+                    />
                   </TouchableOpacity>
                 </View>
               </View>

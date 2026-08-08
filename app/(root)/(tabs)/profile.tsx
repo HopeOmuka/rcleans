@@ -17,6 +17,7 @@ import { ReactNativeModal } from "react-native-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import CustomButton from "@/components/CustomButton";
+import BootstrapIcon from "@/components/BootstrapIcon";
 import InputField from "@/components/InputField";
 import MapboxTextInput from "@/components/MapboxTextInput";
 import { showToast } from "@/components/Toast";
@@ -481,8 +482,19 @@ const Profile = () => {
                       ? theme.colors.primary
                       : theme.colors.border,
                   }}
-                  className="flex-1 py-2.5 rounded-full items-center border"
+                  className="flex-1 py-2.5 rounded-full items-center border flex-row justify-center gap-2"
                 >
+                  <BootstrapIcon
+                    name={
+                      option.key === "light"
+                        ? "sun"
+                        : option.key === "dark"
+                          ? "moon"
+                          : "display"
+                    }
+                    size={16}
+                    color={active ? "#FFFFFF" : theme.colors.textSecondary}
+                  />
                   <Text
                     className="text-sm font-JakartaSemiBold"
                     style={{
