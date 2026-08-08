@@ -35,7 +35,7 @@ const ServiceLayout = ({
   return (
     <GestureHandlerRootView className="flex-1">
       <View
-        className="flex-1 bg-white"
+        className="flex-1"
         style={{ backgroundColor: theme.colors.background }}
       >
         <View className="flex-1 bg-accent-500">
