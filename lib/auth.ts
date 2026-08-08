@@ -1,12 +1,14 @@
+import type { StartOAuthFlowParams, StartOAuthFlowReturnType } from "@clerk/clerk-expo";
 import * as Linking from "expo-linking";
 import * as SecureStore from "expo-secure-store";
-import { fetchAPI } from "@/lib/fetch";
+import { ApiResponse, fetchAPI } from "@/lib/fetch";
+
+type GetAuthToken = (options?: { skipCache?: boolean }) => Promise<string | null>;
 
 export const tokenCache = {
   async getToken(key: string) {
     try {
-      const item = await SecureStore.getItemAsync(key);
-      return item;
+      return await SecureStore.getItemAsync(key);
     } catch (error) {
       console.error("SecureStore get item error: ", error);
       await SecureStore.deleteItemAsync(key);
@@ -22,20 +24,13 @@ export const tokenCache = {
   },
 };
 
-interface OAuthFlowResult {
-  createdSessionId?: string;
-  setActive?: (session: { session: string }) => Promise<void>;
-  signUp?: {
-    createdUserId?: string;
-    firstName?: string;
-    lastName?: string;
-    emailAddress?: string;
-  };
-}
+type StartOAuthFlowFn = (
+  params?: StartOAuthFlowParams,
+) => Promise<StartOAuthFlowReturnType>;
 
 interface OAuthError {
   code?: string;
-  errors?: Array<{ longMessage?: string }>;
+  errors?: { longMessage?: string }[];
 }
 
 interface OAuthResult {
@@ -45,7 +40,8 @@ interface OAuthResult {
 }
 
 export const googleOAuth = async (
-  startOAuthFlow: (params: { redirectUrl: string }) => Promise<OAuthFlowResult>,
+  startOAuthFlow: StartOAuthFlowFn,
+  getToken: GetAuthToken,
 ): Promise<OAuthResult> => {
   try {
     const { createdSessionId, setActive, signUp } = await startOAuthFlow({
@@ -57,8 +53,10 @@ export const googleOAuth = async (
         await setActive({ session: createdSessionId });
 
         if (signUp?.createdUserId) {
-          await fetchAPI("/(api)/user", {
+          const token = await getToken({ skipCache: true });
+          await fetchAPI<ApiResponse<{ id: string }>>("/(api)/user", {
             method: "POST",
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
             body: JSON.stringify({
               name: `${signUp.firstName || ""} ${signUp.lastName || ""}`.trim(),
               email: signUp.emailAddress,

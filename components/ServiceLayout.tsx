@@ -16,6 +16,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import Map from "@/components/Map";
 import { icons } from "@/constants";
+import { useTheme } from "@/lib/theme";
 
 const ServiceLayout = ({
   title,
@@ -26,13 +27,17 @@ const ServiceLayout = ({
   snapPoints?: string[];
   children: React.ReactNode;
 }) => {
+  const { theme } = useTheme();
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const isChooseServicer = title === "Choose a Servicer";
 
   return (
     <GestureHandlerRootView className="flex-1">
-      <View className="flex-1 bg-white">
+      <View
+        className="flex-1 bg-white"
+        style={{ backgroundColor: theme.colors.background }}
+      >
         <View className="flex-1 bg-accent-500">
           <View
             className="flex flex-row absolute z-10 items-center justify-start px-5"
@@ -48,15 +53,26 @@ const ServiceLayout = ({
               accessibilityLabel="Go back"
               accessibilityRole="button"
             >
-              <View className="w-10 h-10 bg-white rounded-full items-center justify-center">
+              <View
+                className="w-10 h-10 rounded-full items-center justify-center shadow-md shadow-black/20"
+                style={{ backgroundColor: theme.colors.surface }}
+              >
                 <Image
                   source={icons.backArrow}
                   resizeMode="contain"
                   className="w-6 h-6"
+                  tintColor={theme.colors.text}
                 />
               </View>
             </TouchableOpacity>
-            <Text className="text-xl font-JakartaSemiBold ml-5">
+            <Text
+              className="text-xl font-JakartaSemiBold ml-5 text-white"
+              style={{
+                textShadowColor: "rgba(0,0,0,0.25)",
+                textShadowOffset: { width: 0, height: 1 },
+                textShadowRadius: 3,
+              }}
+            >
               {title || "Go Back"}
             </Text>
           </View>
@@ -68,6 +84,8 @@ const ServiceLayout = ({
           ref={bottomSheetRef}
           snapPoints={snapPoints || ["40%", "85%"]}
           index={0}
+          handleIndicatorStyle={{ backgroundColor: theme.colors.border }}
+          backgroundStyle={{ backgroundColor: theme.colors.surface }}
         >
           {isChooseServicer ? (
             <BottomSheetView

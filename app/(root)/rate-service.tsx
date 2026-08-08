@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useState, useRef, useCallback, useMemo } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -15,7 +15,8 @@ import * as Haptics from "expo-haptics";
 import CustomButton from "@/components/CustomButton";
 import ServiceLayout from "@/components/ServiceLayout";
 import { icons } from "@/constants";
-import { fetchAPI } from "@/lib/fetch";
+import { ApiResponse, fetchAPI } from "@/lib/fetch";
+import { useTheme } from "@/lib/theme";
 import { showToast } from "@/components/Toast";
 
 const MAX_REVIEW_LENGTH = 500;
@@ -66,11 +67,13 @@ const StarButton = ({
 };
 
 const RateService = () => {
+  const { theme } = useTheme();
   const { serviceId, userId, cleanerId } = useLocalSearchParams();
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
   const [loading, setLoading] = useState(false);
   const navigationTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const submittingRef = useRef(false);
 
   React.useEffect(() => {
     return () => {
@@ -86,31 +89,37 @@ const RateService = () => {
   }, []);
 
   const handleSubmitRating = async () => {
+    if (submittingRef.current) return;
     if (rating === 0) {
       Alert.alert("Error", "Please select a rating");
       return;
     }
 
+    submittingRef.current = true;
     setLoading(true);
     try {
-      await fetchAPI(`/(api)/service/rate/${serviceId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      await fetchAPI<ApiResponse<{ success: boolean }>>(
+        `/(api)/service/rate/${serviceId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            rating,
+            review,
+            userId,
+            cleanerId,
+          }),
         },
-        body: JSON.stringify({
-          rating,
-          review,
-          userId,
-          cleanerId,
-        }),
-      });
+      );
 
       showToast("Thank you for your feedback!", "success");
       navigationTimeout.current = setTimeout(() => router.back(), 1500);
     } catch {
       showToast("Failed to submit rating. Please try again.", "error");
     } finally {
+      submittingRef.current = false;
       setLoading(false);
     }
   };
@@ -118,7 +127,10 @@ const RateService = () => {
   return (
     <ServiceLayout title="Rate Your Service">
       <View className="p-5">
-        <Text className="text-xl font-JakartaBold mb-5 text-center">
+        <Text
+          className="text-xl font-JakartaBold mb-5 text-center"
+          style={{ color: theme.colors.text }}
+        >
           How was your cleaning service?
         </Text>
 
@@ -133,7 +145,10 @@ const RateService = () => {
           ))}
         </View>
 
-        <Text className="text-lg font-JakartaSemiBold mb-3">
+        <Text
+          className="text-lg font-JakartaSemiBold mb-3"
+          style={{ color: theme.colors.text }}
+        >
           Share your experience (optional)
         </Text>
         <TextInput
@@ -144,12 +159,20 @@ const RateService = () => {
             }
           }}
           placeholder="Tell us about your experience..."
+          placeholderTextColor={theme.colors.textMuted}
           multiline
           numberOfLines={4}
-          className="border border-gray-300 rounded-lg p-3 mb-1"
+          style={{
+            borderColor: theme.colors.border,
+            color: theme.colors.text,
+          }}
+          className="border rounded-lg p-3 mb-1"
           textAlignVertical="top"
         />
-        <Text className="text-xs text-gray-400 text-right mb-5">
+        <Text
+          className="text-xs text-right mb-5"
+          style={{ color: theme.colors.textMuted }}
+        >
           {review.length}/{MAX_REVIEW_LENGTH}
         </Text>
 
@@ -161,7 +184,11 @@ const RateService = () => {
           accessibilityLabel="Submit your rating and review"
         />
         {loading && (
-          <ActivityIndicator size="small" color="#22C55E" className="mt-3" />
+          <ActivityIndicator
+            size="small"
+            color={theme.colors.primary}
+            className="mt-3"
+          />
         )}
       </View>
     </ServiceLayout>

@@ -1,34 +1,40 @@
 import { ActivityIndicator, TouchableOpacity, Text } from "react-native";
 
+import { useTheme } from "@/lib/theme";
 import { ButtonProps } from "@/types/type";
 
 const getBgVariantStyle = (variant: ButtonProps["bgVariant"]) => {
   switch (variant) {
     case "secondary":
-      return "bg-gray-500";
+      return "bg-general-500";
     case "danger":
-      return "bg-red-500";
+      return "bg-danger-500";
     case "success":
-      return "bg-green-500";
+      return "bg-success-500";
     case "outline":
-      return "bg-transparent border-secondary-300 border-[0.5px]";
+      return "bg-transparent border border-secondary-300";
     default:
-      return "bg-accent-500";
+      return "bg-primary-500";
   }
 };
 
-const getTextVariantStyle = (variant: ButtonProps["textVariant"]) => {
+const getSpinnerColor = (variant: ButtonProps["bgVariant"]) => {
   switch (variant) {
     case "primary":
-      return "text-black";
-    case "secondary":
-      return "text-gray-100";
-    case "danger":
-      return "text-red-100";
-    case "success":
-      return "text-green-100";
+      return "#052E16";
+    case "outline":
+      return "#334155";
     default:
-      return "text-white";
+      return "#FFFFFF";
+  }
+};
+
+const getShadowStyle = (variant: ButtonProps["bgVariant"]) => {
+  switch (variant) {
+    case "outline":
+      return "";
+    default:
+      return "shadow-md shadow-primary-900/20";
   }
 };
 
@@ -43,24 +49,38 @@ const CustomButton = ({
   disabled,
   ...props
 }: ButtonProps) => {
+  const { theme } = useTheme();
   const isDisabled = disabled || props.loading;
+
+  const textColor =
+    textVariant === "primary"
+      ? theme.colors.primaryContrast
+      : textVariant === "danger" || textVariant === "success"
+        ? "#FFFFFF"
+        : bgVariant === "primary"
+          ? theme.colors.primaryContrast
+          : bgVariant === "outline"
+            ? theme.colors.textSecondary
+            : "#FFFFFF";
+
   return (
     <TouchableOpacity
       onPress={isDisabled ? undefined : onPress}
       disabled={isDisabled}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
       accessibilityRole="button"
       accessibilityLabel={title}
-      accessibilityState={{ disabled: isDisabled }}
-      className={`w-full rounded-full p-3 flex flex-row justify-center items-center shadow-md shadow-neutral-400/70 ${getBgVariantStyle(bgVariant)} ${isDisabled ? "opacity-50" : ""} ${className}`}
+      accessibilityState={{ disabled: isDisabled, busy: props.loading }}
+      className={`w-full rounded-full px-5 py-3.5 flex flex-row justify-center items-center gap-2 ${getBgVariantStyle(bgVariant)} ${getShadowStyle(bgVariant)} ${isDisabled ? "opacity-50" : ""} ${className}`}
       {...props}
     >
       {IconLeft && <IconLeft />}
       {props.loading ? (
-        <ActivityIndicator size="small" color="white" />
+        <ActivityIndicator size="small" color={getSpinnerColor(bgVariant)} />
       ) : (
         <Text
-          className={`text-lg font-JakartaBold ${getTextVariantStyle(textVariant)}`}
+          className={`text-lg font-JakartaBold`}
+          style={{ color: textColor }}
         >
           {title}
         </Text>

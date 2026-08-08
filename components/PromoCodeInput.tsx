@@ -1,18 +1,24 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
 
 import CustomButton from "@/components/CustomButton";
-import { fetchAPI } from "@/lib/fetch";
+import { showToast } from "@/components/Toast";
+import { ApiResponse, fetchAPI } from "@/lib/fetch";
+import { useTheme } from "@/lib/theme";
+import { PromoDiscount } from "@/types/type";
 
 interface PromoCodeInputProps {
   serviceTypeId: string;
   baseAmount: number;
-  onPromoApplied: (discountData: {
-    discountAmount: number;
-    finalAmount: number;
-    promoCode: string;
-  }) => void;
+  onPromoApplied: (discountData: PromoDiscount) => void;
   onPromoRemoved: () => void;
+}
+
+interface PromoValidationResult {
+  promoCode: { code: string; id: string };
+  discountAmount: number;
+  finalAmount: number;
+  originalAmount: number;
 }
 
 const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
@@ -21,47 +27,53 @@ const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
   onPromoApplied,
   onPromoRemoved,
 }) => {
+  const { theme } = useTheme();
   const [promoCode, setPromoCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [appliedPromo, setAppliedPromo] = useState<any>(null);
+  const [appliedPromo, setAppliedPromo] = useState<PromoDiscount | null>(null);
 
   const applyPromoCode = async () => {
     if (!promoCode.trim()) {
-      Alert.alert("Error", "Please enter a promo code");
+      showToast("Please enter a promo code", "error");
       return;
     }
 
     setLoading(true);
     try {
-      const response = await fetchAPI("/(api)/promo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code: promoCode.trim(),
-          serviceTypeId,
-          orderAmount: baseAmount,
-        }),
-      });
+      const response = await fetchAPI<ApiResponse<PromoValidationResult>>(
+        "/(api)/promo",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            code: promoCode.trim(),
+            serviceTypeId,
+            orderAmount: baseAmount,
+          }),
+        },
+      );
 
-      if (response.error) {
-        Alert.alert("Invalid Code", response.error);
+      if (!response.data) {
+        showToast(response.error || "Invalid promo code", "error");
         return;
       }
 
-      setAppliedPromo(response.data);
-      onPromoApplied({
+      const discountData: PromoDiscount = {
         discountAmount: response.data.discountAmount,
         finalAmount: response.data.finalAmount,
-        promoCode: promoCode.trim(),
-      });
+        promoCode: response.data.promoCode.code,
+      };
 
-      Alert.alert(
-        "Success",
-        `Promo code applied! You saved $${response.data.discountAmount}`,
+      setAppliedPromo(discountData);
+      onPromoApplied(discountData);
+
+      showToast(
+        `Promo applied! You saved $${response.data.discountAmount}`,
+        "success",
       );
     } catch (error) {
       console.error("Error applying promo code:", error);
-      Alert.alert("Error", "Failed to apply promo code");
+      showToast("Failed to apply promo code", "error");
     } finally {
       setLoading(false);
     }
@@ -74,14 +86,31 @@ const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
   };
 
   return (
-    <View className="p-4 bg-white rounded-lg border border-gray-200 mb-4">
-      <Text className="text-lg font-JakartaSemiBold mb-3">Promo Code</Text>
+    <View
+      className="p-4 rounded-2xl border-2 mb-4"
+      style={{
+        backgroundColor: theme.colors.surface,
+        borderColor: theme.colors.border,
+      }}
+    >
+      <Text
+        className="text-lg font-JakartaSemiBold mb-3"
+        style={{ color: theme.colors.text }}
+      >
+        Promo Code
+      </Text>
 
       {!appliedPromo ? (
-        <View className="flex-row">
+        <View className="flex-row items-center">
           <TextInput
-            className="flex-1 border border-gray-300 rounded-l-lg px-3 py-2 text-base"
+            style={{
+              borderColor: theme.colors.border,
+              color: theme.colors.text,
+              backgroundColor: theme.colors.surface,
+            }}
+            className="flex-1 border-2 rounded-full px-4 py-3 text-base"
             placeholder="Enter promo code"
+            placeholderTextColor={theme.colors.textMuted}
             value={promoCode}
             onChangeText={setPromoCode}
             autoCapitalize="characters"
@@ -91,27 +120,39 @@ const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
           <CustomButton
             title={loading ? "Applying..." : "Apply"}
             onPress={applyPromoCode}
-            className="rounded-l-none rounded-r-lg px-4"
+            className="ml-3 px-6"
             disabled={loading}
+            loading={loading}
             accessibilityLabel={
               loading ? "Applying promo code" : "Apply promo code"
             }
           />
         </View>
       ) : (
-        <View className="bg-green-50 border border-green-200 rounded-lg p-3">
+        <View
+          className="border-2 rounded-xl p-3"
+          style={{
+            backgroundColor: theme.colors.success + "14",
+            borderColor: theme.colors.success + "55",
+          }}
+        >
           <View className="flex-row justify-between items-center">
             <View>
-              <Text className="text-green-800 font-JakartaSemiBold">
+              <Text
+                className="font-JakartaSemiBold"
+                style={{ color: theme.colors.success }}
+              >
                 {appliedPromo.promoCode}
               </Text>
-              <Text className="text-green-600 text-sm">
+              <Text className="text-sm" style={{ color: theme.colors.success }}>
                 Save ${appliedPromo.discountAmount}
               </Text>
             </View>
             <TouchableOpacity
               onPress={removePromoCode}
-              className="bg-red-500 px-3 py-1 rounded"
+              className="bg-danger-500 px-3 py-1.5 rounded-full"
+              accessibilityRole="button"
+              accessibilityLabel="Remove promo code"
             >
               <Text className="text-white text-sm font-JakartaMedium">
                 Remove

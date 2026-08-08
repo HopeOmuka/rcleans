@@ -2,6 +2,7 @@ import { Tabs } from "expo-router";
 import { Image, ImageSourcePropType, View } from "react-native";
 
 import { icons } from "@/constants";
+import { useTheme } from "@/lib/theme";
 
 const TabIcon = ({
   source,
@@ -11,43 +12,35 @@ const TabIcon = ({
   focused: boolean;
 }) => (
   <View
-    className={`flex flex-row justify-center items-center rounded-full ${focused ? "bg-general-300" : ""}`}
+    className={`w-9 h-9 rounded-full items-center justify-center ${
+      focused ? "bg-primary-500" : "bg-transparent"
+    }`}
   >
-    <View
-      className={`rounded-full w-12 h-12 items-center justify-center ${focused ? "bg-general-400" : ""}`}
-    >
-      <Image
-        source={source}
-        tintColor="white"
-        resizeMode="contain"
-        className="w-7 h-7"
-      />
-    </View>
+    <Image
+      source={source}
+      tintColor={focused ? "#FFFFFF" : "#6B7280"}
+      resizeMode="contain"
+      className="w-5 h-5"
+    />
   </View>
 );
 
 export default function Layout() {
+  const { theme } = useTheme();
+
   return (
     <Tabs
       initialRouteName="home"
       screenOptions={{
-        tabBarActiveTintColor: "#4ADE80",
-        tabBarInactiveTintColor: "#9CA3AF",
-        tabBarShowLabel: false,
+        animation: "fade",
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textMuted,
+        tabBarShowLabel: true,
         tabBarStyle: {
-          backgroundColor: "#1F1F1F",
-          borderRadius: 50,
-          paddingBottom: 0, // ios only
-          overflow: "hidden",
-          marginHorizontal: 20,
-          marginBottom: 20,
-          height: 78,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexDirection: "row",
-          position: "absolute",
+          backgroundColor: theme.colors.surface,
+          borderTopColor: theme.colors.border,
         },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
       }}
     >
       <Tabs.Screen

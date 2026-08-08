@@ -1,17 +1,33 @@
-import { TextInputProps, TouchableOpacityProps } from "react-native";
+import {
+  ImageSourcePropType,
+  TextInputProps,
+  TouchableOpacityProps,
+} from "react-native";
 
 declare interface Cleaner {
-  id: number;
+  id: string;
   first_name: string;
   last_name: string;
   profile_image_url: string;
   rating: number;
+  total_ratings?: number;
   specialties: string[]; // e.g., ['home', 'office', 'deep']
   location_lat: number;
   location_lng: number;
   is_available: boolean;
   completed_jobs: number;
   years_experience: number;
+}
+
+declare interface CleanerReview {
+  id: string;
+  rating: number;
+  review_text: string | null;
+  review_title: string | null;
+  created_at: string;
+  user_name: string;
+  user_avatar: string | null;
+  service_type_name: string;
 }
 
 declare interface ServiceType {
@@ -26,7 +42,7 @@ declare interface ServiceType {
 declare interface MarkerData {
   latitude: number;
   longitude: number;
-  id: number;
+  id: string;
   title: string;
   profile_image_url: string;
   rating: number;
@@ -37,16 +53,7 @@ declare interface MarkerData {
   time?: number; // estimated arrival time in minutes
   price?: string;
   is_available: boolean;
-}
-
-declare interface MapProps {
-  serviceLocation?: {
-    latitude: number;
-    longitude: number;
-  };
-  onCleanerTimesCalculated?: (cleanersWithTimes: MarkerData[]) => void;
-  selectedCleaner?: number | null;
-  onMapReady?: () => void;
+  total_ratings?: number;
 }
 
 declare interface Service {
@@ -63,6 +70,7 @@ declare interface Service {
   status:
     | "requested"
     | "matched"
+    | "confirmed"
     | "arrived"
     | "in_progress"
     | "completed"
@@ -70,31 +78,63 @@ declare interface Service {
   total_price: number;
   discount_amount?: number;
   promo_code_id?: string;
-  payment_status: "pending" | "paid" | "refunded";
+  payment_status: "pending" | "authorized" | "paid" | "refunded" | "failed";
   created_at: string;
   started_at?: string;
   completed_at?: string;
+  special_instructions?: string;
   rating?: number;
   review?: string;
   cleaner?: Cleaner;
   service_type: ServiceType;
 }
 
-declare interface User {
+declare interface ServiceAddonSelection {
   id: string;
   name: string;
-  email: string;
-  clerk_id: string;
-  phone?: string;
+  price: number;
+  quantity: number;
+}
+
+declare interface ServiceDetail extends Service {
+  matched_at: string | null;
+  addons: ServiceAddonSelection[];
+  promo_code: string | null;
+}
+
+declare interface CleanerJobDetail {
+  id: string;
+  status: string;
+  total_price: number;
+  payment_status: string;
+  scheduled_date: string | null;
+  estimated_duration: number;
+  actual_duration: number | null;
+  location_address: string;
+  location_lat: number;
+  location_lng: number;
+  special_instructions: string | null;
   created_at: string;
+  matched_at: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  discount_amount: number;
+  promo_code_id: string | null;
+  service_type_name: string;
+  service_type_description: string | null;
+  user_id: string;
+  user_name: string;
+  user_phone: string;
+  user_avatar: string | null;
+  addons: ServiceAddonSelection[];
 }
 
 declare interface ButtonProps extends TouchableOpacityProps {
   title: string;
   bgVariant?: "primary" | "secondary" | "danger" | "outline" | "success";
   textVariant?: "primary" | "default" | "secondary" | "danger" | "success";
-  IconLeft?: React.ComponentType<any>;
-  IconRight?: React.ComponentType<any>;
+  IconLeft?: React.ComponentType;
+  IconRight?: React.ComponentType;
   className?: string;
   loading?: boolean;
 }
@@ -118,13 +158,75 @@ declare interface GoogleInputProps {
 
 declare interface InputFieldProps extends TextInputProps {
   label: string;
-  icon?: any;
+  icon?: ImageSourcePropType;
   secureTextEntry?: boolean;
   labelStyle?: string;
   containerStyle?: string;
   inputStyle?: string;
   iconStyle?: string;
+  tintColor?: string;
   className?: string;
+}
+
+declare interface SelectedAddon {
+  id: string;
+  name?: string;
+  price?: number;
+  estimated_duration_minutes?: number;
+  quantity?: number;
+}
+
+declare interface PromoDiscount {
+  discountAmount: number;
+  finalAmount: number;
+  promoCode: string;
+}
+
+declare interface SavedLocation {
+  id: string;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  location_type: "home" | "work" | "other";
+  is_default: boolean;
+}
+
+declare interface MapboxPlace {
+  id?: string;
+  place_name: string;
+  center: [number, number];
+}
+
+declare interface MapboxGeocodingResponse {
+  features?: MapboxPlace[];
+}
+
+declare interface AvailabilitySlot {
+  id: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
+}
+
+declare interface CleanerSession {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  profile_image_url: string;
+  rating: number;
+  is_available: boolean;
+  completed_jobs: number;
+  specialties: string[];
+}
+
+declare interface LocationInput {
+  latitude: number;
+  longitude: number;
+  address: string;
 }
 
 declare interface PaymentProps {
@@ -134,7 +236,11 @@ declare interface PaymentProps {
   cleanerId?: string;
   serviceTypeId?: string;
   estimatedDuration: number;
-  stripe?: any;
+  serviceId?: string;
+  paymentMode?: "now" | "later";
+  addons?: SelectedAddon[];
+  promoCode?: string | null;
+  scheduledDate?: string | null;
 }
 
 declare interface LocationStore {
@@ -158,10 +264,14 @@ declare interface LocationStore {
 
 declare interface CleanerStore {
   cleaners: MarkerData[];
-  selectedCleaner: number | null;
-  setSelectedCleaner: (cleanerId: number | null) => void;
+  selectedCleaner: string | null;
+  cleanersLoading: boolean;
+  cleanersError: string | null;
+  setSelectedCleaner: (cleanerId: string | null) => void;
   setCleaners: (cleaners: MarkerData[]) => void;
   clearSelectedCleaner: () => void;
+  setCleanersLoading: (loading: boolean) => void;
+  setCleanersError: (error: string | null) => void;
 }
 
 declare interface ServiceTypeStore {
@@ -171,9 +281,73 @@ declare interface ServiceTypeStore {
   setSelectedServiceType: (serviceType: ServiceType | null) => void;
 }
 
+declare interface BookingStore {
+  selectedAddons: SelectedAddon[];
+  appliedPromoCode: string | null;
+  appliedPromoDiscount: number;
+  isScheduled: boolean;
+  scheduledDate: string | null;
+  specialInstructions: string | null;
+  setBooking: (partial: Partial<{
+    selectedAddons: SelectedAddon[];
+    appliedPromoCode: string | null;
+    appliedPromoDiscount: number;
+    isScheduled: boolean;
+    scheduledDate: string | null;
+    specialInstructions: string | null;
+  }>) => void;
+  resetBooking: () => void;
+}
+
 declare interface CleanerCardProps {
   item: MarkerData;
-  selected: number;
+  selected: string;
   setSelected: () => void;
   accessibilityLabel?: string;
+  onViewProfile?: () => void;
+}
+
+declare interface ChatMessage {
+  id: string;
+  service_id: string;
+  sender_id: string;
+  sender_type: "user" | "cleaner";
+  recipient_id: string | null;
+  content: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+declare interface ChatConversation {
+  service_id: string;
+  status: Service["status"];
+  scheduled_date: string | null;
+  service_type_name: string;
+  other_id: string;
+  other_name: string;
+  other_avatar: string | null;
+  last_message: string | null;
+  last_message_at: string | null;
+  unread_count: number;
+}
+
+declare interface ChatThreadProps {
+  serviceId: string;
+  otherName: string;
+  recipientId: string;
+  role: "user" | "cleaner";
+  theme?: "light" | "dark";
+}
+
+declare interface NotificationItem {
+  id: string;
+  user_id: string | null;
+  cleaner_id: string | null;
+  service_id: string | null;
+  type: string;
+  title: string;
+  message: string;
+  data: unknown;
+  is_read: boolean;
+  created_at: string;
 }

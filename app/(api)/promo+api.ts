@@ -1,13 +1,23 @@
 import { neon } from "@neondatabase/serverless";
 import { jsonResponse, errorResponse, AppError } from "@/lib/api-error";
+import { requireUserAuth, rateLimit, clientIp } from "@/lib/server-auth";
+import { resolvePromo } from "@/lib/pricing";
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireUserAuth(request);
+    await rateLimit(`promo:validate:${auth.userId}`, 120, 60_000);
+    await rateLimit(`promo:validate:ip:${clientIp(request)}`, 600, 60_000);
+
     const body = await request.json();
     const { code, serviceTypeId, orderAmount } = body;
 
     if (!code || !orderAmount) {
-      throw new AppError(400, "Promo code and order amount required", "VALIDATION_ERROR");
+      throw new AppError(
+        400,
+        "Promo code and order amount required",
+        "VALIDATION_ERROR",
+      );
     }
 
     const parsedAmount = Number(orderAmount);
@@ -15,64 +25,30 @@ export async function POST(request: Request) {
       throw new AppError(400, "Invalid order amount", "VALIDATION_ERROR");
     }
 
+    if (typeof code !== "string") {
+      throw new AppError(400, "Invalid promo code", "VALIDATION_ERROR");
+    }
+
     const sql = neon(`${process.env.DATABASE_URL}`);
 
-    const promoCodes = await sql`
-      SELECT * FROM promo_codes
-      WHERE code = ${code}
-      AND is_active = true
-      AND (valid_from IS NULL OR valid_from <= NOW())
-      AND (valid_until IS NULL OR valid_until >= NOW())
-      AND (usage_limit IS NULL OR usage_count < usage_limit);
-    `;
-
-    if (promoCodes.length === 0) {
-      throw new AppError(400, "Invalid or expired promo code", "PROMO_INVALID");
-    }
-
-    const promo = promoCodes[0];
-
-    if (parsedAmount < promo.minimum_order_amount) {
-      throw new AppError(
-        400,
-        `Minimum order amount of $${promo.minimum_order_amount} required`,
-        "PROMO_MINIMUM",
-      );
-    }
-
-    if (promo.applicable_service_types?.length > 0) {
-      if (!promo.applicable_service_types.includes(serviceTypeId)) {
-        throw new AppError(400, "Promo code not applicable to this service type", "PROMO_NOT_APPLICABLE");
-      }
-    }
-
-    let discountAmount = 0;
-    if (promo.discount_type === "percentage") {
-      discountAmount = (parsedAmount * promo.discount_value) / 100;
-    } else if (promo.discount_type === "fixed_amount") {
-      discountAmount = promo.discount_value;
-    }
-
-    if (promo.maximum_discount_amount && discountAmount > promo.maximum_discount_amount) {
-      discountAmount = promo.maximum_discount_amount;
-    }
-
-    discountAmount = Math.min(discountAmount, parsedAmount);
-
-    await sql`
-      UPDATE promo_codes SET usage_count = usage_count + 1 WHERE code = ${code}
-    `;
+    // Validation only - usage is counted atomically when the booking is created.
+    const promo = await resolvePromo(sql, {
+      code: code.trim().toUpperCase(),
+      serviceTypeId,
+      orderAmount: parsedAmount,
+      userId: auth.userId,
+    });
 
     return jsonResponse({
       data: {
-        promoCode: promo,
-        discountAmount,
-        finalAmount: parsedAmount - discountAmount,
+        promoCode: { code: promo.code, id: promo.promoId },
+        discountAmount: promo.discountAmount,
+        finalAmount: parsedAmount - promo.discountAmount,
         originalAmount: parsedAmount,
       },
     });
   } catch (error) {
-    if (error instanceof AppError) throw error;
+    if (error instanceof AppError) return errorResponse(error);
     return errorResponse(error, "Error validating promo code");
   }
 }

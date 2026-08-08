@@ -1,18 +1,8 @@
-import { Service } from "@/types/type";
-
-export const sortServices = (services: Service[]): Service[] => {
-  return [...services].sort((a, b) => {
-    return (
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-  });
-};
-
 export function formatTime(minutes: number): string {
   const formattedMinutes = +minutes?.toFixed(0) || 0;
 
   if (formattedMinutes < 60) {
-    return `${minutes} min`;
+    return `${formattedMinutes} min`;
   } else {
     const hours = Math.floor(formattedMinutes / 60);
     const remainingMinutes = formattedMinutes % 60;
@@ -41,4 +31,37 @@ export function formatDate(dateString: string): string {
   const year = date.getFullYear();
 
   return `${day < 10 ? "0" + day : day} ${month} ${year}`;
+}
+
+export function formatChatTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+
+  const isToday =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+
+  if (isToday) {
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  const isThisYear = date.getFullYear() === now.getFullYear();
+  return date.toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+    ...(isThisYear ? {} : { year: "numeric" }),
+  });
+}
+
+export function formatDateTime(dateString: string): string {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
+  return `${formatDate(dateString)} · ${date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  })}`;
 }

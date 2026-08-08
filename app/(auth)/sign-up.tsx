@@ -1,10 +1,11 @@
-import { useSignUp } from "@clerk/clerk-expo";
+import { isClerkAPIResponseError, useAuth, useSignUp } from "@clerk/clerk-expo";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Image,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   Text,
   View,
@@ -15,10 +16,13 @@ import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
 import OAuth from "@/components/OAuth";
 import { icons, images } from "@/constants";
-import { fetchAPI } from "@/lib/fetch";
+import { ApiResponse, fetchAPI } from "@/lib/fetch";
+import { useTheme } from "@/lib/theme";
 
 const SignUp = () => {
+  const { theme } = useTheme();
   const { isLoaded, signUp, setActive } = useSignUp();
+  const { getToken } = useAuth();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -35,10 +39,34 @@ const SignUp = () => {
 
   const onSignUpPress = async () => {
     if (!isLoaded) return;
+
+    const name = form.name.trim();
+    const email = form.email.trim();
+    if (!name) {
+      Alert.alert("Notice", "Please enter your name.");
+      return;
+    }
+    if (!email) {
+      Alert.alert("Notice", "Please enter your email address.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      Alert.alert("Notice", "Please enter a valid email address.");
+      return;
+    }
+    if (!form.password) {
+      Alert.alert("Notice", "Please choose a password.");
+      return;
+    }
+    if (form.password.length < 6) {
+      Alert.alert("Notice", "Password must be at least 6 characters.");
+      return;
+    }
+
     setLoading(true);
     try {
       await signUp.create({
-        emailAddress: form.email,
+        emailAddress: email,
         password: form.password,
       });
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
@@ -46,12 +74,13 @@ const SignUp = () => {
         ...verification,
         state: "pending",
       });
-    } catch (err: any) {
+    } catch (err) {
       console.log(JSON.stringify(err, null, 2));
-      Alert.alert(
-        "Error",
-        err?.errors?.[0]?.longMessage || "An error occurred",
-      );
+      const message =
+        isClerkAPIResponseError(err) && err.errors?.[0]?.longMessage
+          ? err.errors[0].longMessage
+          : "An error occurred";
+      Alert.alert("Error", message);
     } finally {
       setLoading(false);
     }
@@ -63,15 +92,17 @@ const SignUp = () => {
         code: verification.code,
       });
       if (completeSignUp.status === "complete") {
-        await fetchAPI("/(api)/user", {
+        await setActive({ session: completeSignUp.createdSessionId });
+        const token = await getToken({ skipCache: true });
+        await fetchAPI<ApiResponse<{ id: string }>>("/(api)/user", {
           method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
           body: JSON.stringify({
             name: form.name,
             email: form.email,
             clerkId: completeSignUp.createdUserId,
           }),
         });
-        await setActive({ session: completeSignUp.createdSessionId });
         setVerification({
           ...verification,
           state: "success",
@@ -94,116 +125,156 @@ const SignUp = () => {
     }
   };
   return (
-    <ScrollView className="flex-1 bg-white">
-      <View className="flex-1 bg-white">
-        <View className="relative w-full h-[250px]">
-          <Image source={images.signUpCar} className="z-0 w-full h-[250px]" />
-          <Text className="text-2xl text-black font-JakartaSemiBold absolute bottom-5 left-5">
-            Create Your Account
-          </Text>
-        </View>
-        <View className="p-5">
-          <InputField
-            label="Name"
-            placeholder="Enter name"
-            icon={icons.person}
-            value={form.name}
-            onChangeText={(value) => setForm({ ...form, name: value })}
-          />
-          <InputField
-            label="Email"
-            placeholder="Enter email"
-            icon={icons.email}
-            textContentType="emailAddress"
-            value={form.email}
-            onChangeText={(value) => setForm({ ...form, email: value })}
-          />
-          <InputField
-            label="Password"
-            placeholder="Enter password"
-            icon={icons.lock}
-            secureTextEntry={true}
-            textContentType="password"
-            value={form.password}
-            onChangeText={(value) => setForm({ ...form, password: value })}
-          />
-          <CustomButton
-            title={loading ? "Signing Up..." : "Sign Up"}
-            onPress={onSignUpPress}
-            disabled={loading}
-            className="mt-6"
-          />
-          {loading && <ActivityIndicator size="small" className="mt-2" />}
-          <OAuth />
-          <Link
-            href="/(auth)/sign-in"
-            className="text-lg text-center text-general-200 mt-10"
-          >
-            Already have an account?{" "}
-            <Text className="text-primary-500">Log In</Text>
-          </Link>
-        </View>
-        <ReactNativeModal
-          isVisible={verification.state === "pending"}
-          // onBackdropPress={() =>
-          //   setVerification({ ...verification, state: "default" })
-          // }
-          onModalHide={() => {
-            if (verification.state === "success") {
-              setShowSuccessModal(true);
-            }
-          }}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      className="flex-1"
+      style={{ backgroundColor: theme.colors.background }}
+    >
+      <ScrollView
+        className="flex-1"
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
+        <View
+          className="flex-1"
+          style={{ backgroundColor: theme.colors.background }}
         >
-          <View className="bg-white px-7 py-9 rounded-2xl min-h-[300px]">
-            <Text className="font-JakartaExtraBold text-2xl mb-2">
-              Verification
+          <View className="relative w-full h-[260px] bg-primary-gradient items-center justify-center rounded-b-[36px]">
+            <View className="w-20 h-20 rounded-2xl bg-white/15 border border-white/25 items-center justify-center mb-4 overflow-hidden">
+              <Image
+                source={images.logo}
+                className="w-full h-full"
+                resizeMode="cover"
+              />
+            </View>
+            <Text className="text-3xl text-white font-JakartaExtraBold">
+              Create Your Account
             </Text>
-            <Text className="font-Jakarta mb-5">
-              We&apos;ve sent a verification code to {form.email}.
+            <Text className="text-white/85 mt-2 font-JakartaMedium text-base">
+              Join rcleans and book trusted cleaners
             </Text>
+          </View>
+          <View className="p-6">
             <InputField
-              label={"Code"}
+              label="Name"
+              placeholder="Enter name"
+              icon={icons.person}
+              value={form.name}
+              onChangeText={(value) => setForm({ ...form, name: value })}
+            />
+            <InputField
+              label="Email"
+              placeholder="Enter email"
+              icon={icons.email}
+              textContentType="emailAddress"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={form.email}
+              onChangeText={(value) => setForm({ ...form, email: value })}
+            />
+            <InputField
+              label="Password"
+              placeholder="Enter password"
               icon={icons.lock}
-              placeholder={"12345"}
-              value={verification.code}
-              keyboardType="numeric"
-              onChangeText={(code) =>
-                setVerification({ ...verification, code })
+              secureTextEntry={true}
+              textContentType="password"
+              value={form.password}
+              onChangeText={(value) => setForm({ ...form, password: value })}
+            />
+            <CustomButton
+              title={loading ? "Signing Up..." : "Sign Up"}
+              onPress={onSignUpPress}
+              loading={loading}
+              className="mt-6"
+            />
+            <OAuth />
+            <Link
+              href="/(auth)/sign-in"
+              className="text-lg text-center mt-8 font-JakartaMedium"
+              style={{ color: theme.colors.textSecondary }}
+            >
+              Already have an account?{" "}
+              <Text className="text-primary-600 font-JakartaBold">Log In</Text>
+            </Link>
+          </View>
+          <ReactNativeModal
+            isVisible={verification.state === "pending"}
+            onModalHide={() => {
+              if (verification.state === "success") {
+                setShowSuccessModal(true);
               }
-            />
-            {verification.error && (
-              <Text className="text-red-500 text-sm mt-1">
-                {verification.error}
+            }}
+          >
+            <View
+              className="px-7 py-9 rounded-2xl min-h-[300px]"
+              style={{ backgroundColor: theme.colors.surface }}
+            >
+              <Text
+                className="font-JakartaExtraBold text-2xl mb-2"
+                style={{ color: theme.colors.text }}
+              >
+                Verification
               </Text>
-            )}
-            <CustomButton
-              title="Verify Email"
-              onPress={onPressVerify}
-              className="mt-5 bg-success-500"
-            />
-          </View>
-        </ReactNativeModal>
-        <ReactNativeModal isVisible={showSuccessModal}>
-          <View className="bg-white px-7 py-9 rounded-2xl min-h-[300px]">
-            <Image
-              source={images.check}
-              className="w-[110px] h-[110px] mx-auto my-5"
-            />
-            <Text className="text-3xl font-JakartaBold text-center">
-              Verified
-            </Text>
-            <Text className="text-base text-gray-400 font-Jakarta text-center mt-2">
-              You have successfully verified your account.
-            </Text>
-            <CustomButton
-              title="Browse Home"
-              onPress={() => router.push(`/(root)/(tabs)/home`)}
-              className="mt-5"
-            />
-          </View>
-        </ReactNativeModal>
-      </View>
-    </ScrollView>
+              <Text
+                className="font-Jakarta mb-5"
+                style={{ color: theme.colors.textSecondary }}
+              >
+                We&apos;ve sent a verification code to {form.email}.
+              </Text>
+              <InputField
+                label={"Code"}
+                icon={icons.lock}
+                placeholder={"123456"}
+                value={verification.code}
+                keyboardType="numeric"
+                onChangeText={(code) =>
+                  setVerification({ ...verification, code })
+                }
+              />
+              {verification.error && (
+                <Text className="text-danger-500 text-sm mt-1">
+                  {verification.error}
+                </Text>
+              )}
+              <CustomButton
+                title="Verify Email"
+                onPress={onPressVerify}
+                bgVariant="success"
+                className="mt-5"
+              />
+            </View>
+          </ReactNativeModal>
+          <ReactNativeModal isVisible={showSuccessModal}>
+            <View
+              className="px-7 py-9 rounded-2xl min-h-[300px]"
+              style={{ backgroundColor: theme.colors.surface }}
+            >
+              <Image
+                source={images.check}
+                className="w-[110px] h-[110px] mx-auto my-5"
+              />
+              <Text
+                className="text-3xl font-JakartaBold text-center"
+                style={{ color: theme.colors.text }}
+              >
+                Verified
+              </Text>
+              <Text
+                className="text-base font-Jakarta text-center mt-2"
+                style={{ color: theme.colors.textMuted }}
+              >
+                You have successfully verified your account.
+              </Text>
+              <CustomButton
+                title="Browse Home"
+                onPress={() => router.push(`/(root)/(tabs)/home`)}
+                className="mt-5"
+              />
+            </View>
+          </ReactNativeModal>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 export default SignUp;

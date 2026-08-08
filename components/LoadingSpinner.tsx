@@ -1,6 +1,8 @@
 import React from "react";
 import { View, ActivityIndicator, Text } from "react-native";
 
+import { useTheme } from "@/lib/theme";
+
 interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg";
   color?: string;
@@ -16,15 +18,21 @@ const sizeMap = {
 
 const LoadingSpinner = ({
   size = "md",
-  color = "#4ADE80",
+  color,
   text,
   fullScreen = false,
 }: LoadingSpinnerProps) => {
+  const { theme } = useTheme();
+  const spinnerColor = color ?? theme.colors.primary;
+
   const content = (
     <View className="flex items-center justify-center">
-      <ActivityIndicator size={sizeMap[size]} color={color} />
+      <ActivityIndicator size={sizeMap[size]} color={spinnerColor} />
       {text && (
-        <Text className="text-secondary-400 font-JakartaMedium mt-3 text-sm">
+        <Text
+          className="font-JakartaMedium mt-3 text-sm"
+          style={{ color: theme.colors.textSecondary }}
+        >
           {text}
         </Text>
       )}
@@ -33,7 +41,10 @@ const LoadingSpinner = ({
 
   if (fullScreen) {
     return (
-      <View className="flex-1 bg-dark-500 justify-center items-center">
+      <View
+        className="flex-1 justify-center items-center"
+        style={{ backgroundColor: theme.colors.background }}
+      >
         {content}
       </View>
     );

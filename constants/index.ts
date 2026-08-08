@@ -35,8 +35,10 @@ import onboarding1 from "@/assets/images/slide1.png";
 import onboarding2 from "@/assets/images/slide2.png";
 import onboarding3 from "@/assets/images/slide3.png";
 import signUpCar from "@/assets/images/signup-banner.png";
+import logo from "@/assets/images/icon.png";
 
 export const images = {
+  logo,
   onboarding1,
   onboarding2,
   onboarding3,

@@ -1,62 +1,32 @@
+import * as Sentry from "@sentry/react-native";
+
 import { logger } from "./logger";
 
-type SentryLevel = "error" | "warning" | "info";
-
-interface SentryEvent {
-  message: string;
-  level: SentryLevel;
-  extra?: Record<string, unknown>;
-  tags?: Record<string, string>;
-  user?: { id?: string; email?: string };
-}
-
 const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
-const IS_ENABLED = !!SENTRY_DSN;
+const APP_ENV = process.env.EXPO_PUBLIC_APP_ENV || "development";
 
-async function sendToSentry(event: SentryEvent): Promise<void> {
-  if (!IS_ENABLED) {
-    logger.debug(`[Sentry Mock] ${event.level}: ${event.message}`, event.extra);
+export function initSentry(): void {
+  if (!SENTRY_DSN) {
     return;
   }
 
-  try {
-    const body = {
-      event: {
-        message: event.message,
-        level: event.level,
-        extra: event.extra,
-        tags: event.tags,
-        user: event.user,
-        timestamp: new Date().toISOString(),
-        environment: process.env.EXPO_PUBLIC_APP_ENV || "development",
-      },
-    };
-
-    await fetch(`${SENTRY_DSN}/api/1/envelope/`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (err) {
-    logger.error("Failed to send event to Sentry", err);
-  }
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    environment: APP_ENV,
+    tracesSampleRate: 1.0,
+  });
 }
 
 export const monitoring = {
   captureError(error: Error, extra?: Record<string, unknown>) {
-    sendToSentry({
-      message: error.message,
-      level: "error",
-      extra: { ...extra, stack: error.stack },
-      tags: { error_type: error.name },
-    });
-  },
+    if (SENTRY_DSN) {
+      Sentry.captureException(error, {
+        extra,
+        tags: { error_type: error.name },
+      });
+      return;
+    }
 
-  captureMessage(message: string, level: SentryLevel = "info") {
-    sendToSentry({ message, level });
-  },
-
-  setUser(user: { id?: string; email?: string }) {
-    logger.info(`[Sentry] User set: ${user.id || user.email}`);
+    logger.error(error.message, { ...extra, stack: error.stack });
   },
 };

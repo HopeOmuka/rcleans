@@ -3,6 +3,7 @@ import type {
   LocationStore,
   CleanerStore,
   ServiceTypeStore,
+  BookingStore,
 } from "@/types/type";
 
 export const useLocationStore = create<LocationStore>((set) => ({
@@ -31,6 +32,8 @@ export const useLocationStore = create<LocationStore>((set) => ({
 export const useCleanerStore = create<CleanerStore>((set) => ({
   cleaners: [],
   selectedCleaner: null,
+  cleanersLoading: false,
+  cleanersError: null,
   setSelectedCleaner: (cleanerId) => set(() => ({ selectedCleaner: cleanerId })),
   setCleaners: (cleaners) =>
     set(() => ({
@@ -40,6 +43,8 @@ export const useCleanerStore = create<CleanerStore>((set) => ({
     set(() => ({
       selectedCleaner: null,
     })),
+  setCleanersLoading: (cleanersLoading) => set(() => ({ cleanersLoading })),
+  setCleanersError: (cleanersError) => set(() => ({ cleanersError })),
 }));
 
 export const useServiceTypeStore = create<ServiceTypeStore>((set) => ({
@@ -52,5 +57,24 @@ export const useServiceTypeStore = create<ServiceTypeStore>((set) => ({
   setSelectedServiceType: (serviceType) =>
     set(() => ({
       selectedServiceType: serviceType,
+    })),
+}));
+
+export const useBookingStore = create<BookingStore>((set) => ({
+  selectedAddons: [],
+  appliedPromoCode: null,
+  appliedPromoDiscount: 0,
+  isScheduled: false,
+  scheduledDate: null,
+  specialInstructions: null,
+  setBooking: (partial) => set((state) => ({ ...state, ...partial })),
+  resetBooking: () =>
+    set(() => ({
+      selectedAddons: [],
+      appliedPromoCode: null,
+      appliedPromoDiscount: 0,
+      isScheduled: false,
+      scheduledDate: null,
+      specialInstructions: null,
     })),
 }));

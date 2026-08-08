@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS services (
     actual_duration DECIMAL(4,1), -- in hours (filled after completion)
     status TEXT NOT NULL DEFAULT 'requested' CHECK (status IN ('requested', 'matched', 'confirmed', 'arrived', 'in_progress', 'completed', 'cancelled', 'refunded')),
     total_price DECIMAL(10,2) NOT NULL CHECK (total_price >= 0),
-    payment_status TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'refunded', 'failed')),
+    payment_status TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'authorized', 'paid', 'refunded', 'failed')),
     payment_method TEXT, -- 'card', 'wallet', etc.
     stripe_payment_intent_id TEXT,
     discount_amount DECIMAL(10,2) DEFAULT 0 CHECK (discount_amount >= 0),
@@ -201,6 +201,21 @@ CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id, sender_typ
 CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(created_at DESC);
 
 -- =========================================
+-- 9b. SUPPORT MESSAGES TABLE
+-- =========================================
+-- Customer support inquiries submitted from the app
+CREATE TABLE IF NOT EXISTS support_messages (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    subject TEXT NOT NULL,
+    message TEXT NOT NULL CHECK (char_length(message) > 0 AND char_length(message) <= 5000),
+    status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'in_progress', 'resolved')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_support_messages_user ON support_messages(user_id, created_at DESC);
+
+-- =========================================
 -- 10. PROMO CODES TABLE
 -- =========================================
 -- Discount codes and promotions
@@ -232,11 +247,18 @@ CREATE TABLE IF NOT EXISTS service_addons (
     description TEXT,
     price DECIMAL(8,2) NOT NULL CHECK (price >= 0),
     estimated_duration_minutes INTEGER DEFAULT 0,
+    -- Empty array = available for every service type; otherwise the add-on is
+    -- only offered for the listed service types.
+    service_type_ids TEXT[] NOT NULL DEFAULT '{}',
     is_active BOOLEAN DEFAULT true,
     sort_order INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Applied in scripts/migrate-service-addon-scope.mjs on live DBs.
+ALTER TABLE service_addons
+  ADD COLUMN IF NOT EXISTS service_type_ids TEXT[] NOT NULL DEFAULT '{}';
 
 -- =========================================
 -- 11. SERVICE ADD-ON SELECTIONS TABLE
@@ -330,13 +352,13 @@ INSERT INTO service_types (id, name, description, base_price, price_per_hour, es
 ('post-construction', 'Post-Construction', 'Cleaning after construction or renovation work', 150.00, 35.00, 6.0, 5)
 ON CONFLICT (id) DO NOTHING;
 
--- Insert sample service add-ons
-INSERT INTO service_addons (name, description, price, estimated_duration_minutes, sort_order) VALUES
-('Inside Fridge', 'Clean inside refrigerator', 15.00, 30, 1),
-('Inside Oven', 'Clean inside oven', 25.00, 45, 2),
-('Window Cleaning', 'Clean interior windows', 20.00, 30, 3),
-('Carpet Shampoo', 'Deep clean carpets', 30.00, 60, 4),
-('Laundry Service', 'Wash and fold laundry', 15.00, 45, 5)
+-- Insert sample service add-ons. service_type_ids: empty array = all services.
+INSERT INTO service_addons (name, description, price, estimated_duration_minutes, service_type_ids, sort_order) VALUES
+('Inside Fridge', 'Clean inside refrigerator', 15.00, 30, ARRAY['deep-cleaning'], 1),
+('Inside Oven', 'Clean inside oven', 25.00, 45, ARRAY['deep-cleaning'], 2),
+('Window Cleaning', 'Clean interior windows', 20.00, 30, ARRAY['home-cleaning','office-cleaning','deep-cleaning','post-construction'], 3),
+('Carpet Shampoo', 'Deep clean carpets', 30.00, 60, ARRAY['home-cleaning','office-cleaning'], 4),
+('Laundry Service', 'Wash and fold laundry', 15.00, 45, ARRAY['home-cleaning'], 5)
 ON CONFLICT DO NOTHING;
 
 -- =========================================
@@ -435,6 +457,20 @@ ALTER TABLE services ADD CONSTRAINT check_scheduled_date_future
 -- Ensure completed_at is after started_at
 ALTER TABLE services ADD CONSTRAINT check_completion_after_start
     CHECK (completed_at IS NULL OR started_at IS NULL OR completed_at > started_at);
+
+-- =========================================
+-- RATE LIMITING (DB-backed)
+-- =========================================
+-- Buckets for rateLimit() in lib/server-auth.ts. Keyed by SHA-256 of the
+-- logical limit key so raw emails / IPs are never stored in cleartext.
+CREATE TABLE IF NOT EXISTS rate_limits (
+    key TEXT PRIMARY KEY,
+    count INTEGER NOT NULL DEFAULT 1,
+    reset_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_rate_limits_reset ON rate_limits(reset_at);
 
 -- =========================================
 -- FINAL NOTES

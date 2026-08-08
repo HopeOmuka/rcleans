@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 import {
   ActivityIndicator,
   Image,
@@ -6,26 +12,50 @@ import {
   View,
   TouchableOpacity,
 } from "react-native";
-import MapboxGL from "@rnmapbox/maps";
+import type { Feature, LineString } from "geojson";
+import type MapboxGLModule from "@rnmapbox/maps";
+import type * as MapboxGLTypes from "@rnmapbox/maps";
 
 import { icons } from "@/constants";
-import { fetchAPI, useFetch } from "@/lib/fetch";
+import { fetchAPI } from "@/lib/fetch";
+import { useFetch } from "@/lib/fetch-hook";
+import { useTheme } from "@/lib/theme";
 import {
   calculateCleanerTimes,
   calculateRegion,
+  DirectionsResponse,
   generateMarkersFromData,
+  haversineKm,
 } from "@/lib/map";
 import { useCleanerStore, useLocationStore } from "@/store";
 import { Cleaner, MarkerData } from "@/types/type";
 
-MapboxGL.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_API_KEY!);
+type MapboxGLModuleType = typeof MapboxGLModule;
+
+let MapboxGL: MapboxGLModuleType | null = null;
+
+try {
+  // Lazy require so screens that render without the native module (e.g.
+  // Expo Go) still work instead of crashing at import time.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const mod = require("@rnmapbox/maps");
+  MapboxGL = (mod?.default ?? mod) as MapboxGLModuleType;
+  const accessToken = process.env.EXPO_PUBLIC_MAPBOX_API_KEY;
+  if (accessToken) {
+    MapboxGL.setAccessToken(accessToken);
+  }
+} catch {
+  MapboxGL = null;
+}
 
 const Map = () => {
+  const { theme } = useTheme();
   const { userLongitude, userLatitude, serviceLatitude, serviceLongitude } =
     useLocationStore();
 
-  const { selectedCleaner, setCleaners } = useCleanerStore();
-  const cameraRef = useRef<MapboxGL.Camera>(null);
+  const { selectedCleaner, setCleaners, setCleanersLoading, setCleanersError } =
+    useCleanerStore();
+  const cameraRef = useRef<MapboxGLTypes.Camera>(null);
 
   const {
     data: cleaners,
@@ -33,6 +63,14 @@ const Map = () => {
     error,
     refetch,
   } = useFetch<Cleaner[]>("/(api)/cleaner");
+
+  useEffect(() => {
+    setCleanersLoading(loading);
+  }, [loading, setCleanersLoading]);
+
+  useEffect(() => {
+    setCleanersError(error);
+  }, [error, setCleanersError]);
 
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [routeCoords, setRouteCoords] = useState<
@@ -62,9 +100,11 @@ const Map = () => {
       serviceLatitude,
       serviceLongitude,
     }).then((cleanersWithTimes) => {
-      setCleaners(cleanersWithTimes as MarkerData[]);
+      if (cleanersWithTimes) {
+        setCleaners(cleanersWithTimes);
+      }
     });
-  }, [markers, serviceLatitude, serviceLongitude]);
+  }, [markers, serviceLatitude, serviceLongitude, setCleaners]);
 
   useEffect(() => {
     const fetchRoute = async () => {
@@ -76,21 +116,32 @@ const Map = () => {
       )
         return;
 
+      if (
+        haversineKm(
+          userLatitude,
+          userLongitude,
+          serviceLatitude,
+          serviceLongitude,
+        ) > 500
+      ) {
+        setRouteCoords([]);
+        setRouteError(false);
+        return;
+      }
+
       setRouteLoading(true);
       setRouteError(false);
 
       try {
-        const data = await fetchAPI(
+        const data = await fetchAPI<DirectionsResponse>(
           `https://api.mapbox.com/directions/v5/mapbox/driving/${userLongitude},${userLatitude};${serviceLongitude},${serviceLatitude}?access_token=${process.env.EXPO_PUBLIC_MAPBOX_API_KEY}&geometries=geojson&overview=full`,
         );
 
         const coords =
-          data.routes?.[0]?.geometry?.coordinates?.map(
-            ([lng, lat]: [number, number]) => ({
-              latitude: lat,
-              longitude: lng,
-            }),
-          ) ?? [];
+          data.routes?.[0]?.geometry?.coordinates?.map((coord) => ({
+            latitude: coord[1],
+            longitude: coord[0],
+          })) ?? [];
 
         setRouteCoords(coords);
       } catch (err) {
@@ -115,7 +166,7 @@ const Map = () => {
     [userLatitude, userLongitude, serviceLatitude, serviceLongitude],
   );
 
-  const routeGeoJSON = useMemo(() => {
+  const routeGeoJSON = useMemo((): Feature<LineString> | null => {
     if (routeCoords.length === 0) return null;
     return {
       type: "Feature",
@@ -127,35 +178,44 @@ const Map = () => {
     };
   }, [routeCoords]);
 
-  const onMarkerPress = useCallback(
-    (marker: MarkerData) => {
-      useCleanerStore.setState({ selectedCleaner: +marker.id });
-      cameraRef.current?.flyTo([marker.longitude, marker.latitude], 600);
-    },
-    [],
-  );
+  const onMarkerPress = useCallback((marker: MarkerData) => {
+    useCleanerStore.setState({ selectedCleaner: marker.id });
+    cameraRef.current?.flyTo([marker.longitude, marker.latitude], 600);
+  }, []);
 
   if (loading || (!userLatitude && !userLongitude)) {
     return (
       <View className="flex justify-center items-center w-full h-full">
-        <ActivityIndicator size="small" color="black" />
+        <ActivityIndicator size="small" color={theme.colors.textSecondary} />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex justify-center items-center w-full h-full bg-gray-100 px-6">
-        <View className="bg-white rounded-2xl p-6 items-center shadow-sm">
+      <View
+        className="flex justify-center items-center w-full h-full px-6"
+        style={{ backgroundColor: theme.colors.surfaceMuted }}
+      >
+        <View
+          className="rounded-2xl p-6 items-center shadow-sm"
+          style={{ backgroundColor: theme.colors.surface }}
+        >
           <Image
             source={icons.map}
             className="w-12 h-12 mb-3 opacity-50"
-            tintColor="#9CA3AF"
+            tintColor={theme.colors.textMuted}
           />
-          <Text className="text-lg font-JakartaBold text-gray-800 mb-1">
+          <Text
+            className="text-lg font-JakartaBold mb-1"
+            style={{ color: theme.colors.text }}
+          >
             Unable to load map
           </Text>
-          <Text className="text-sm text-gray-500 text-center mb-4">
+          <Text
+            className="text-sm text-center mb-4"
+            style={{ color: theme.colors.textSecondary }}
+          >
             {error}
           </Text>
           <TouchableOpacity
@@ -169,11 +229,44 @@ const Map = () => {
     );
   }
 
+  if (!MapboxGL) {
+    return (
+      <View
+        className="flex-1 items-center justify-center px-6"
+        style={{ backgroundColor: theme.colors.surfaceMuted }}
+      >
+        <View
+          className="rounded-2xl p-6 items-center shadow-sm"
+          style={{ backgroundColor: theme.colors.surface }}
+        >
+          <Image
+            source={icons.map}
+            className="w-12 h-12 mb-3 opacity-50"
+            tintColor={theme.colors.textMuted}
+          />
+          <Text
+            className="text-lg font-JakartaBold mb-1"
+            style={{ color: theme.colors.text }}
+          >
+            Map unavailable
+          </Text>
+          <Text
+            className="text-sm text-center mb-4"
+            style={{ color: theme.colors.textSecondary }}
+          >
+            The map requires a development build. Run `npx expo run:android` to
+            enable it.
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1">
       <MapboxGL.MapView
         style={{ flex: 1 }}
-        styleURL={MapboxGL.StyleURL.Streets}
+        styleURL={MapboxGL.StyleURL.Street}
         logoEnabled={false}
         attributionEnabled={false}
       >
@@ -194,7 +287,7 @@ const Map = () => {
           >
             <Image
               source={
-                selectedCleaner === +marker.id
+                selectedCleaner === marker.id
                   ? icons.selectedMarker
                   : icons.marker
               }
@@ -233,17 +326,33 @@ const Map = () => {
       </MapboxGL.MapView>
 
       {routeLoading && (
-        <View className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 px-4 py-2 rounded-full flex-row items-center shadow-sm">
+        <View
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full flex-row items-center shadow-sm"
+          style={{ backgroundColor: theme.colors.surface }}
+        >
           <ActivityIndicator size="small" color="#3B82F6" className="mr-2" />
-          <Text className="text-sm font-JakartaMedium text-gray-700">
+          <Text
+            className="text-sm font-JakartaMedium"
+            style={{ color: theme.colors.text }}
+          >
             Fetching route...
           </Text>
         </View>
       )}
 
       {routeError && !routeLoading && (
-        <View className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-red-50 border border-red-200 px-4 py-2 rounded-full">
-          <Text className="text-sm font-JakartaMedium text-red-600">
+        <View
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full"
+          style={{
+            backgroundColor: theme.colors.dangerSoft,
+            borderColor: theme.colors.danger,
+            borderWidth: 1,
+          }}
+        >
+          <Text
+            className="text-sm font-JakartaMedium"
+            style={{ color: theme.colors.danger }}
+          >
             Failed to load route
           </Text>
         </View>

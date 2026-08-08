@@ -4,23 +4,16 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  Alert,
+  ActivityIndicator,
   TextInput,
 } from "react-native";
 
-import { fetchAPI } from "@/lib/fetch";
-
-interface AvailabilitySlot {
-  id: string;
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
-  is_available: boolean;
-}
+import { fetchAPI, ApiResponse } from "@/lib/fetch";
+import { AvailabilitySlot } from "@/types/type";
 
 interface AvailabilityManagerProps {
   cleanerId: string;
-  onDataChange?: () => void;
+  onDataChange?: (slots: AvailabilitySlot[]) => void;
 }
 
 const DAYS_OF_WEEK = [
@@ -39,25 +32,33 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
 }) => {
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadAvailability = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetchAPI(
+      const response = await fetchAPI<ApiResponse<AvailabilitySlot[]>>(
         `/(api)/cleaner/availability?cleanerId=${cleanerId}`,
       );
       if (response.data) {
         setAvailability(response.data);
+        onDataChange?.(response.data);
+      } else {
+        setError(response.error || "Failed to load availability");
       }
-    } catch (error) {
-      console.error("Error loading availability:", error);
-      Alert.alert("Error", "Failed to load availability");
+    } catch (err) {
+      console.error("Error loading availability:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to load availability",
+      );
     } finally {
       setLoading(false);
     }
-  }, [cleanerId]);
+  }, [cleanerId, onDataChange]);
 
   useEffect(() => {
-    loadAvailability();
+    void loadAvailability();
   }, [loadAvailability]);
 
   const getAvailabilityForDay = (dayIndex: number) => {
@@ -69,9 +70,9 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
 
     if (existingSlot) {
       // Remove availability for this day
-      setAvailability(
-        availability.filter((slot) => slot.day_of_week !== dayIndex),
-      );
+      const next = availability.filter((slot) => slot.day_of_week !== dayIndex);
+      setAvailability(next);
+      onDataChange?.(next);
     } else {
       // Add default availability for this day
       const newSlot: AvailabilitySlot = {
@@ -81,36 +82,60 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
         end_time: "17:00",
         is_available: true,
       };
-      setAvailability([...availability, newSlot]);
+      const next = [...availability, newSlot];
+      setAvailability(next);
+      onDataChange?.(next);
     }
-    onDataChange?.();
   };
 
   const updateTime = (dayIndex: number, isStartTime: boolean, time: string) => {
-    setAvailability(
-      availability.map((slot) =>
-        slot.day_of_week === dayIndex
-          ? {
-              ...slot,
-              [isStartTime ? "start_time" : "end_time"]: time,
-            }
-          : slot,
-      ),
+    const next = availability.map((slot) =>
+      slot.day_of_week === dayIndex
+        ? {
+            ...slot,
+            [isStartTime ? "start_time" : "end_time"]: time,
+          }
+        : slot,
     );
-    onDataChange?.();
+    setAvailability(next);
+    onDataChange?.(next);
   };
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <Text>Loading availability...</Text>
+      <View className="flex-1 justify-center items-center py-16">
+        <ActivityIndicator size="large" color="#22C55E" />
+        <Text className="text-gray-400 text-sm mt-3">
+          Loading availability...
+        </Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 justify-center items-center px-8 py-16">
+        <View className="bg-dark-200 rounded-2xl border border-red-500/40 p-6 items-center w-full">
+          <Text className="text-white text-lg font-JakartaBold text-center mb-1">
+            Could not load availability
+          </Text>
+          <Text className="text-gray-400 text-sm text-center mb-5">
+            {error}
+          </Text>
+          <TouchableOpacity
+            onPress={() => void loadAvailability()}
+            className="bg-primary-500 px-6 py-2.5 rounded-lg"
+          >
+            <Text className="text-white font-JakartaMedium">Retry</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
   return (
     <ScrollView className="flex-1 p-4">
-      <Text className="text-2xl font-JakartaBold mb-6">
+      <Text className="text-2xl font-JakartaBold mb-6 text-white">
         Set Your Availability
       </Text>
 
@@ -121,19 +146,21 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
         return (
           <View
             key={index}
-            className="mb-4 p-4 bg-white rounded-lg border border-gray-200"
+            className="mb-4 p-4 bg-dark-200 rounded-lg border border-gray-700"
           >
             <View className="flex-row justify-between items-center mb-3">
-              <Text className="text-lg font-JakartaSemiBold">{day}</Text>
+              <Text className="text-lg font-JakartaSemiBold text-white">
+                {day}
+              </Text>
               <TouchableOpacity
                 onPress={() => toggleDayAvailability(index)}
                 className={`px-3 py-1 rounded-full ${
-                  isAvailable ? "bg-green-100" : "bg-gray-100"
+                  isAvailable ? "bg-green-500/20" : "bg-dark-300"
                 }`}
               >
                 <Text
                   className={`text-sm font-JakartaMedium ${
-                    isAvailable ? "text-green-700" : "text-gray-600"
+                    isAvailable ? "text-green-400" : "text-gray-400"
                   }`}
                 >
                   {isAvailable ? "Available" : "Unavailable"}
@@ -144,21 +171,27 @@ const AvailabilityManager: React.FC<AvailabilityManagerProps> = ({
             {isAvailable && (
               <View className="space-y-3">
                 <View className="flex-row justify-between items-center">
-                  <Text className="text-sm font-JakartaMedium mr-2">From:</Text>
+                  <Text className="text-sm font-JakartaMedium mr-2 text-gray-400">
+                    From:
+                  </Text>
                   <TextInput
-                    className="flex-1 p-2 bg-gray-50 rounded border text-center"
+                    className="flex-1 p-2 bg-dark-300 rounded border border-gray-700 text-center text-white"
                     value={slot.start_time}
                     onChangeText={(text) => updateTime(index, true, text)}
                     placeholder="HH:MM"
+                    placeholderTextColor="#6B7280"
                   />
                 </View>
                 <View className="flex-row justify-between items-center">
-                  <Text className="text-sm font-JakartaMedium mr-2">To:</Text>
+                  <Text className="text-sm font-JakartaMedium mr-2 text-gray-400">
+                    To:
+                  </Text>
                   <TextInput
-                    className="flex-1 p-2 bg-gray-50 rounded border text-center"
+                    className="flex-1 p-2 bg-dark-300 rounded border border-gray-700 text-center text-white"
                     value={slot.end_time}
                     onChangeText={(text) => updateTime(index, false, text)}
                     placeholder="HH:MM"
+                    placeholderTextColor="#6B7280"
                   />
                 </View>
               </View>

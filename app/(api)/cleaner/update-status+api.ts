@@ -1,7 +1,14 @@
 import { neon } from "@neondatabase/serverless";
 import { jsonResponse, errorResponse, AppError } from "@/lib/api-error";
+import { requireCleanerAuth } from "@/lib/server-auth";
+import { sendPush } from "@/lib/push";
 
-const VALID_STATUSES = ["matched", "arrived", "in_progress", "completed"] as const;
+const VALID_STATUSES = [
+  "matched",
+  "arrived",
+  "in_progress",
+  "completed",
+] as const;
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
   matched: ["arrived"],
@@ -10,7 +17,10 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   completed: [],
 };
 
-const NOTIF_CONFIG: Record<string, { type: string; title: string; message: string }> = {
+const NOTIF_CONFIG: Record<
+  string,
+  { type: string; title: string; message: string }
+> = {
   arrived: {
     type: "service_started",
     title: "Cleaner Arrived",
@@ -30,6 +40,7 @@ const NOTIF_CONFIG: Record<string, { type: string; title: string; message: strin
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireCleanerAuth(request);
     const body = await request.json();
     const { jobId, status } = body;
 
@@ -47,14 +58,17 @@ export async function POST(request: Request) {
 
     const sql = neon(`${process.env.DATABASE_URL}`);
 
-    const currentResult = await sql`
-      SELECT status FROM services WHERE id = ${jobId}
+    const [service] = await sql`
+      SELECT status, cleaner_id, user_id FROM services WHERE id = ${jobId}
     `;
-    if (currentResult.length === 0) {
+    if (!service) {
       throw new AppError(404, "Job not found", "NOT_FOUND");
     }
+    if (String(service.cleaner_id) !== auth.cleanerId) {
+      throw new AppError(403, "Not authorized to update this job", "FORBIDDEN");
+    }
 
-    const currentStatus = currentResult[0].status as string;
+    const currentStatus = service.status as string;
     if (!VALID_TRANSITIONS[currentStatus]?.includes(status)) {
       throw new AppError(
         400,
@@ -63,53 +77,63 @@ export async function POST(request: Request) {
       );
     }
 
+    // Atomic: re-verify current status inside the UPDATE.
     let result;
     if (status === "arrived") {
       result = await sql`
-        UPDATE services SET status = ${status}, matched_at = NOW(), updated_at = NOW()
-        WHERE id = ${jobId} RETURNING id, status, cleaner_id
+        UPDATE services SET status = 'arrived', matched_at = NOW(), updated_at = NOW()
+        WHERE id = ${jobId} AND status = 'matched'
+        RETURNING id, status, cleaner_id
       `;
     } else if (status === "in_progress") {
       result = await sql`
-        UPDATE services SET status = ${status}, started_at = NOW(), updated_at = NOW()
-        WHERE id = ${jobId} RETURNING id, status, cleaner_id
+        UPDATE services SET status = 'in_progress', started_at = NOW(), updated_at = NOW()
+        WHERE id = ${jobId} AND status = 'arrived'
+        RETURNING id, status, cleaner_id
       `;
     } else if (status === "completed") {
       result = await sql`
-        UPDATE services SET status = ${status}, completed_at = NOW(), updated_at = NOW()
-        WHERE id = ${jobId} RETURNING id, status, cleaner_id
+        UPDATE services SET status = 'completed', completed_at = NOW(), updated_at = NOW()
+        WHERE id = ${jobId} AND status = 'in_progress'
+        RETURNING id, status, cleaner_id
       `;
     } else {
       result = await sql`
         UPDATE services SET status = ${status}, updated_at = NOW()
-        WHERE id = ${jobId} RETURNING id, status, cleaner_id
+        WHERE id = ${jobId} AND status = ${currentStatus}
+        RETURNING id, status, cleaner_id
       `;
     }
 
     if (result.length === 0) {
-      throw new AppError(404, "Job not found", "NOT_FOUND");
+      throw new AppError(
+        409,
+        "Job status changed by another request",
+        "CONFLICT",
+      );
     }
 
     const notif = NOTIF_CONFIG[status];
     if (notif) {
-      const serviceData = await sql`
-        SELECT user_id FROM services WHERE id = ${jobId}
+      await sql`
+        INSERT INTO notifications (user_id, service_id, type, title, message, data)
+        VALUES (
+          ${service.user_id}, ${jobId}, ${notif.type},
+          ${notif.title}, ${notif.message},
+          ${JSON.stringify({ service_id: jobId, status })}
+        )
       `;
-      if (serviceData.length > 0) {
-        await sql`
-          INSERT INTO notifications (user_id, service_id, type, title, message, data)
-          VALUES (
-            ${serviceData[0].user_id}, ${jobId}, ${notif.type},
-            ${notif.title}, ${notif.message},
-            ${JSON.stringify({ service_id: jobId, status })}
-          )
-        `;
-      }
+      void sendPush({
+        userId: service.user_id,
+        title: notif.title,
+        body: notif.message,
+        data: { service_id: jobId, status },
+      });
     }
 
     return jsonResponse({ data: result[0] });
   } catch (error) {
-    if (error instanceof AppError) throw error;
+    if (error instanceof AppError) return errorResponse(error);
     return errorResponse(error, "Error updating job status");
   }
 }

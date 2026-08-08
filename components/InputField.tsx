@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   TextInput,
   View,
@@ -9,6 +10,8 @@ import {
   Platform,
 } from "react-native";
 
+import { useTheme } from "@/lib/theme";
+
 import { InputFieldProps } from "@/types/type";
 
 const InputField = ({
@@ -19,9 +22,13 @@ const InputField = ({
   containerStyle,
   inputStyle,
   iconStyle,
+  tintColor,
   className,
   ...props
 }: InputFieldProps) => {
+  const { theme } = useTheme();
+  const [focused, setFocused] = useState(false);
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -31,23 +38,44 @@ const InputField = ({
           <Text
             className={`text-lg font-JakartaSemiBold mb-3 ${labelStyle}`}
             accessibilityRole="text"
+            style={{ color: theme.colors.text }}
           >
             {label}
           </Text>
           <View
-            className={`flex flex-row justify-start items-center relative bg-neutral-100 rounded-full border border-neutral-100 focus:border-primary-500 ${containerStyle}`}
+            className={`flex flex-row justify-start items-center relative rounded-2xl border-2 ${containerStyle}`}
+            style={{
+              backgroundColor: focused
+                ? theme.colors.surface
+                : theme.colors.surfaceMuted,
+              borderColor: focused ? theme.colors.primary : theme.colors.border,
+            }}
           >
             {icon && (
               <Image
                 source={icon}
-                className={`w-6 h-6 ml-4 ${iconStyle}`}
+                tintColor={
+                  tintColor ??
+                  (focused ? theme.colors.primary : theme.colors.textMuted)
+                }
+                className={`w-5 h-5 ml-4 ${iconStyle}`}
                 accessibilityIgnoresInvertColors={false}
               />
             )}
             <TextInput
-              className={`rounded-full p-4 font-JakartaSemiBold text-[15px] flex-1 ${inputStyle} text-left`}
+              className={`rounded-2xl p-4 font-JakartaSemiBold text-[15px] flex-1 text-left ${inputStyle}`}
+              style={{ color: theme.colors.text }}
               secureTextEntry={secureTextEntry}
               accessibilityLabel={label}
+              onFocus={(e) => {
+                setFocused(true);
+                props.onFocus?.(e);
+              }}
+              onBlur={(e) => {
+                setFocused(false);
+                props.onBlur?.(e);
+              }}
+              placeholderTextColor={theme.colors.textMuted}
               {...props}
             />
           </View>

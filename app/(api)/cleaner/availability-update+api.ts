@@ -1,13 +1,19 @@
 import { neon } from "@neondatabase/serverless";
 import { jsonResponse, errorResponse, AppError } from "@/lib/api-error";
+import { requireCleanerAuth } from "@/lib/server-auth";
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireCleanerAuth(request);
     const body = await request.json();
-    const { cleanerId, isAvailable } = body;
+    const { isAvailable } = body;
 
-    if (!cleanerId) {
-      throw new AppError(400, "Cleaner ID required", "VALIDATION_ERROR");
+    if (typeof isAvailable !== "boolean") {
+      throw new AppError(
+        400,
+        "isAvailable must be a boolean",
+        "VALIDATION_ERROR",
+      );
     }
 
     const sql = neon(`${process.env.DATABASE_URL}`);
@@ -15,7 +21,7 @@ export async function POST(request: Request) {
     const result = await sql`
       UPDATE cleaners
       SET is_available = ${isAvailable}, updated_at = NOW()
-      WHERE id = ${cleanerId}
+      WHERE id = ${auth.cleanerId}
       RETURNING id, is_available
     `;
 
@@ -25,7 +31,7 @@ export async function POST(request: Request) {
 
     return jsonResponse({ data: result[0] });
   } catch (error) {
-    if (error instanceof AppError) throw error;
+    if (error instanceof AppError) return errorResponse(error);
     return errorResponse(error, "Error updating availability");
   }
 }

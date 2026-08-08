@@ -1,15 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { jsonResponse, errorResponse, AppError } from "@/lib/api-error";
-import { randomBytes } from "node:crypto";
-import { createHash } from "node:crypto";
-
-function generateToken(cleanerId: number): string {
-  const timestamp = Date.now();
-  const random = randomBytes(16).toString("hex");
-  const raw = `${cleanerId}:${timestamp}:${random}`;
-  const signature = createHash("sha256").update(raw).digest("hex");
-  return Buffer.from(`${raw}:${signature}`).toString("base64url");
-}
+import { rateLimit, clientIp, issueCleanerToken } from "@/lib/server-auth";
 
 export async function POST(request: Request) {
   try {
@@ -24,10 +15,26 @@ export async function POST(request: Request) {
       throw new AppError(400, "Invalid email format", "VALIDATION_ERROR");
     }
 
+    if (typeof phone !== "string" || phone.trim().length < 7) {
+      throw new AppError(400, "Invalid phone format", "VALIDATION_ERROR");
+    }
+
+    // IP limits alone can be evaded by rotating X-Forwarded-For; the
+    // per-account limit is the one that stops credential brute-forcing.
+    await rateLimit(`cleaner:login:ip:${clientIp(request)}`, 5, 60_000);
+    await rateLimit(
+      `cleaner:login:email:${email.trim().toLowerCase()}`,
+      5,
+      60_000,
+    );
+
     const sql = neon(`${process.env.DATABASE_URL}`);
 
     const cleaners = await sql`
-      SELECT * FROM cleaners WHERE email = ${email} AND phone = ${phone} LIMIT 1
+      SELECT * FROM cleaners
+      WHERE email = ${email.trim().toLowerCase()}
+        AND phone = ${phone.trim()}
+      LIMIT 1
     `;
 
     if (cleaners.length === 0) {
@@ -35,7 +42,11 @@ export async function POST(request: Request) {
     }
 
     const cleaner = cleaners[0];
-    const token = generateToken(cleaner.id);
+    const token = await issueCleanerToken({
+      id: String(cleaner.id),
+      email: cleaner.email,
+      phone: cleaner.phone,
+    });
 
     return jsonResponse({
       data: {
@@ -55,7 +66,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    if (error instanceof AppError) throw error;
+    if (error instanceof AppError) return errorResponse(error);
     return errorResponse(error, "Cleaner login error");
   }
 }

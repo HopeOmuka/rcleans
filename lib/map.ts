@@ -1,7 +1,55 @@
-import { Cleaner, MarkerData } from "@/types/type";
+import { Cleaner, MarkerData, MapboxGeocodingResponse } from "@/types/type";
 import { fetchAPI } from "@/lib/fetch";
 
 const MAPBOX_API_KEY = process.env.EXPO_PUBLIC_MAPBOX_API_KEY;
+
+export const NAIROBI_CBD = {
+  latitude: -1.2921,
+  longitude: 36.8219,
+};
+
+export const DEFAULT_LOCATION = {
+  ...NAIROBI_CBD,
+  address: "Nairobi, Kenya",
+};
+
+// Kenya bounding box (matches the bbox used for Mapbox search)
+export const KENYA_BOUNDS = {
+  minLatitude: -4.899,
+  maxLatitude: 5.506,
+  minLongitude: 33.909,
+  maxLongitude: 41.905,
+};
+
+// Max straight-line distance (km) allowed for driving directions. Beyond
+// this the map shows no route instead of hammering the Directions API with
+// "Route exceeds maximum distance limitation" errors.
+const MAX_ROUTE_DISTANCE_KM = 500;
+
+export const isWithinKenya = (
+  latitude: number,
+  longitude: number,
+): boolean =>
+  latitude >= KENYA_BOUNDS.minLatitude &&
+  latitude <= KENYA_BOUNDS.maxLatitude &&
+  longitude >= KENYA_BOUNDS.minLongitude &&
+  longitude <= KENYA_BOUNDS.maxLongitude;
+
+export const haversineKm = (
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number,
+): number => {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+};
 
 interface Region {
   latitude: number;
@@ -42,8 +90,7 @@ export const calculateRegion = ({
 }): Region => {
   if (!userLatitude || !userLongitude) {
     return {
-      latitude: 37.78825,
-      longitude: -122.4324,
+      ...NAIROBI_CBD,
       latitudeDelta: 0.01,
       longitudeDelta: 0.01,
     };
@@ -71,8 +118,13 @@ export const calculateRegion = ({
   };
 };
 
-interface DirectionsResponse {
-  routes?: Array<{ duration: number }>;
+export interface DirectionsResponse {
+  routes?: {
+    duration: number;
+    geometry?: {
+      coordinates: number[][];
+    };
+  }[];
 }
 
 export const calculateCleanerTimes = async ({
@@ -88,11 +140,21 @@ export const calculateCleanerTimes = async ({
 
   try {
     const timesPromises = markers.map(async (marker) => {
-      const data = await fetchAPI(
+      if (
+        haversineKm(
+          marker.latitude,
+          marker.longitude,
+          serviceLatitude,
+          serviceLongitude,
+        ) > MAX_ROUTE_DISTANCE_KM
+      ) {
+        return { ...marker, time: 0, price: "0.00" };
+      }
+
+      const data = await fetchAPI<DirectionsResponse>(
         `https://api.mapbox.com/directions/v5/mapbox/driving/${marker.longitude},${marker.latitude};${serviceLongitude},${serviceLatitude}?access_token=${MAPBOX_API_KEY}&geometries=geojson&overview=full`,
       );
-      const directions = data as DirectionsResponse;
-      const timeToService = directions.routes?.[0]?.duration ?? 0;
+      const timeToService = data.routes?.[0]?.duration ?? 0;
       const totalTime = timeToService / 60;
       const price = (totalTime * 0.5).toFixed(2);
 
@@ -105,14 +167,6 @@ export const calculateCleanerTimes = async ({
   }
 };
 
-interface GeocodingFeature {
-  place_name: string;
-}
-
-interface GeocodingResponse {
-  features?: GeocodingFeature[];
-}
-
 export const reverseGeocodeWithMapbox = async (
   latitude: number,
   longitude: number,
@@ -122,10 +176,9 @@ export const reverseGeocodeWithMapbox = async (
   }
 
   try {
-    const data = await fetchAPI(
+    const geo = await fetchAPI<MapboxGeocodingResponse>(
       `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${MAPBOX_API_KEY}&limit=1&types=address,poi,place,neighborhood,locality,region,country`,
     );
-    const geo = data as GeocodingResponse;
     if (geo.features && geo.features.length > 0) {
       return geo.features[0].place_name;
     }

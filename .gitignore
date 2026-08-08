@@ -1,3 +1,6 @@
+# Node 22 binary (downloaded for development)
+node22/
+
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 idk
@@ -27,6 +30,21 @@ expo-env.d.ts
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+
+# Metro logs
+metro*.log
+metro*.out.log
+metro*.err.log
+com.android.*
+com.facebook.*
+
+# IDE
+.idea/
+
+# scratch scripts
+f-*.mjs
+inspect-*.mjs
+tmp-*.mjs
 
 # macOS
 .DS_Store

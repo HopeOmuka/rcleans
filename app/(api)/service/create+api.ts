@@ -1,60 +1,273 @@
 import { neon } from "@neondatabase/serverless";
+import { Stripe } from "stripe";
 import { jsonResponse, errorResponse, AppError } from "@/lib/api-error";
+import { requireUserAuth, rateLimit } from "@/lib/server-auth";
+import { computeBookingPrice, resolvePromo } from "@/lib/pricing";
+import { randomUUID } from "node:crypto";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireUserAuth(request);
+    await rateLimit(`service:create:${auth.userId}`, 20, 60_000);
+
     const body = await request.json();
     const {
-      service_type_id, location_address, location_lat, location_lng,
-      scheduled_date, estimated_duration, total_price, payment_status,
-      cleaner_id, user_id, addons, promo_code_id, discount_amount,
+      service_type_id,
+      location_address,
+      location_lat,
+      location_lng,
+      scheduled_date,
+      estimated_duration,
+      cleaner_id,
+      addons,
+      promo_code,
+      payment_mode,
+      payment_intent_id,
+      special_instructions,
     } = body;
 
-    if (!service_type_id || !location_address || !location_lat || !location_lng ||
-        !estimated_duration || !total_price || !payment_status || !user_id) {
+    if (!service_type_id || !location_address || !estimated_duration) {
       throw new AppError(400, "Missing required fields", "VALIDATION_ERROR");
     }
 
-    const parsedTotal = Number(total_price);
-    if (isNaN(parsedTotal) || parsedTotal <= 0) {
-      throw new AppError(400, "Invalid total price", "VALIDATION_ERROR");
+    if (
+      typeof location_address !== "string" ||
+      location_address.trim().length < 5
+    ) {
+      throw new AppError(
+        400,
+        "A valid service location is required",
+        "VALIDATION_ERROR",
+      );
+    }
+    if (location_address.length > 500) {
+      throw new AppError(400, "Location address too long", "VALIDATION_ERROR");
     }
 
-    const sql = neon(`${process.env.DATABASE_URL}`);
-    const status = cleaner_id ? "accepted" : "requested";
+    const lat = Number(location_lat);
+    const lng = Number(location_lng);
+    if (
+      isNaN(lat) ||
+      isNaN(lng) ||
+      lat < -90 ||
+      lat > 90 ||
+      lng < -180 ||
+      lng > 180
+    ) {
+      throw new AppError(
+        400,
+        "Invalid location coordinates",
+        "VALIDATION_ERROR",
+      );
+    }
 
-    const serviceResponse = await sql`
-      INSERT INTO services (
-        service_type_id, location_address, location_lat, location_lng,
-        scheduled_date, estimated_duration, total_price, discount_amount,
-        promo_code_id, status, payment_status, cleaner_id, user_id
-      ) VALUES (
-        ${service_type_id}, ${location_address}, ${location_lat}, ${location_lng},
-        ${scheduled_date || null}, ${estimated_duration}, ${parsedTotal},
-        ${discount_amount || 0}, ${promo_code_id || null}, ${status},
-        ${payment_status}, ${cleaner_id || null}, ${user_id}
-      )
-      RETURNING *;
-    `;
+    const duration = Number(estimated_duration);
+    if (isNaN(duration) || duration <= 0 || duration > 24 * 60) {
+      throw new AppError(400, "Invalid estimated duration", "VALIDATION_ERROR");
+    }
 
-    const service = serviceResponse[0];
-
-    if (addons && Array.isArray(addons) && addons.length > 0) {
-      for (const addon of addons) {
-        await sql`
-          INSERT INTO service_addon_selections (
-            service_id, addon_id, quantity, price_at_time
-          ) VALUES (
-            ${service.id}, ${addon.id}, ${addon.quantity || 1},
-            ${addon.price_at_time || addon.price}
-          );
-        `;
+    let scheduled: Date | null = null;
+    if (scheduled_date) {
+      scheduled = new Date(scheduled_date);
+      if (isNaN(scheduled.getTime())) {
+        throw new AppError(400, "Invalid scheduled date", "VALIDATION_ERROR");
+      }
+      if (scheduled.getTime() < Date.now() - 5 * 60 * 1000) {
+        throw new AppError(
+          400,
+          "Scheduled date must be in the future",
+          "VALIDATION_ERROR",
+        );
       }
     }
 
+    const addonList = Array.isArray(addons)
+      ? addons.map((a) => ({ id: String(a.id), quantity: a.quantity }))
+      : [];
+
+    let specialInstructions: string | null = null;
+    if (special_instructions != null) {
+      if (typeof special_instructions !== "string") {
+        throw new AppError(
+          400,
+          "Invalid special instructions",
+          "VALIDATION_ERROR",
+        );
+      }
+      const trimmed = special_instructions.trim();
+      if (trimmed.length > 2000) {
+        throw new AppError(
+          400,
+          "Special instructions must be under 2000 characters",
+          "VALIDATION_ERROR",
+        );
+      }
+      specialInstructions = trimmed.length > 0 ? trimmed : null;
+    }
+
+    if (payment_mode !== "now" && payment_mode !== "later") {
+      throw new AppError(
+        400,
+        "payment_mode must be 'now' or 'later'",
+        "VALIDATION_ERROR",
+      );
+    }
+    if (payment_mode === "now" && !payment_intent_id) {
+      throw new AppError(
+        400,
+        "payment_intent_id is required for pay-now bookings",
+        "VALIDATION_ERROR",
+      );
+    }
+
+    const sql = neon(`${process.env.DATABASE_URL}`);
+
+    const { subtotal, addonTotal, addonPrices } = await computeBookingPrice(
+      sql,
+      {
+        serviceTypeId: service_type_id,
+        estimatedDurationMinutes: duration,
+        addons: addonList,
+      },
+    );
+
+    let promoId: string | null = null;
+    let promoDiscount = 0;
+    if (promo_code) {
+      if (typeof promo_code !== "string") {
+        throw new AppError(400, "Invalid promo code", "VALIDATION_ERROR");
+      }
+      const promo = await resolvePromo(sql, {
+        code: promo_code.trim().toUpperCase(),
+        serviceTypeId: service_type_id,
+        orderAmount: subtotal + addonTotal,
+        userId: auth.userId,
+      });
+      promoId = promo.promoId;
+      promoDiscount = promo.discountAmount;
+    }
+
+    const total = Math.max(
+      0,
+      Math.round((subtotal + addonTotal - promoDiscount) * 100) / 100,
+    );
+
+    let cleaner: { id: string; is_available: boolean } | null = null;
+    if (cleaner_id) {
+      [cleaner] = (await sql`
+        SELECT id, is_available FROM cleaners WHERE id = ${String(cleaner_id)}
+      `) as { id: string; is_available: boolean }[];
+      if (!cleaner) {
+        throw new AppError(404, "Cleaner not found", "NOT_FOUND");
+      }
+      if (!cleaner.is_available) {
+        throw new AppError(
+          400,
+          "Cleaner is not currently available",
+          "CLEANER_UNAVAILABLE",
+        );
+      }
+    }
+
+    // Pay-now bookings: verify the PaymentIntent server-side. A confirmed
+    // manual-capture intent (requires_capture) means the money is HELD but
+    // not taken — it is captured only when the cleaner accepts the job.
+    let paymentStatus: "paid" | "authorized" | "pending" = "pending";
+    let stripeIntentId: string | null = null;
+    if (payment_mode === "now") {
+      const intent = await stripe.paymentIntents.retrieve(payment_intent_id);
+      if (
+        intent.status !== "succeeded" &&
+        intent.status !== "requires_capture"
+      ) {
+        throw new AppError(
+          400,
+          "Payment has not been completed",
+          "PAYMENT_NOT_VERIFIED",
+        );
+      }
+      if (
+        intent.metadata?.app !== "rcleans" ||
+        intent.metadata?.user_id !== auth.userId
+      ) {
+        throw new AppError(
+          400,
+          "Payment intent does not belong to this booking",
+          "PAYMENT_NOT_VERIFIED",
+        );
+      }
+      if (intent.amount !== Math.round(total * 100)) {
+        throw new AppError(
+          400,
+          "Payment amount does not match booking total",
+          "AMOUNT_MISMATCH",
+        );
+      }
+      // Money held but not captured until a cleaner accepts the job.
+      paymentStatus = intent.status === "succeeded" ? "paid" : "authorized";
+      stripeIntentId = intent.id;
+
+      // Idempotency: a retry after a partial failure (e.g. the client
+      // timed out during INSERT) must not create a duplicate booking for
+      // the same paid intent.
+      const [existingService] = (await sql`
+        SELECT * FROM services WHERE stripe_payment_intent_id = ${payment_intent_id}
+      `) as Record<string, unknown>[];
+      if (existingService) {
+        return jsonResponse({ data: existingService }, 200);
+      }
+    }
+
+    const serviceId = randomUUID();
+    // The cleaner must accept the job before it is matched — a picked cleaner
+    // creates a reserved, requested job that only they can accept.
+    const status = "requested";
+
+    const queries: ReturnType<typeof sql>[] = [
+      sql`
+        INSERT INTO services (
+          id, service_type_id, location_address, location_lat, location_lng,
+          scheduled_date, estimated_duration, total_price, discount_amount,
+          promo_code_id, status, payment_status, cleaner_id, user_id,
+          stripe_payment_intent_id, special_instructions
+        ) VALUES (
+          ${serviceId}, ${service_type_id}, ${location_address.trim()}, ${lat}, ${lng},
+          ${scheduled}, ${duration}, ${total}, ${promoDiscount},
+          ${promoId}, ${status}, ${paymentStatus}, ${cleaner?.id || null}, ${auth.userId},
+          ${stripeIntentId}, ${specialInstructions}
+        )
+        RETURNING *
+      `,
+      ...addonPrices.map(
+        (a) => sql`
+          INSERT INTO service_addon_selections (service_id, addon_id, quantity, price_at_time)
+          VALUES (${serviceId}, ${a.id}, ${a.quantity}, ${a.price})
+        `,
+      ),
+      ...(promoId
+        ? [
+            sql`
+              INSERT INTO promo_redemptions (promo_code_id, user_id, service_id)
+              VALUES (${promoId}, ${auth.userId}, ${serviceId})
+              ON CONFLICT (promo_code_id, user_id) DO NOTHING
+            `,
+            sql`
+              UPDATE promo_codes SET usage_count = usage_count + 1
+              WHERE id = ${promoId}
+                AND (usage_limit IS NULL OR usage_count < usage_limit)
+            `,
+          ]
+        : []),
+    ];
+
+    const results = await sql.transaction(queries);
+    const service = results[0][0];
+
     return jsonResponse({ data: service }, 201);
   } catch (error) {
-    if (error instanceof AppError) throw error;
+    if (error instanceof AppError) return errorResponse(error);
     return errorResponse(error, "Error creating service");
   }
 }

@@ -6,7 +6,10 @@
     "resolveJsonModule": true,
     "strict": true,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "react-native-theme-transition": [
+        "./types/react-native-theme-transition.d.ts"
+      ]
     }
   },
   "include": [

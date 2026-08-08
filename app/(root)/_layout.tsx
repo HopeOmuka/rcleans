@@ -24,7 +24,31 @@ const Layout = () => {
         }}
       />
       <Stack.Screen
-        name="availability"
+        name="pay-service"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="chat/[serviceId]"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="cleaner/[cleanerId]"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="notifications"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="support"
         options={{
           headerShown: false,
         }}

@@ -1,15 +1,12 @@
 import { neon } from "@neondatabase/serverless";
 import { jsonResponse, errorResponse, AppError } from "@/lib/api-error";
+import { requireUserAuth } from "@/lib/server-auth";
 
 export async function GET(request: Request) {
   try {
+    const auth = await requireUserAuth(request);
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("user_id");
     const limit = parseInt(searchParams.get("limit") || "10", 10);
-
-    if (!userId) {
-      throw new AppError(400, "user_id is required", "VALIDATION_ERROR");
-    }
 
     const sql = neon(`${process.env.DATABASE_URL}`);
 
@@ -36,14 +33,45 @@ export async function GET(request: Request) {
       FROM services s
       LEFT JOIN cleaners c ON s.cleaner_id = c.id
       INNER JOIN service_types st ON s.service_type_id = st.id
-      WHERE s.user_id = ${userId}
+      WHERE s.user_id = ${auth.userId}
       ORDER BY s.created_at DESC
       LIMIT ${limit};
     `;
 
-    return jsonResponse({ data: response });
+    const data = response.map((s) => ({
+      ...s,
+      location_lat: Number(s.location_lat),
+      location_lng: Number(s.location_lng),
+      estimated_duration: Number(s.estimated_duration),
+      actual_duration:
+        s.actual_duration === null ? null : Number(s.actual_duration),
+      total_price: Number(s.total_price),
+      discount_amount:
+        s.discount_amount === null ? 0 : Number(s.discount_amount),
+      rating: s.rating === null ? null : Number(s.rating),
+      service_type: {
+        ...s.service_type,
+        base_price: Number(s.service_type.base_price),
+        price_per_hour: Number(s.service_type.price_per_hour),
+        estimated_duration_hours: Number(
+          s.service_type.estimated_duration_hours,
+        ),
+      },
+      cleaner: s.cleaner?.id
+        ? {
+            ...s.cleaner,
+            rating: Number(s.cleaner.rating),
+            completed_jobs: Number(s.cleaner.completed_jobs),
+            years_experience: Number(s.cleaner.years_experience),
+            location_lat: Number(s.cleaner.location_lat),
+            location_lng: Number(s.cleaner.location_lng),
+          }
+        : s.cleaner,
+    }));
+
+    return jsonResponse({ data });
   } catch (error) {
-    if (error instanceof AppError) throw error;
+    if (error instanceof AppError) return errorResponse(error);
     return errorResponse(error, "Error fetching services");
   }
 }
