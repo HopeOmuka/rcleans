@@ -25,10 +25,12 @@ const StarButton = ({
   star,
   isSelected,
   onPress,
+  unselectedColor,
 }: {
   star: number;
   isSelected: boolean;
   onPress: () => void;
+  unselectedColor: string;
 }) => {
   const scaleValue = useRef(new Animated.Value(1)).current;
 
@@ -59,7 +61,9 @@ const StarButton = ({
         <Image
           source={icons.star}
           className="w-8 h-8"
-          style={{ tintColor: isSelected ? "#FBBF24" : "#D1D5DB" }}
+          style={{
+            tintColor: isSelected ? "#FBBF24" : unselectedColor,
+          }}
         />
       </Animated.View>
     </TouchableOpacity>
@@ -141,6 +145,7 @@ const RateService = () => {
               star={star}
               isSelected={star <= rating}
               onPress={() => handleStarPress(star)}
+              unselectedColor={theme.colors.textMuted}
             />
           ))}
         </View>

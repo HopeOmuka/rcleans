@@ -1,5 +1,6 @@
 import { useSignIn } from "@clerk/clerk-expo";
 import { Link, router } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
   Alert,
@@ -122,6 +123,7 @@ const ForgotPassword = () => {
       className="flex-1"
       style={{ backgroundColor: theme.colors.background }}
     >
+      <StatusBar style="light" />
       <ScrollView
         className="flex-1"
         keyboardShouldPersistTaps="handled"

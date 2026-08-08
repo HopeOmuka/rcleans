@@ -1,5 +1,6 @@
 import { useSignIn } from "@clerk/clerk-expo";
 import { Link, router, type Href } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useCallback, useState } from "react";
 import {
   Alert,
@@ -75,6 +76,7 @@ const SignIn = () => {
       className="flex-1"
       style={{ backgroundColor: theme.colors.background }}
     >
+      <StatusBar style="light" />
       <ScrollView
         className="flex-1"
         keyboardShouldPersistTaps="handled"

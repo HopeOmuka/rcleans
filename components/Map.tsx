@@ -266,7 +266,11 @@ const Map = () => {
     <View className="flex-1">
       <MapboxGL.MapView
         style={{ flex: 1 }}
-        styleURL={MapboxGL.StyleURL.Street}
+        styleURL={
+          theme.scheme === "dark"
+            ? MapboxGL.StyleURL.Dark
+            : MapboxGL.StyleURL.Street
+        }
         logoEnabled={false}
         attributionEnabled={false}
       >
