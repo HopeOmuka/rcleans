@@ -14,11 +14,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 
-import { icons } from "@/constants";
-import { APIFetchError, ApiResponse, fetchAPI } from "@/lib/fetch";
-import { showToast } from "@/components/Toast";
+import BootstrapIcon from "@/components/BootstrapIcon";
 import ChatThread from "@/components/ChatThread";
 import CustomButton from "@/components/CustomButton";
+import { showToast } from "@/components/Toast";
+import { APIFetchError, ApiResponse, fetchAPI } from "@/lib/fetch";
 import { CleanerSession } from "@/types/type";
 
 interface MyJob {
@@ -276,11 +276,7 @@ const CleanerJobs = () => {
             {item.service_type_name}
           </Text>
           <View className="flex-row items-center mt-1">
-            <Image
-              source={icons.point}
-              className="w-4 h-4"
-              tintColor="#9CA3AF"
-            />
+            <BootstrapIcon name="geo-alt" size={16} color="#9CA3AF" />
             <Text className="text-gray-400 text-sm ml-1" numberOfLines={1}>
               {item.location_address}
             </Text>
@@ -297,21 +293,13 @@ const CleanerJobs = () => {
 
       <View className="flex-row justify-between items-center mb-3">
         <View className="flex-row items-center">
-          <Image
-            source={icons.calendar}
-            className="w-4 h-4"
-            tintColor="#9CA3AF"
-          />
+          <BootstrapIcon name="calendar" size={16} color="#9CA3AF" />
           <Text className="text-gray-400 text-sm ml-2">
             {formatDate(item.scheduled_date)}
           </Text>
         </View>
         <View className="flex-row items-center">
-          <Image
-            source={icons.dollar}
-            className="w-4 h-4"
-            tintColor="#22C55E"
-          />
+          <BootstrapIcon name="currency-dollar" size={16} color="#22C55E" />
           <Text className="text-primary-500 font-JakartaBold ml-1">
             ${item.total_price}
           </Text>
@@ -348,7 +336,7 @@ const CleanerJobs = () => {
           accessibilityRole="button"
           accessibilityLabel={`Message ${item.user_name}`}
         >
-          <Image source={icons.chat} className="w-4 h-4" tintColor="#4ADE80" />
+          <BootstrapIcon name="chat-dots" size={16} color="#4ADE80" />
           <Text className="text-primary-500 font-JakartaMedium ml-2">
             Message customer
           </Text>
@@ -385,11 +373,7 @@ const CleanerJobs = () => {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Image
-              source={icons.backArrow}
-              className="w-5 h-5"
-              tintColor="white"
-            />
+            <BootstrapIcon name="chevron-left" size={20} color="#FFFFFF" />
           </TouchableOpacity>
           <View className="flex-1">
             <Text
@@ -450,10 +434,11 @@ const CleanerJobs = () => {
             </View>
           ) : (
             <View className="items-center mt-10 px-6">
-              <Image
-                source={icons.list}
-                className="w-16 h-16 mb-4"
-                tintColor="#6B7280"
+              <BootstrapIcon
+                name="list-ul"
+                size={64}
+                color="#6B7280"
+                style={{ marginBottom: 16 }}
               />
               <Text className="text-general-500 text-center font-JakartaMedium">
                 No active jobs

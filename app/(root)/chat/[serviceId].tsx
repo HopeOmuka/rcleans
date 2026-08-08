@@ -1,9 +1,9 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import BootstrapIcon from "@/components/BootstrapIcon";
 import ChatThread from "@/components/ChatThread";
-import { icons } from "@/constants";
 import { useTheme } from "@/lib/theme";
 
 const ChatThreadScreen = () => {
@@ -33,10 +33,10 @@ const ChatThreadScreen = () => {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Image
-            source={icons.backArrow}
-            className="w-5 h-5"
-            tintColor={theme.colors.text}
+          <BootstrapIcon
+            name="chevron-left"
+            size={20}
+            color={theme.colors.text}
           />
         </TouchableOpacity>
         <View className="flex-1">

@@ -12,11 +12,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 
-import { icons } from "@/constants";
-import { ApiResponse, fetchAPI, setAuthToken } from "@/lib/fetch";
-import { showToast } from "@/components/Toast";
+import BootstrapIcon from "@/components/BootstrapIcon";
 import CustomButton from "@/components/CustomButton";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { showToast } from "@/components/Toast";
+import { ApiResponse, fetchAPI, setAuthToken } from "@/lib/fetch";
 import { CleanerSession } from "@/types/type";
 
 const CleanerProfile = () => {
@@ -179,11 +179,7 @@ const CleanerProfile = () => {
         <View className="flex-row justify-center mt-4 gap-4">
           <View className="bg-dark-200 px-4 py-2 rounded-lg">
             <View className="flex-row items-center">
-              <Image
-                source={icons.star}
-                className="w-4 h-4"
-                tintColor="#FBBF24"
-              />
+              <BootstrapIcon name="star" size={16} color="#FBBF24" />
               <Text className="text-white font-JakartaBold ml-1">
                 {typeof cleaner.rating === "number"
                   ? cleaner.rating.toFixed(1)
@@ -202,11 +198,7 @@ const CleanerProfile = () => {
         <View className="bg-dark-200 rounded-xl p-4 mt-6 border border-gray-700">
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center">
-              <Image
-                source={icons.checkmark}
-                className="w-5 h-5"
-                tintColor="#4ADE80"
-              />
+              <BootstrapIcon name="check" size={20} color="#4ADE80" />
               <Text className="text-white font-JakartaMedium ml-3">
                 Available for Jobs
               </Text>
@@ -255,19 +247,15 @@ const CleanerProfile = () => {
             className="flex-row items-center justify-between p-4 border-b border-gray-700"
           >
             <View className="flex-row items-center">
-              <Image
-                source={icons.settings}
-                className="w-5 h-5"
-                tintColor="#9CA3AF"
-              />
+              <BootstrapIcon name="gear" size={20} color="#9CA3AF" />
               <Text className="text-white font-JakartaMedium ml-3">
                 Service Settings
               </Text>
             </View>
-            <Image
-              source={icons.arrowUp}
-              className="w-4 h-4"
-              tintColor="#9CA3AF"
+            <BootstrapIcon
+              name="arrow-up"
+              size={16}
+              color="#9CA3AF"
               style={{ transform: [{ rotate: "90deg" }] }}
             />
           </TouchableOpacity>
@@ -277,11 +265,7 @@ const CleanerProfile = () => {
             className="flex-row items-center justify-between p-4"
           >
             <View className="flex-row items-center">
-              <Image
-                source={icons.out}
-                className="w-5 h-5"
-                tintColor="#EF4444"
-              />
+              <BootstrapIcon name="box-arrow-right" size={20} color="#EF4444" />
               <Text className="text-red-400 font-JakartaMedium ml-3">
                 Sign Out
               </Text>

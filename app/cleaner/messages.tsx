@@ -11,9 +11,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import BootstrapIcon from "@/components/BootstrapIcon";
 import ChatThread from "@/components/ChatThread";
 import CustomButton from "@/components/CustomButton";
-import { icons } from "@/constants";
 import { useFetch } from "@/lib/fetch-hook";
 import { formatChatTime } from "@/lib/utils";
 import { ChatConversation } from "@/types/type";
@@ -101,11 +101,7 @@ const Messages = () => {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Image
-              source={icons.backArrow}
-              className="w-5 h-5"
-              tintColor="white"
-            />
+            <BootstrapIcon name="chevron-left" size={20} color="#FFFFFF" />
           </TouchableOpacity>
           <View className="flex-1">
             <Text
@@ -168,10 +164,11 @@ const Messages = () => {
             </View>
           ) : (
             <View className="items-center mt-16 px-6">
-              <Image
-                source={icons.chat}
-                className="w-16 h-16 mb-4"
-                tintColor="#6B7280"
+              <BootstrapIcon
+                name="chat-dots"
+                size={64}
+                color="#6B7280"
+                style={{ marginBottom: 16 }}
               />
               <Text className="text-general-500 text-center font-JakartaMedium">
                 No conversations yet

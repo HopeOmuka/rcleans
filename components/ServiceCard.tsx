@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 
-import { icons } from "@/constants";
+import BootstrapIcon from "@/components/BootstrapIcon";
 import { useTheme } from "@/lib/theme";
 import { formatDate } from "@/lib/utils";
 import { Service } from "@/types/type";
@@ -58,10 +58,10 @@ const ServiceCard = ({
             )}
             {imageError || !hasStaticMapCoords ? (
               <View className="items-center justify-center">
-                <Image
-                  source={icons.map}
-                  className="w-6 h-6 opacity-40"
-                  tintColor={theme.colors.textMuted}
+                <BootstrapIcon
+                  name="map"
+                  size={24}
+                  color={theme.colors.textMuted}
                 />
               </View>
             ) : (
@@ -78,7 +78,11 @@ const ServiceCard = ({
 
           <View className="flex flex-col mx-5 gap-y-5 flex-1">
             <View className="flex flex-row items-center gap-x-2">
-              <Image source={icons.point} className="w-5 h-5" />
+              <BootstrapIcon
+                name="geo-alt"
+                size={20}
+                color={theme.colors.text}
+              />
               <Text
                 className="text-md font-JakartaMedium"
                 numberOfLines={1}
@@ -89,10 +93,10 @@ const ServiceCard = ({
             </View>
 
             <View className="flex flex-row items-center gap-x-2">
-              <Image
-                source={icons.map}
-                className="w-5 h-5 opacity-60"
-                tintColor={theme.colors.textMuted}
+              <BootstrapIcon
+                name="map"
+                size={20}
+                color={theme.colors.textMuted}
               />
               <Text
                 className="text-md font-JakartaMedium"
@@ -203,7 +207,7 @@ const ServiceCard = ({
                 onPress={() => onRatePress?.(service)}
                 className="flex flex-row items-center bg-primary-500 px-5 py-2.5 rounded-full shadow-sm shadow-primary-200"
               >
-                <Image source={icons.star} className="w-4 h-4 mr-2" />
+                <BootstrapIcon name="star" size={16} color="#FFFFFF" />
                 <Text className="text-white font-JakartaMedium">
                   Rate Service
                 </Text>

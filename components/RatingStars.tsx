@@ -1,6 +1,6 @@
-import { Image, View } from "react-native";
+import { View } from "react-native";
 
-import { icons } from "@/constants";
+import BootstrapIcon from "@/components/BootstrapIcon";
 import { useTheme } from "@/lib/theme";
 
 const RatingStars = ({
@@ -17,16 +17,14 @@ const RatingStars = ({
       accessibilityLabel={`${rating} star rating`}
     >
       {[1, 2, 3, 4, 5].map((star) => (
-        <Image
+        <BootstrapIcon
           key={star}
-          source={icons.star}
-          style={{
-            width: size,
-            height: size,
-            marginRight: 2,
-            tintColor:
-              star <= Math.round(rating) ? "#FBBF24" : theme.colors.textMuted,
-          }}
+          name="star"
+          size={size}
+          color={
+            star <= Math.round(rating) ? "#FBBF24" : theme.colors.textMuted
+          }
+          style={{ marginRight: 2 }}
         />
       ))}
     </View>

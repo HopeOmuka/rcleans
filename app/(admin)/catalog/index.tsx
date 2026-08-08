@@ -1,9 +1,9 @@
 import { router } from "expo-router";
 import type { Href } from "expo-router";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { icons } from "@/constants";
+import BootstrapIcon from "@/components/BootstrapIcon";
 import { useTheme } from "@/lib/theme";
 
 const sections = [
@@ -45,10 +45,10 @@ const Catalog = () => {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Image
-            source={icons.backArrow}
-            className="w-5 h-5"
-            tintColor={theme.colors.text}
+          <BootstrapIcon
+            name="chevron-left"
+            size={20}
+            color={theme.colors.text}
           />
         </TouchableOpacity>
         <Text
@@ -87,10 +87,10 @@ const Catalog = () => {
                 className="w-10 h-10 rounded-full items-center justify-center"
                 style={{ backgroundColor: theme.colors.primarySoft }}
               >
-                <Image
-                  source={icons.list}
-                  className="w-5 h-5"
-                  tintColor={theme.colors.primaryBright}
+                <BootstrapIcon
+                  name="list-ul"
+                  size={20}
+                  color={theme.colors.primaryBright}
                 />
               </View>
               <View className="flex-1 ml-3">
@@ -107,10 +107,11 @@ const Catalog = () => {
                   {section.description}
                 </Text>
               </View>
-              <Image
-                source={icons.arrowUp}
-                className="w-4 h-4 rotate-90"
-                tintColor={theme.colors.textMuted}
+              <BootstrapIcon
+                name="arrow-up"
+                size={16}
+                color={theme.colors.textMuted}
+                style={{ transform: [{ rotate: "90deg" }] }}
               />
             </TouchableOpacity>
           ))}

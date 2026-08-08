@@ -158,7 +158,7 @@ declare interface GoogleInputProps {
 
 declare interface InputFieldProps extends TextInputProps {
   label: string;
-  icon?: ImageSourcePropType;
+  icon?: import("@/lib/bootstrap-icons").BootstrapIconName;
   secureTextEntry?: boolean;
   labelStyle?: string;
   containerStyle?: string;

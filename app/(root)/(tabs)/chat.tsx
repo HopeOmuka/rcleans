@@ -11,8 +11,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import BootstrapIcon from "@/components/BootstrapIcon";
 import SkeletonLoader from "@/components/SkeletonLoader";
-import { images } from "@/constants";
 import { useFetch } from "@/lib/fetch-hook";
 import { useTheme } from "@/lib/theme";
 import { formatChatTime } from "@/lib/utils";
@@ -176,10 +176,10 @@ const Chat = () => {
           }
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center pt-16 px-7">
-              <Image
-                source={images.message}
-                className="w-48 h-40 opacity-80"
-                resizeMode="contain"
+              <BootstrapIcon
+                name="chat-dots"
+                size={112}
+                color={theme.colors.textMuted}
               />
               <Text
                 className="text-2xl font-JakartaBold mt-3"

@@ -1,23 +1,20 @@
 import { Tabs } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Image,
-  ImageSourcePropType,
-  View,
-} from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import * as SecureStore from "expo-secure-store";
 
-import { icons } from "@/constants";
-import { setAuthToken } from "@/lib/fetch";
+import BootstrapIcon, {
+  type BootstrapIconProps,
+} from "@/components/BootstrapIcon";
 import PushNotificationHandler from "@/components/PushNotificationHandler";
+import { setAuthToken } from "@/lib/fetch";
 
 const TabIcon = ({
-  source,
+  name,
   focused,
 }: {
-  source: ImageSourcePropType;
+  name: BootstrapIconProps["name"];
   focused: boolean;
 }) => (
   <View
@@ -26,12 +23,7 @@ const TabIcon = ({
     <View
       className={`rounded-full w-12 h-12 items-center justify-center ${focused ? "bg-primary-600" : ""}`}
     >
-      <Image
-        source={source}
-        tintColor="white"
-        resizeMode="contain"
-        className="w-6 h-6"
-      />
+      <BootstrapIcon name={name} size={24} color="#FFFFFF" />
     </View>
   </View>
 );
@@ -95,7 +87,7 @@ export default function Layout() {
             title: "Available",
             headerShown: false,
             tabBarIcon: ({ focused }) => (
-              <TabIcon source={icons.list} focused={focused} />
+              <TabIcon name="house-fill" focused={focused} />
             ),
           }}
         />
@@ -105,7 +97,7 @@ export default function Layout() {
             title: "My Jobs",
             headerShown: false,
             tabBarIcon: ({ focused }) => (
-              <TabIcon source={icons.checkmark} focused={focused} />
+              <TabIcon name="clipboard-check" focused={focused} />
             ),
           }}
         />
@@ -115,7 +107,7 @@ export default function Layout() {
             title: "Messages",
             headerShown: false,
             tabBarIcon: ({ focused }) => (
-              <TabIcon source={icons.chat} focused={focused} />
+              <TabIcon name="chat-dots-fill" focused={focused} />
             ),
           }}
         />
@@ -125,7 +117,7 @@ export default function Layout() {
             title: "Profile",
             headerShown: false,
             tabBarIcon: ({ focused }) => (
-              <TabIcon source={icons.profile} focused={focused} />
+              <TabIcon name="person-fill" focused={focused} />
             ),
           }}
         />

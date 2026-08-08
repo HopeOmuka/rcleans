@@ -13,10 +13,11 @@ import {
 } from "react-native";
 import { ReactNativeModal } from "react-native-modal";
 
+import BootstrapIcon from "@/components/BootstrapIcon";
 import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
 import OAuth from "@/components/OAuth";
-import { icons, images } from "@/constants";
+import { images } from "@/constants";
 import { ApiResponse, fetchAPI } from "@/lib/fetch";
 import { useTheme } from "@/lib/theme";
 
@@ -160,14 +161,14 @@ const SignUp = () => {
             <InputField
               label="Name"
               placeholder="Enter name"
-              icon={icons.person}
+              icon="person"
               value={form.name}
               onChangeText={(value) => setForm({ ...form, name: value })}
             />
             <InputField
               label="Email"
               placeholder="Enter email"
-              icon={icons.email}
+              icon="envelope"
               textContentType="emailAddress"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -177,7 +178,7 @@ const SignUp = () => {
             <InputField
               label="Password"
               placeholder="Enter password"
-              icon={icons.lock}
+              icon="lock"
               secureTextEntry={true}
               textContentType="password"
               value={form.password}
@@ -225,7 +226,7 @@ const SignUp = () => {
               </Text>
               <InputField
                 label={"Code"}
-                icon={icons.lock}
+                icon="lock"
                 placeholder={"123456"}
                 value={verification.code}
                 keyboardType="numeric"
@@ -251,9 +252,11 @@ const SignUp = () => {
               className="px-7 py-9 rounded-2xl min-h-[300px]"
               style={{ backgroundColor: theme.colors.surface }}
             >
-              <Image
-                source={images.check}
-                className="w-[110px] h-[110px] mx-auto my-5"
+              <BootstrapIcon
+                name="check-circle-fill"
+                size={110}
+                color={theme.colors.success}
+                style={{ alignSelf: "center", marginVertical: 20 }}
               />
               <Text
                 className="text-3xl font-JakartaBold text-center"

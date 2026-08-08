@@ -1,7 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   View,
-  Image,
   TextInput,
   FlatList,
   TouchableOpacity,
@@ -9,7 +8,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 
-import { icons } from "@/constants";
+import BootstrapIcon from "@/components/BootstrapIcon";
+import { type BootstrapIconName } from "@/lib/bootstrap-icons";
 import { fetchAPI } from "@/lib/fetch";
 import { NAIROBI_CBD, isWithinKenya } from "@/lib/map";
 import { useTheme } from "@/lib/theme";
@@ -141,10 +141,11 @@ const MapboxTextInput = ({
           elevation: 2,
         }}
       >
-        <Image
-          source={icon || icons.search}
-          className="w-5 h-5 mr-2"
-          tintColor={theme.colors.textMuted}
+        <BootstrapIcon
+          name={(icon as BootstrapIconName) || "search"}
+          size={20}
+          color={theme.colors.textMuted}
+          style={{ marginRight: 8 }}
         />
 
         <TextInput

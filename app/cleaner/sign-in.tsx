@@ -13,7 +13,7 @@ import * as SecureStore from "expo-secure-store";
 
 import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
-import { icons, images } from "@/constants";
+import { images } from "@/constants";
 import { fetchAPI, setAuthToken, ApiResponse } from "@/lib/fetch";
 import { CleanerSession } from "@/types/type";
 
@@ -121,7 +121,7 @@ const SignIn = () => {
               <InputField
                 label="Email"
                 placeholder="Enter your email"
-                icon={icons.email}
+                icon="envelope"
                 tintColor="#9CA3AF"
                 textContentType="emailAddress"
                 value={form.email}
@@ -144,7 +144,7 @@ const SignIn = () => {
               <InputField
                 label="Phone"
                 placeholder="Enter your phone number"
-                icon={icons.phone || icons.person}
+                icon="telephone-fill"
                 tintColor="#9CA3AF"
                 textContentType="telephoneNumber"
                 value={form.phone}

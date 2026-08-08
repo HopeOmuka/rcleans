@@ -7,7 +7,6 @@ import {
   Text,
   View,
   TouchableOpacity,
-  Image,
   FlatList,
   ActivityIndicator,
   Alert,
@@ -30,7 +29,7 @@ import {
   DEFAULT_LOCATION,
   isWithinKenya,
 } from "@/lib/map";
-import { icons, images } from "@/constants";
+
 import { useFetch } from "@/lib/fetch-hook";
 import { ApiResponse, fetchAPI } from "@/lib/fetch";
 import { useTheme } from "@/lib/theme";
@@ -439,10 +438,10 @@ const Home = () => {
         </Text>
 
         <View className="flex-row items-center mt-1.5">
-          <Image
-            source={icons.calendar}
-            className="w-4 h-4"
-            tintColor={theme.colors.textSecondary}
+          <BootstrapIcon
+            name="calendar"
+            size={16}
+            color={theme.colors.textSecondary}
           />
           <Text
             className="text-sm ml-2"
@@ -451,10 +450,10 @@ const Home = () => {
             {formatScheduledDate(activeService.scheduled_date)}
           </Text>
           <View className="flex-row items-center ml-4">
-            <Image
-              source={icons.dollar}
-              className="w-4 h-4"
-              tintColor={theme.colors.success}
+            <BootstrapIcon
+              name="currency-dollar"
+              size={16}
+              color={theme.colors.success}
             />
             <Text
               className="text-sm font-JakartaMedium ml-1"
@@ -467,10 +466,10 @@ const Home = () => {
 
         {cleaner && (
           <View className="flex-row items-center mt-1.5">
-            <Image
-              source={icons.person}
-              className="w-4 h-4"
-              tintColor={theme.colors.textSecondary}
+            <BootstrapIcon
+              name="person"
+              size={16}
+              color={theme.colors.textSecondary}
             />
             <Text
               className="text-sm ml-2"
@@ -586,11 +585,10 @@ const Home = () => {
                   borderColor: theme.colors.danger,
                 }}
               >
-                <Image
-                  source={images.noResult}
-                  className="w-28 h-28"
-                  alt="Could not load services"
-                  resizeMode="contain"
+                <BootstrapIcon
+                  name="exclamation-triangle"
+                  size={96}
+                  color={theme.colors.danger}
                 />
                 <Text
                   className="text-base font-JakartaSemiBold text-center"
@@ -613,11 +611,10 @@ const Home = () => {
               </View>
             ) : !loading ? (
               <>
-                <Image
-                  source={images.noResult}
-                  className="w-40 h-40 opacity-70"
-                  alt="No recent services found"
-                  resizeMode="contain"
+                <BootstrapIcon
+                  name="calendar"
+                  size={140}
+                  color={theme.colors.textMuted}
                 />
                 <Text
                   className="text-sm"
@@ -784,10 +781,10 @@ const Home = () => {
                       </View>
                       {isSelected && (
                         <View className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-primary-500 items-center justify-center">
-                          <Image
-                            source={icons.checkmark}
-                            className="w-3 h-3"
-                            tintColor="#FFFFFF"
+                          <BootstrapIcon
+                            name="check-lg"
+                            size={12}
+                            color="#FFFFFF"
                           />
                         </View>
                       )}
@@ -841,10 +838,15 @@ const Home = () => {
                         Optional
                       </Text>
                     )}
-                    <Image
-                      source={icons.arrowDown}
-                      className={`w-4 h-4 ${showAddons ? "rotate-180" : ""}`}
-                      tintColor={theme.colors.textSecondary}
+                    <BootstrapIcon
+                      name="chevron-down"
+                      size={16}
+                      color={theme.colors.textSecondary}
+                      style={
+                        showAddons
+                          ? { transform: [{ rotate: "180deg" }] }
+                          : undefined
+                      }
                     />
                   </View>
                 </TouchableOpacity>
@@ -1078,7 +1080,7 @@ const Home = () => {
             )}
 
             <GoogleTextInput
-              icon={icons.search}
+              icon="search"
               containerStyle="shadow-md shadow-neutral-300"
               handlePress={handleServiceLocationPress}
               placeholder="Enter service location"
@@ -1164,10 +1166,11 @@ const Home = () => {
                   borderColor: theme.colors.primary,
                 }}
               >
-                <Image
-                  source={icons.pin}
-                  className="w-4 h-4 mt-0.5"
-                  tintColor={theme.colors.primary}
+                <BootstrapIcon
+                  name="geo-alt"
+                  size={16}
+                  color={theme.colors.primary}
+                  style={{ marginTop: 2 }}
                 />
                 <Text
                   className="text-sm font-JakartaMedium ml-2 flex-1"
@@ -1185,10 +1188,11 @@ const Home = () => {
                   borderColor: theme.colors.border,
                 }}
               >
-                <Image
-                  source={icons.pin}
-                  className="w-4 h-4 mt-0.5"
-                  tintColor={theme.colors.textMuted}
+                <BootstrapIcon
+                  name="geo-alt"
+                  size={16}
+                  color={theme.colors.textMuted}
+                  style={{ marginTop: 2 }}
                 />
                 <Text
                   className="text-sm ml-2 flex-1"

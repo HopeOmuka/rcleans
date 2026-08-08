@@ -3,7 +3,6 @@ import type { Href } from "expo-router";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   RefreshControl,
   ScrollView,
   Text,
@@ -12,7 +11,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { icons } from "@/constants";
+import BootstrapIcon from "@/components/BootstrapIcon";
+import type { BootstrapIconName } from "@/lib/bootstrap-icons";
 import { useFetch } from "@/lib/fetch-hook";
 import { useTheme } from "@/lib/theme";
 
@@ -109,36 +109,41 @@ const Dashboard = () => {
       ]
     : [];
 
-  const sections = [
+  const sections: {
+    label: string;
+    description: string;
+    route: Href;
+    icon: BootstrapIconName;
+  }[] = [
     {
       label: "Bookings",
       description: "All service requests and their status",
       route: "/bookings" as Href,
-      icon: icons.list,
+      icon: "list-ul",
     },
     {
       label: "Cleaners",
       description: "Approvals, availability and ratings",
       route: "/cleaners" as Href,
-      icon: icons.person,
+      icon: "person",
     },
     {
       label: "Users",
       description: "Registered customer accounts",
       route: "/users" as Href,
-      icon: icons.profile,
+      icon: "person",
     },
     {
       label: "Service Catalog",
       description: "Service types, addons and promos",
       route: "/catalog" as Href,
-      icon: icons.dollar,
+      icon: "currency-dollar",
     },
     {
       label: "Support Inbox",
       description: `Open tickets (${stats?.open_support ?? 0})`,
       route: "/support" as Href,
-      icon: icons.chat,
+      icon: "chat-dots",
     },
   ];
 
@@ -161,10 +166,10 @@ const Dashboard = () => {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Image
-            source={icons.backArrow}
-            className="w-5 h-5"
-            tintColor={theme.colors.text}
+          <BootstrapIcon
+            name="chevron-left"
+            size={20}
+            color={theme.colors.text}
           />
         </TouchableOpacity>
         <Text
@@ -367,10 +372,10 @@ const Dashboard = () => {
                     className="w-10 h-10 rounded-full items-center justify-center"
                     style={{ backgroundColor: theme.colors.primarySoft }}
                   >
-                    <Image
-                      source={section.icon}
-                      className="w-5 h-5"
-                      tintColor={theme.colors.primaryBright}
+                    <BootstrapIcon
+                      name={section.icon}
+                      size={20}
+                      color={theme.colors.primaryBright}
                     />
                   </View>
                   <View className="flex-1 ml-3">
@@ -387,10 +392,11 @@ const Dashboard = () => {
                       {section.description}
                     </Text>
                   </View>
-                  <Image
-                    source={icons.arrowUp}
-                    className="w-4 h-4 rotate-90"
-                    tintColor={theme.colors.textMuted}
+                  <BootstrapIcon
+                    name="arrow-up"
+                    size={16}
+                    color={theme.colors.textMuted}
+                    style={{ transform: [{ rotate: "90deg" }] }}
                   />
                 </TouchableOpacity>
               ))}

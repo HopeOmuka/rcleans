@@ -17,7 +17,7 @@ import EmptyState from "@/components/EmptyState";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import RatingStars from "@/components/RatingStars";
 import RescheduleModal from "@/components/RescheduleModal";
-import { icons, images } from "@/constants";
+
 import { useFetch } from "@/lib/fetch-hook";
 import { useTheme } from "@/lib/theme";
 import { formatDate, formatDateTime } from "@/lib/utils";
@@ -329,11 +329,7 @@ const ServiceDetails = () => {
               {cleaner.first_name} {cleaner.last_name}
             </Text>
             <View className="flex-row items-center mt-1">
-              <Image
-                source={icons.star}
-                className="w-3.5 h-3.5"
-                tintColor="#FBBF24"
-              />
+              <BootstrapIcon name="star-fill" size={14} color="#FBBF24" />
               <Text
                 className="text-sm ml-1"
                 style={{ color: theme.colors.textSecondary }}
@@ -365,10 +361,11 @@ const ServiceDetails = () => {
               >
                 View profile &amp; reviews
               </Text>
-              <Image
-                source={icons.arrowUp}
-                className="w-3 h-3 rotate-90 ml-1"
-                tintColor={theme.colors.primary}
+              <BootstrapIcon
+                name="chevron-right"
+                size={12}
+                color={theme.colors.primary}
+                style={{ marginLeft: 4 }}
               />
             </View>
           </TouchableOpacity>
@@ -500,7 +497,7 @@ const ServiceDetails = () => {
         <EmptyState
           title="Something went wrong"
           description={error}
-          icon={images.noResult}
+          icon="exclamation-triangle"
           variant="light"
           actionLabel="Retry"
           onAction={() => refetch()}
@@ -530,10 +527,10 @@ const ServiceDetails = () => {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Image
-            source={icons.backArrow}
-            className="w-5 h-5"
-            tintColor={theme.colors.text}
+          <BootstrapIcon
+            name="chevron-left"
+            size={20}
+            color={theme.colors.text}
           />
         </TouchableOpacity>
         <Text
@@ -580,10 +577,10 @@ const ServiceDetails = () => {
             </Text>
           )}
           <View className="flex-row items-center mt-3">
-            <Image
-              source={icons.calendar}
-              className="w-4 h-4"
-              tintColor={theme.colors.textMuted}
+            <BootstrapIcon
+              name="calendar"
+              size={16}
+              color={theme.colors.textMuted}
             />
             <Text
               className="text-sm ml-2"
@@ -595,10 +592,10 @@ const ServiceDetails = () => {
             </Text>
           </View>
           <View className="flex-row items-center mt-1.5">
-            <Image
-              source={icons.point}
-              className="w-4 h-4"
-              tintColor={theme.colors.textMuted}
+            <BootstrapIcon
+              name="geo-alt"
+              size={16}
+              color={theme.colors.textMuted}
             />
             <Text
               className="text-sm ml-2 flex-1"
@@ -608,10 +605,10 @@ const ServiceDetails = () => {
             </Text>
           </View>
           <View className="flex-row items-center mt-1.5">
-            <Image
-              source={icons.checkmark}
-              className="w-4 h-4"
-              tintColor={theme.colors.textMuted}
+            <BootstrapIcon
+              name="clock"
+              size={16}
+              color={theme.colors.textMuted}
             />
             <Text
               className="text-sm ml-2"

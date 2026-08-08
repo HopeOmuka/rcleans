@@ -1,12 +1,14 @@
 import React from "react";
-import { View, Text, ImageSourcePropType, Image } from "react-native";
+import { View, Text } from "react-native";
 import CustomButton from "./CustomButton";
+import BootstrapIcon from "@/components/BootstrapIcon";
+import type { BootstrapIconName } from "@/lib/bootstrap-icons";
 import { useTheme } from "@/lib/theme";
 
 interface EmptyStateProps {
   title: string;
   description: string;
-  icon?: ImageSourcePropType;
+  icon?: BootstrapIconName;
   actionLabel?: string;
   onAction?: () => void;
   variant?: "dark" | "light";
@@ -30,10 +32,10 @@ const EmptyState = ({
       }`}
     >
       {icon && (
-        <Image
-          source={icon}
-          className="w-20 h-20 mb-6 opacity-40"
-          resizeMode="contain"
+        <BootstrapIcon
+          name={icon}
+          size={80}
+          color={isLight ? theme.colors.textMuted : "#6B7280"}
         />
       )}
       <Text

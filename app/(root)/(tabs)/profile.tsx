@@ -21,7 +21,6 @@ import BootstrapIcon from "@/components/BootstrapIcon";
 import InputField from "@/components/InputField";
 import MapboxTextInput from "@/components/MapboxTextInput";
 import { showToast } from "@/components/Toast";
-import { icons } from "@/constants";
 import { ApiResponse, fetchAPI } from "@/lib/fetch";
 import { useFetch } from "@/lib/fetch-hook";
 import { persistThemePreference, ThemePreference, useTheme } from "@/lib/theme";
@@ -292,16 +291,13 @@ const Profile = () => {
         style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border }}
       >
         <View className="flex-row items-center flex-1">
-          <Image
-            source={
-              kind === "home"
-                ? icons.home
-                : kind === "work"
-                  ? icons.point
-                  : icons.star
+          <BootstrapIcon
+            name={
+              kind === "home" ? "house" : kind === "work" ? "geo-alt" : "star"
             }
-            className="w-5 h-5 mr-3"
-            tintColor={theme.colors.textSecondary}
+            size={20}
+            color={theme.colors.textSecondary}
+            style={{ marginRight: 12 }}
           />
           <View className="flex-1">
             <Text
@@ -537,10 +533,10 @@ const Profile = () => {
             >
               Help Center
             </Text>
-            <Image
-              source={icons.arrowUp}
-              className="w-4 h-4 rotate-90"
-              tintColor={theme.colors.textMuted}
+            <BootstrapIcon
+              name="chevron-right"
+              size={16}
+              color={theme.colors.textMuted}
             />
           </TouchableOpacity>
 
@@ -560,10 +556,10 @@ const Profile = () => {
             >
               My Tickets
             </Text>
-            <Image
-              source={icons.arrowUp}
-              className="w-4 h-4 rotate-90"
-              tintColor={theme.colors.textMuted}
+            <BootstrapIcon
+              name="chevron-right"
+              size={16}
+              color={theme.colors.textMuted}
             />
           </TouchableOpacity>
 
@@ -584,10 +580,10 @@ const Profile = () => {
             >
               Contact Support
             </Text>
-            <Image
-              source={icons.arrowUp}
-              className="w-4 h-4 rotate-90"
-              tintColor={theme.colors.textMuted}
+            <BootstrapIcon
+              name="chevron-right"
+              size={16}
+              color={theme.colors.textMuted}
             />
           </TouchableOpacity>
         </View>
@@ -616,10 +612,10 @@ const Profile = () => {
                 >
                   Admin Dashboard
                 </Text>
-                <Image
-                  source={icons.arrowUp}
-                  className="w-4 h-4 rotate-90"
-                  tintColor={theme.colors.textMuted}
+                <BootstrapIcon
+                  name="chevron-right"
+                  size={16}
+                  color={theme.colors.textMuted}
                 />
               </TouchableOpacity>
             </View>
@@ -634,10 +630,11 @@ const Profile = () => {
             borderColor: theme.colors.danger,
           }}
         >
-          <Image
-            source={icons.out}
-            className="w-5 h-5 mr-2"
-            tintColor={theme.colors.danger}
+          <BootstrapIcon
+            name="box-arrow-right"
+            size={20}
+            color={theme.colors.danger}
+            style={{ marginRight: 8 }}
           />
           <Text
             className="font-JakartaMedium"
@@ -698,7 +695,7 @@ const Profile = () => {
               Address
             </Text>
             <MapboxTextInput
-              icon={icons.search}
+              icon="search"
               initialLocation={pickedLocation?.address}
               containerStyle="bg-neutral-100"
               handlePress={(location) => setPickedLocation(location)}

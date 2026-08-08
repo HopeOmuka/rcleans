@@ -6,7 +6,6 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
   Alert,
   RefreshControl,
@@ -14,15 +13,15 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 
-import { icons } from "@/constants";
+import BootstrapIcon from "@/components/BootstrapIcon";
+import CustomButton from "@/components/CustomButton";
+import { showToast } from "@/components/Toast";
 import {
   APIFetchError,
   ApiResponse,
   fetchAPI,
   setAuthToken,
 } from "@/lib/fetch";
-import { showToast } from "@/components/Toast";
-import CustomButton from "@/components/CustomButton";
 import { CleanerSession } from "@/types/type";
 
 interface CleanerJob {
@@ -301,11 +300,7 @@ const Dashboard = () => {
             {item.service_type_name}
           </Text>
           <View className="flex-row items-center mt-1">
-            <Image
-              source={icons.point}
-              className="w-4 h-4"
-              tintColor="#9CA3AF"
-            />
+            <BootstrapIcon name="geo-alt" size={16} color="#9CA3AF" />
             <Text className="text-gray-400 text-sm ml-1" numberOfLines={1}>
               {item.location_address}
             </Text>
@@ -322,21 +317,13 @@ const Dashboard = () => {
 
       <View className="flex-row justify-between items-center mb-3">
         <View className="flex-row items-center">
-          <Image
-            source={icons.calendar}
-            className="w-4 h-4"
-            tintColor="#9CA3AF"
-          />
+          <BootstrapIcon name="calendar" size={16} color="#9CA3AF" />
           <Text className="text-gray-400 text-sm ml-2">
             {formatDate(item.scheduled_date)}
           </Text>
         </View>
         <View className="flex-row items-center">
-          <Image
-            source={icons.dollar}
-            className="w-4 h-4"
-            tintColor="#22C55E"
-          />
+          <BootstrapIcon name="currency-dollar" size={16} color="#22C55E" />
           <Text className="text-primary-500 font-JakartaBold ml-1">
             ${item.total_price}
           </Text>
@@ -344,7 +331,7 @@ const Dashboard = () => {
       </View>
 
       <View className="flex-row items-center mb-4">
-        <Image source={icons.person} className="w-4 h-4" tintColor="#9CA3AF" />
+        <BootstrapIcon name="person" size={16} color="#9CA3AF" />
         <Text className="text-gray-400 text-sm ml-2">{item.user_name}</Text>
         <Text className="text-gray-500 text-sm ml-1">• {item.user_phone}</Text>
       </View>
@@ -398,7 +385,7 @@ const Dashboard = () => {
             accessibilityRole="button"
             accessibilityLabel="Notifications"
           >
-            <Image source={icons.list} className="w-5 h-5" tintColor="white" />
+            <BootstrapIcon name="list-ul" size={20} color="#FFFFFF" />
             {unreadCount > 0 && (
               <View className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-red-500 items-center justify-center px-1 border border-dark-500">
                 <Text className="text-white text-[10px] font-JakartaBold">
@@ -411,7 +398,7 @@ const Dashboard = () => {
             onPress={handleSignOut}
             className="bg-dark-300 p-3 rounded-full"
           >
-            <Image source={icons.out} className="w-5 h-5" tintColor="white" />
+            <BootstrapIcon name="box-arrow-right" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       </View>
@@ -420,11 +407,7 @@ const Dashboard = () => {
         <View className="flex-1 bg-dark-200 rounded-xl p-4 border border-gray-700">
           <Text className="text-gray-400 text-sm">Rating</Text>
           <View className="flex-row items-center mt-1">
-            <Image
-              source={icons.star}
-              className="w-4 h-4"
-              tintColor="#FBBF24"
-            />
+            <BootstrapIcon name="star" size={16} color="#FBBF24" />
             <Text className="text-white font-JakartaBold text-lg ml-1">
               {typeof cleaner.rating === "number"
                 ? cleaner.rating.toFixed(1)
@@ -435,11 +418,7 @@ const Dashboard = () => {
         <View className="flex-1 bg-dark-200 rounded-xl p-4 border border-gray-700">
           <Text className="text-gray-400 text-sm">Jobs Completed</Text>
           <View className="flex-row items-center mt-1">
-            <Image
-              source={icons.list}
-              className="w-4 h-4"
-              tintColor="#22C55E"
-            />
+            <BootstrapIcon name="list-ul" size={16} color="#22C55E" />
             <Text className="text-white font-JakartaBold text-lg ml-1">
               {cleaner.completed_jobs || 0}
             </Text>
@@ -455,11 +434,7 @@ const Dashboard = () => {
         <Text className="text-gray-400 text-sm">Total Earnings</Text>
         <View className="flex-row items-end justify-between mt-1">
           <View className="flex-row items-center">
-            <Image
-              source={icons.dollar}
-              className="w-5 h-5"
-              tintColor="#22C55E"
-            />
+            <BootstrapIcon name="currency-dollar" size={20} color="#22C55E" />
             <Text className="text-white font-JakartaBold text-xl ml-1.5">
               ${earnings ? earnings.total_earned.toFixed(2) : "0.00"}
             </Text>
@@ -503,10 +478,11 @@ const Dashboard = () => {
             </View>
           ) : (
             <View className="items-center mt-10 px-6">
-              <Image
-                source={icons.list}
-                className="w-16 h-16 mb-4"
-                tintColor="#6B7280"
+              <BootstrapIcon
+                name="list-ul"
+                size={64}
+                color="#6B7280"
+                style={{ marginBottom: 16 }}
               />
               <Text className="text-general-500 text-center font-JakartaMedium">
                 No jobs available right now

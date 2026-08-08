@@ -11,9 +11,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
 
 import EmptyState from "@/components/EmptyState";
+import BootstrapIcon from "@/components/BootstrapIcon";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import RatingStars from "@/components/RatingStars";
-import { icons, images } from "@/constants";
 import { useFetch } from "@/lib/fetch-hook";
 import { useTheme } from "@/lib/theme";
 import { formatDate } from "@/lib/utils";
@@ -61,7 +61,7 @@ const CleanerProfile = () => {
         <EmptyState
           title="Something went wrong"
           description={error}
-          icon={images.noResult}
+          icon="exclamation-triangle"
           variant="light"
           actionLabel="Retry"
           onAction={() => refetch()}
@@ -93,10 +93,10 @@ const CleanerProfile = () => {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Image
-            source={icons.backArrow}
-            className="w-5 h-5"
-            tintColor={theme.colors.text}
+          <BootstrapIcon
+            name="chevron-left"
+            size={20}
+            color={theme.colors.text}
           />
         </TouchableOpacity>
         <Text
@@ -224,10 +224,10 @@ const CleanerProfile = () => {
               borderColor: theme.colors.border,
             }}
           >
-            <Image
-              source={images.noResult}
-              className="w-20 h-20 mb-3"
-              resizeMode="contain"
+            <BootstrapIcon
+              name="star"
+              size={80}
+              color={theme.colors.textMuted}
             />
             <Text
               className="text-sm text-center"

@@ -5,18 +5,12 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import {
-  ActivityIndicator,
-  Image,
-  Text,
-  View,
-  TouchableOpacity,
-} from "react-native";
+import { ActivityIndicator, Text, View, TouchableOpacity } from "react-native";
 import type { Feature, LineString } from "geojson";
 import type MapboxGLModule from "@rnmapbox/maps";
 import type * as MapboxGLTypes from "@rnmapbox/maps";
 
-import { icons } from "@/constants";
+import BootstrapIcon from "@/components/BootstrapIcon";
 import { fetchAPI } from "@/lib/fetch";
 import { useFetch } from "@/lib/fetch-hook";
 import { useTheme } from "@/lib/theme";
@@ -201,10 +195,10 @@ const Map = () => {
           className="rounded-2xl p-6 items-center shadow-sm"
           style={{ backgroundColor: theme.colors.surface }}
         >
-          <Image
-            source={icons.map}
-            className="w-12 h-12 mb-3 opacity-50"
-            tintColor={theme.colors.textMuted}
+          <BootstrapIcon
+            name="map-fill"
+            size={48}
+            color={theme.colors.textMuted}
           />
           <Text
             className="text-lg font-JakartaBold mb-1"
@@ -239,10 +233,10 @@ const Map = () => {
           className="rounded-2xl p-6 items-center shadow-sm"
           style={{ backgroundColor: theme.colors.surface }}
         >
-          <Image
-            source={icons.map}
-            className="w-12 h-12 mb-3 opacity-50"
-            tintColor={theme.colors.textMuted}
+          <BootstrapIcon
+            name="map-fill"
+            size={48}
+            color={theme.colors.textMuted}
           />
           <Text
             className="text-lg font-JakartaBold mb-1"
@@ -289,14 +283,12 @@ const Map = () => {
             coordinate={[marker.longitude, marker.latitude]}
             onSelected={() => onMarkerPress(marker)}
           >
-            <Image
-              source={
-                selectedCleaner === marker.id
-                  ? icons.selectedMarker
-                  : icons.marker
+            <BootstrapIcon
+              name={
+                selectedCleaner === marker.id ? "pin-map-fill" : "geo-alt-fill"
               }
-              className="w-8 h-8"
-              resizeMode="contain"
+              size={32}
+              color={selectedCleaner === marker.id ? "#22C55E" : "#6B7280"}
             />
           </MapboxGL.PointAnnotation>
         ))}
@@ -306,11 +298,7 @@ const Map = () => {
             id="destination"
             coordinate={[serviceLongitude, serviceLatitude]}
           >
-            <Image
-              source={icons.pin}
-              className="w-8 h-8"
-              resizeMode="contain"
-            />
+            <BootstrapIcon name="geo-alt" size={32} color="#3B82F6" />
           </MapboxGL.PointAnnotation>
         )}
 

@@ -3,7 +3,6 @@ import type { Href } from "expo-router";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   RefreshControl,
   ScrollView,
   Text,
@@ -12,8 +11,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import BootstrapIcon from "@/components/BootstrapIcon";
 import { showToast } from "@/components/Toast";
-import { icons } from "@/constants";
 import { ApiResponse, fetchAPI } from "@/lib/fetch";
 import { useFetch } from "@/lib/fetch-hook";
 import { useTheme } from "@/lib/theme";
@@ -95,10 +94,10 @@ const Users = () => {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Image
-            source={icons.backArrow}
-            className="w-5 h-5"
-            tintColor={theme.colors.text}
+          <BootstrapIcon
+            name="chevron-left"
+            size={20}
+            color={theme.colors.text}
           />
         </TouchableOpacity>
         <Text

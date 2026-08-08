@@ -3,13 +3,13 @@ import {
   TextInput,
   View,
   Text,
-  Image,
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
   Keyboard,
   Platform,
 } from "react-native";
 
+import BootstrapIcon from "@/components/BootstrapIcon";
 import { useTheme } from "@/lib/theme";
 
 import { InputFieldProps } from "@/types/type";
@@ -52,14 +52,14 @@ const InputField = ({
             }}
           >
             {icon && (
-              <Image
-                source={icon}
-                tintColor={
+              <BootstrapIcon
+                name={icon}
+                size={20}
+                color={
                   tintColor ??
                   (focused ? theme.colors.primary : theme.colors.textMuted)
                 }
-                className={`w-5 h-5 ml-4 ${iconStyle}`}
-                accessibilityIgnoresInvertColors={false}
+                style={{ marginLeft: 16 }}
               />
             )}
             <TextInput

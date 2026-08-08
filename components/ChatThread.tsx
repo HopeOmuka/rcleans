@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Text,
@@ -11,8 +10,8 @@ import {
   View,
 } from "react-native";
 
+import BootstrapIcon from "@/components/BootstrapIcon";
 import { showToast } from "@/components/Toast";
-import { icons } from "@/constants";
 import { ApiResponse, fetchAPI } from "@/lib/fetch";
 import { formatChatTime } from "@/lib/utils";
 import { ChatMessage } from "@/types/type";
@@ -233,10 +232,10 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           }}
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center px-8 mt-10">
-              <Image
-                source={icons.chat}
-                className="w-14 h-14 mb-3 opacity-40"
-                tintColor={isDark ? "#9CA3AF" : "#6B7280"}
+              <BootstrapIcon
+                name="chat-dots"
+                size={56}
+                color={isDark ? "#9CA3AF" : "#6B7280"}
               />
               <Text
                 className={`text-center font-JakartaMedium ${
@@ -281,7 +280,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           {sending ? (
             <ActivityIndicator size="small" color="#052E16" />
           ) : (
-            <Image source={icons.arrowUp} className="w-5 h-5" />
+            <BootstrapIcon
+              name="arrow-up"
+              size={20}
+              color={isDark ? "#FFFFFF" : "#052E16"}
+            />
           )}
         </TouchableOpacity>
       </View>

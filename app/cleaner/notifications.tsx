@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   RefreshControl,
   Text,
   TouchableOpacity,
@@ -12,8 +11,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import BootstrapIcon from "@/components/BootstrapIcon";
 import CustomButton from "@/components/CustomButton";
-import { icons } from "@/constants";
 import { ApiResponse, fetchAPI } from "@/lib/fetch";
 import { useFetch } from "@/lib/fetch-hook";
 import { formatChatTime } from "@/lib/utils";
@@ -125,10 +124,11 @@ const Notifications = () => {
             </View>
           ) : (
             <View className="items-center mt-16 px-6">
-              <Image
-                source={icons.list}
-                className="w-16 h-16 mb-4"
-                tintColor="#6B7280"
+              <BootstrapIcon
+                name="list-ul"
+                size={64}
+                color="#6B7280"
+                style={{ marginBottom: 16 }}
               />
               <Text className="text-general-500 text-center font-JakartaMedium">
                 No notifications yet

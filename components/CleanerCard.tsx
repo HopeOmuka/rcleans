@@ -1,7 +1,7 @@
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
-import { icons } from "@/constants";
+import BootstrapIcon from "@/components/BootstrapIcon";
 import { useTheme } from "@/lib/theme";
 import { formatTime } from "@/lib/utils";
 import { CleanerCardProps } from "@/types/type";
@@ -66,11 +66,7 @@ const CleanerCard = ({
             className="flex flex-row items-center ml-2 rounded-full px-2 py-0.5"
             style={{ backgroundColor: theme.colors.surfaceMuted }}
           >
-            <Image
-              source={icons.star}
-              className="w-3 h-3"
-              tintColor={theme.colors.warning}
-            />
+            <BootstrapIcon name="star" size={12} color={theme.colors.warning} />
             <Text
               className="text-xs font-JakartaMedium ml-0.5"
               style={{ color: theme.colors.textSecondary }}
@@ -86,10 +82,10 @@ const CleanerCard = ({
             className="flex flex-row items-center rounded-full px-2 py-0.5"
             style={{ backgroundColor: theme.colors.primarySoft }}
           >
-            <Image
-              source={icons.dollar}
-              className="w-3 h-3"
-              tintColor={theme.colors.primary}
+            <BootstrapIcon
+              name="currency-dollar"
+              size={12}
+              color={theme.colors.primary}
             />
             <Text
               className="text-xs font-JakartaBold ml-0.5"
@@ -144,11 +140,7 @@ const CleanerCard = ({
         style={!isSelected ? { borderColor: theme.colors.border } : undefined}
       >
         {isSelected && (
-          <Image
-            source={icons.checkmark}
-            className="w-4 h-4"
-            tintColor="#FFFFFF"
-          />
+          <BootstrapIcon name="check-lg" size={16} color="#FFFFFF" />
         )}
       </View>
     </TouchableOpacity>

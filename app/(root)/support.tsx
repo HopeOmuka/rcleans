@@ -2,7 +2,6 @@ import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import {
   FlatList,
-  Image,
   Modal,
   RefreshControl,
   Text,
@@ -13,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { showToast } from "@/components/Toast";
-import { icons } from "@/constants";
+import BootstrapIcon from "@/components/BootstrapIcon";
 import { ApiResponse, fetchAPI } from "@/lib/fetch";
 import { useFetch } from "@/lib/fetch-hook";
 import { useTheme } from "@/lib/theme";
@@ -151,10 +150,10 @@ const Support = () => {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Image
-            source={icons.backArrow}
-            className="w-5 h-5"
-            tintColor={theme.colors.text}
+          <BootstrapIcon
+            name="chevron-left"
+            size={20}
+            color={theme.colors.text}
           />
         </TouchableOpacity>
         <Text
@@ -230,10 +229,10 @@ const Support = () => {
                 Contact support
               </Text>
               <TouchableOpacity onPress={() => setShowForm(false)} hitSlop={8}>
-                <Image
-                  source={icons.close}
-                  className="w-5 h-5"
-                  tintColor={theme.colors.textSecondary}
+                <BootstrapIcon
+                  name="x-lg"
+                  size={20}
+                  color={theme.colors.textSecondary}
                 />
               </TouchableOpacity>
             </View>

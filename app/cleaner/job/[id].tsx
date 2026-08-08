@@ -14,10 +14,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import type MapboxGLModule from "@rnmapbox/maps";
 
+import BootstrapIcon from "@/components/BootstrapIcon";
 import ChatThread from "@/components/ChatThread";
 import CustomButton from "@/components/CustomButton";
 import { showToast } from "@/components/Toast";
-import { icons } from "@/constants";
 import { APIFetchError, ApiResponse, fetchAPI } from "@/lib/fetch";
 import { useFetch } from "@/lib/fetch-hook";
 import { formatDate } from "@/lib/utils";
@@ -54,10 +54,11 @@ const JobLocationMap = ({ lat, lng }: { lat: number; lng: number }) => {
   if (!MapboxGL) {
     return (
       <View className="h-48 rounded-2xl mb-4 items-center justify-center bg-dark-200 border border-gray-700">
-        <Image
-          source={icons.map}
-          className="w-8 h-8 opacity-40"
-          tintColor="#9CA3AF"
+        <BootstrapIcon
+          name="map-fill"
+          size={32}
+          color="#9CA3AF"
+          style={{ opacity: 0.4 }}
         />
         <Text className="text-gray-500 text-sm mt-2">
           Map requires a development build
@@ -80,7 +81,7 @@ const JobLocationMap = ({ lat, lng }: { lat: number; lng: number }) => {
           }}
         />
         <MapboxGL.PointAnnotation id="job" coordinate={[lng, lat]}>
-          <Image source={icons.pin} className="w-8 h-8" resizeMode="contain" />
+          <BootstrapIcon name="geo-alt" size={32} color="#22C55E" />
         </MapboxGL.PointAnnotation>
       </MapboxGL.MapView>
     </View>
@@ -357,11 +358,7 @@ const JobDetails = () => {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Image
-              source={icons.backArrow}
-              className="w-5 h-5"
-              tintColor="white"
-            />
+            <BootstrapIcon name="chevron-left" size={20} color="#FFFFFF" />
           </TouchableOpacity>
           <View className="flex-1">
             <Text
@@ -418,11 +415,7 @@ const JobDetails = () => {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Image
-            source={icons.backArrow}
-            className="w-5 h-5"
-            tintColor="white"
-          />
+          <BootstrapIcon name="chevron-left" size={20} color="#FFFFFF" />
         </TouchableOpacity>
         <Text className="flex-1 text-lg font-JakartaSemiBold text-white">
           Job Details
@@ -452,11 +445,7 @@ const JobDetails = () => {
             </Text>
           )}
           <View className="flex-row items-center mt-3">
-            <Image
-              source={icons.calendar}
-              className="w-4 h-4"
-              tintColor="#9CA3AF"
-            />
+            <BootstrapIcon name="calendar" size={16} color="#9CA3AF" />
             <Text className="text-gray-400 text-sm ml-2">
               {job.scheduled_date
                 ? formatDate(job.scheduled_date)
@@ -464,11 +453,7 @@ const JobDetails = () => {
             </Text>
           </View>
           <View className="flex-row items-center mt-1.5">
-            <Image
-              source={icons.point}
-              className="w-4 h-4"
-              tintColor="#9CA3AF"
-            />
+            <BootstrapIcon name="geo-alt" size={16} color="#9CA3AF" />
             <Text className="text-gray-400 text-sm ml-2 flex-1">
               {job.location_address}
             </Text>
@@ -479,11 +464,7 @@ const JobDetails = () => {
               {job.estimated_duration === 1 ? "" : "s"} estimated
             </Text>
             <View className="flex-row items-center">
-              <Image
-                source={icons.dollar}
-                className="w-4 h-4"
-                tintColor="#22C55E"
-              />
+              <BootstrapIcon name="currency-dollar" size={16} color="#22C55E" />
               <Text className="text-primary-500 font-JakartaBold ml-1">
                 ${job.total_price}
               </Text>
@@ -520,11 +501,7 @@ const JobDetails = () => {
               accessibilityRole="button"
               accessibilityLabel={`Call ${job.user_name}`}
             >
-              <Image
-                source={icons.phone}
-                className="w-4 h-4"
-                tintColor="#22C55E"
-              />
+              <BootstrapIcon name="telephone-fill" size={16} color="#22C55E" />
               <Text className="text-primary-500 font-JakartaMedium ml-2">
                 Call
               </Text>
@@ -535,11 +512,7 @@ const JobDetails = () => {
               accessibilityRole="button"
               accessibilityLabel={`Message ${job.user_name}`}
             >
-              <Image
-                source={icons.chat}
-                className="w-4 h-4"
-                tintColor="white"
-              />
+              <BootstrapIcon name="chat-dots" size={16} color="#FFFFFF" />
               <Text className="text-white font-JakartaMedium ml-2">
                 Message
               </Text>

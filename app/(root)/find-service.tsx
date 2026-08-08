@@ -1,14 +1,14 @@
 import { router } from "expo-router";
 import { useEffect } from "react";
-import { Image, Text, View, FlatList } from "react-native";
+import { Text, View, FlatList } from "react-native";
 import type { Href } from "expo-router";
 
+import BootstrapIcon from "@/components/BootstrapIcon";
 import CleanerCard from "@/components/CleanerCard";
 import CustomButton from "@/components/CustomButton";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import Map from "@/components/Map";
 import ServiceLayout from "@/components/ServiceLayout";
-import { icons } from "@/constants";
 import { useTheme } from "@/lib/theme";
 import {
   useCleanerStore,
@@ -53,10 +53,10 @@ const FindService = () => {
             className="w-9 h-9 rounded-full items-center justify-center mr-3"
             style={{ backgroundColor: theme.colors.primarySoft }}
           >
-            <Image
-              source={icons.pin}
-              className="w-4 h-4"
-              tintColor={theme.colors.primary}
+            <BootstrapIcon
+              name="geo-alt"
+              size={16}
+              color={theme.colors.primary}
             />
           </View>
           <View className="flex-1">

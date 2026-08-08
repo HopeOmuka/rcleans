@@ -4,11 +4,11 @@ import type {
 } from "@stripe/stripe-react-native";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import { Alert, Image, Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 import { ReactNativeModal } from "react-native-modal";
 
+import BootstrapIcon from "@/components/BootstrapIcon";
 import CustomButton from "@/components/CustomButton";
-import { images } from "@/constants";
 import { ApiResponse, fetchAPI } from "@/lib/fetch";
 import { useTheme } from "@/lib/theme";
 import { useBookingStore, useLocationStore } from "@/store";
@@ -261,7 +261,12 @@ const Payment = ({
           className="flex flex-col items-center justify-center p-7 rounded-2xl"
           style={{ backgroundColor: theme.colors.surface }}
         >
-          <Image source={images.check} className="w-28 h-28 mt-5" />
+          <BootstrapIcon
+            name="check-circle-fill"
+            size={112}
+            color={theme.colors.success}
+            style={{ marginTop: 20 }}
+          />
 
           <Text
             className="text-2xl text-center font-JakartaBold mt-5"

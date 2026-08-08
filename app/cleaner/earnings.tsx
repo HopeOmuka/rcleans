@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   RefreshControl,
   Text,
   TouchableOpacity,
@@ -12,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { icons } from "@/constants";
+import BootstrapIcon from "@/components/BootstrapIcon";
 import { get } from "@/lib/fetch";
 import { formatDate } from "@/lib/utils";
 
@@ -77,11 +76,7 @@ const Earnings = () => {
         </Text>
       </View>
       <View className="flex-row items-center mt-2">
-        <Image
-          source={icons.checkmark}
-          className="w-4 h-4"
-          tintColor="#22C55E"
-        />
+        <BootstrapIcon name="check" size={16} color="#22C55E" />
         <Text className="text-gray-400 text-sm ml-1.5">
           Paid {formatDate(item.completed_at ?? item.created_at)}
         </Text>
@@ -98,7 +93,7 @@ const Earnings = () => {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Image source={icons.backArrow} className="w-5 h-5" />
+          <BootstrapIcon name="chevron-left" size={20} color="#FFFFFF" />
         </TouchableOpacity>
         <Text className="text-white text-lg font-JakartaSemiBold">
           Earnings

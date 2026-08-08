@@ -12,8 +12,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import BootstrapIcon from "@/components/BootstrapIcon";
 import { showToast } from "@/components/Toast";
-import { icons } from "@/constants";
 import { ApiResponse, fetchAPI } from "@/lib/fetch";
 import { useFetch } from "@/lib/fetch-hook";
 import { useTheme } from "@/lib/theme";
@@ -164,10 +164,10 @@ const CleanerDetail = () => {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Image
-            source={icons.backArrow}
-            className="w-5 h-5"
-            tintColor={theme.colors.text}
+          <BootstrapIcon
+            name="chevron-left"
+            size={20}
+            color={theme.colors.text}
           />
         </TouchableOpacity>
         <Text
@@ -278,7 +278,7 @@ const CleanerDetail = () => {
               Joined {formatDate(cleaner!.created_at)}
             </Text>
             <View className="flex-row items-center">
-              <Image source={icons.star} className="w-3 h-3" />
+              <BootstrapIcon name="star" size={12} color="#4B5563" />
               <Text
                 className="text-xs font-JakartaMedium ml-0.5"
                 style={{ color: theme.colors.text }}

@@ -1,16 +1,10 @@
 import { router, Stack, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  Image,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import BootstrapIcon from "@/components/BootstrapIcon";
 import CustomButton from "@/components/CustomButton";
-import { icons } from "@/constants";
 import { ApiResponse, fetchAPI } from "@/lib/fetch";
 import { useTheme } from "@/lib/theme";
 
@@ -69,10 +63,10 @@ const AdminLayout = () => {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Image
-              source={icons.backArrow}
-              className="w-5 h-5"
-              tintColor={theme.colors.text}
+            <BootstrapIcon
+              name="chevron-left"
+              size={20}
+              color={theme.colors.text}
             />
           </TouchableOpacity>
           <Text
@@ -87,11 +81,7 @@ const AdminLayout = () => {
             className="w-16 h-16 rounded-full items-center justify-center mb-4"
             style={{ backgroundColor: theme.colors.dangerSoft }}
           >
-            <Image
-              source={icons.lock}
-              className="w-7 h-7"
-              tintColor={theme.colors.danger}
-            />
+            <BootstrapIcon name="lock" size={28} color={theme.colors.danger} />
           </View>
           <Text
             className="text-lg font-JakartaBold text-center"

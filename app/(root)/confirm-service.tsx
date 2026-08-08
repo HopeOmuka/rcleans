@@ -2,10 +2,10 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { View, Image, Text, TouchableOpacity } from "react-native";
 
+import BootstrapIcon from "@/components/BootstrapIcon";
 import CustomButton from "@/components/CustomButton";
 import EmptyState from "@/components/EmptyState";
 import ServiceLayout from "@/components/ServiceLayout";
-import { icons } from "@/constants";
 import { useTheme } from "@/lib/theme";
 import {
   useBookingStore,
@@ -36,7 +36,7 @@ const ConfirmService = () => {
         <EmptyState
           title="No Service Selected"
           description="Please go back and select a service type and cleaner to continue."
-          icon={icons.pin}
+          icon="geo-alt"
           actionLabel="Go Back"
           onAction={() => router.back()}
         />
@@ -202,7 +202,12 @@ const ConfirmService = () => {
               {selectedCleanerData.title}
             </Text>
             <View className="flex-row items-center mt-1">
-              <Image source={icons.star} className="w-4 h-4 mr-1" />
+              <BootstrapIcon
+                name="star-fill"
+                size={16}
+                color="#FBBF24"
+                style={{ marginRight: 4 }}
+              />
               <Text className="text-sm" style={{ color: theme.colors.text }}>
                 {selectedCleanerData.rating}
               </Text>

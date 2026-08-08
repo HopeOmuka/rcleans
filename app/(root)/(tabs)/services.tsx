@@ -3,7 +3,6 @@ import { router } from "expo-router";
 import type { Href } from "expo-router";
 import {
   FlatList,
-  Image,
   RefreshControl,
   Text,
   TouchableOpacity,
@@ -16,7 +15,7 @@ import CancelBookingModal from "@/components/CancelBookingModal";
 import EmptyState from "@/components/EmptyState";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ServiceCard from "@/components/ServiceCard";
-import { images } from "@/constants";
+import BootstrapIcon from "@/components/BootstrapIcon";
 import { useFetch } from "@/lib/fetch-hook";
 import { useTheme } from "@/lib/theme";
 import { Service } from "@/types/type";
@@ -93,7 +92,7 @@ const Services = () => {
         <EmptyState
           title="Something went wrong"
           description={error}
-          icon={images.noResult}
+          icon="exclamation-triangle"
           variant="light"
           actionLabel="Retry"
           onAction={() => refetch()}
@@ -126,11 +125,10 @@ const Services = () => {
           }
           ListEmptyComponent={() => (
             <View className="flex flex-col items-center justify-center px-5 pt-6">
-              <Image
-                source={images.noResult}
-                className="w-40 h-40 opacity-70"
-                alt="No services found"
-                resizeMode="contain"
+              <BootstrapIcon
+                name="calendar"
+                size={112}
+                color={theme.colors.textMuted}
               />
               <Text
                 className="text-base font-JakartaSemiBold text-center mt-1"

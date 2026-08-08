@@ -1,12 +1,13 @@
 import { router, useFocusEffect } from "expo-router";
 import type { Href } from "expo-router";
 import { useCallback } from "react";
-import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import EmptyState from "@/components/EmptyState";
+import BootstrapIcon from "@/components/BootstrapIcon";
 import SkeletonLoader from "@/components/SkeletonLoader";
-import { icons, images } from "@/constants";
+
 import { ApiResponse, fetchAPI } from "@/lib/fetch";
 import { useFetch } from "@/lib/fetch-hook";
 import { useTheme } from "@/lib/theme";
@@ -124,10 +125,10 @@ const Notifications = () => {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Image
-            source={icons.backArrow}
-            className="w-5 h-5"
-            tintColor={theme.colors.text}
+          <BootstrapIcon
+            name="chevron-left"
+            size={20}
+            color={theme.colors.text}
           />
         </TouchableOpacity>
         <Text
@@ -148,7 +149,7 @@ const Notifications = () => {
         <EmptyState
           title="Something went wrong"
           description={error}
-          icon={images.noResult}
+          icon="exclamation-triangle"
           variant="light"
           actionLabel="Retry"
           onAction={() => refetch()}
@@ -162,11 +163,10 @@ const Notifications = () => {
           contentContainerStyle={{ paddingBottom: 40 }}
           ListEmptyComponent={() => (
             <View className="items-center justify-center pt-16">
-              <Image
-                source={images.noResult}
-                className="w-32 h-32"
-                alt="No notifications"
-                resizeMode="contain"
+              <BootstrapIcon
+                name="bell"
+                size={96}
+                color={theme.colors.textMuted}
               />
               <Text
                 className="text-sm mt-2"

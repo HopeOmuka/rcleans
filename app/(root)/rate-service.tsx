@@ -4,7 +4,6 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
-  Image,
   Text,
   TextInput,
   TouchableOpacity,
@@ -12,9 +11,9 @@ import {
 } from "react-native";
 import * as Haptics from "expo-haptics";
 
+import BootstrapIcon from "@/components/BootstrapIcon";
 import CustomButton from "@/components/CustomButton";
 import ServiceLayout from "@/components/ServiceLayout";
-import { icons } from "@/constants";
 import { ApiResponse, fetchAPI } from "@/lib/fetch";
 import { useTheme } from "@/lib/theme";
 import { showToast } from "@/components/Toast";
@@ -58,12 +57,10 @@ const StarButton = ({
       accessibilityRole="button"
     >
       <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
-        <Image
-          source={icons.star}
-          className="w-8 h-8"
-          style={{
-            tintColor: isSelected ? "#FBBF24" : unselectedColor,
-          }}
+        <BootstrapIcon
+          name="star-fill"
+          size={32}
+          color={isSelected ? "#FBBF24" : unselectedColor}
         />
       </Animated.View>
     </TouchableOpacity>

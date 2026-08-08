@@ -5,7 +5,6 @@ import BottomSheet, {
 import { router } from "expo-router";
 import React, { useRef } from "react";
 import {
-  Image,
   Text,
   TouchableOpacity,
   View,
@@ -14,8 +13,8 @@ import {
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import BootstrapIcon from "@/components/BootstrapIcon";
 import Map from "@/components/Map";
-import { icons } from "@/constants";
 import { useTheme } from "@/lib/theme";
 
 const ServiceLayout = ({
@@ -57,11 +56,10 @@ const ServiceLayout = ({
                 className="w-10 h-10 rounded-full items-center justify-center shadow-md shadow-black/20"
                 style={{ backgroundColor: theme.colors.surface }}
               >
-                <Image
-                  source={icons.backArrow}
-                  resizeMode="contain"
-                  className="w-6 h-6"
-                  tintColor={theme.colors.text}
+                <BootstrapIcon
+                  name="chevron-left"
+                  size={24}
+                  color={theme.colors.text}
                 />
               </View>
             </TouchableOpacity>

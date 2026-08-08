@@ -6,7 +6,7 @@ import { Image, Text, View } from "react-native";
 import EmptyState from "@/components/EmptyState";
 import Payment from "@/components/Payment";
 import ServiceLayout from "@/components/ServiceLayout";
-import { icons } from "@/constants";
+import BootstrapIcon from "@/components/BootstrapIcon";
 import { useTheme } from "@/lib/theme";
 import { formatTime } from "@/lib/utils";
 import {
@@ -152,11 +152,7 @@ const BookService = () => {
               </Text>
 
               <View className="flex flex-row items-center space-x-0.5">
-                <Image
-                  source={icons.star}
-                  className="w-5 h-5"
-                  resizeMode="contain"
-                />
+                <BootstrapIcon name="star-fill" size={20} color="#FBBF24" />
                 <Text
                   className="text-lg font-JakartaRegular"
                   style={{ color: theme.colors.text }}
@@ -235,10 +231,10 @@ const BookService = () => {
               className="flex flex-row items-center justify-start mt-3 border-t border-b w-full py-3"
               style={{ borderColor: theme.colors.border }}
             >
-              <Image
-                source={icons.point}
-                className="w-6 h-6"
-                tintColor={theme.colors.text}
+              <BootstrapIcon
+                name="geo-alt"
+                size={24}
+                color={theme.colors.text}
               />
               <Text
                 className="text-lg font-JakartaRegular ml-2"
