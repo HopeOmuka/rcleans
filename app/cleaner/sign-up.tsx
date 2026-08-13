@@ -35,6 +35,8 @@ const SignUp = () => {
     lastName: "",
     email: "",
     phone: "",
+    password: "",
+    confirmPassword: "",
     yearsExperience: "",
     bio: "",
   });
@@ -91,6 +93,12 @@ const SignUp = () => {
     if (digits.length < 7 || digits.length > 15) {
       newErrors.phone = "Enter a valid phone number";
     }
+    if (form.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+    }
+    if (form.confirmPassword !== form.password) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
     if (specialties.length === 0) {
       newErrors.specialties = "Select at least one specialty";
     }
@@ -123,6 +131,7 @@ const SignUp = () => {
           last_name: form.lastName.trim(),
           email: form.email.trim(),
           phone: form.phone.trim(),
+          password: form.password,
           specialties,
           years_experience: Number(form.yearsExperience),
           bio: form.bio.trim() || undefined,
@@ -156,8 +165,8 @@ const SignUp = () => {
           </Text>
           <Text className="text-gray-400 text-center mt-3 leading-6">
             Your application is under review. An admin will approve your
-            registration, after which you can sign in with your email and phone
-            number.
+            registration, after which you can sign in with your email, phone
+            number and password.
           </Text>
           <CustomButton
             title="Go to Sign In"
@@ -280,6 +289,55 @@ const SignUp = () => {
             />
             {errors.phone ? (
               <Text className="text-red-400 text-sm mt-1">{errors.phone}</Text>
+            ) : null}
+
+            <InputField
+              label="Password"
+              placeholder="At least 8 characters"
+              icon="lock-fill"
+              tintColor="#9CA3AF"
+              secureTextEntry
+              textContentType="newPassword"
+              value={form.password}
+              onChangeText={(value) => {
+                setForm({ ...form, password: value });
+                if (errors.password) setErrors((e) => ({ ...e, password: "" }));
+              }}
+              labelStyle="text-white"
+              containerStyle="bg-dark-300 border-dark-300"
+              inputStyle="text-white placeholder:text-gray-500"
+              iconStyle="opacity-80"
+              accessibilityLabel="Password"
+            />
+            {errors.password ? (
+              <Text className="text-red-400 text-sm mt-1">
+                {errors.password}
+              </Text>
+            ) : null}
+
+            <InputField
+              label="Confirm password"
+              placeholder="Re-enter your password"
+              icon="shield-lock"
+              tintColor="#9CA3AF"
+              secureTextEntry
+              textContentType="newPassword"
+              value={form.confirmPassword}
+              onChangeText={(value) => {
+                setForm({ ...form, confirmPassword: value });
+                if (errors.confirmPassword)
+                  setErrors((e) => ({ ...e, confirmPassword: "" }));
+              }}
+              labelStyle="text-white"
+              containerStyle="bg-dark-300 border-dark-300"
+              inputStyle="text-white placeholder:text-gray-500"
+              iconStyle="opacity-80"
+              accessibilityLabel="Confirm password"
+            />
+            {errors.confirmPassword ? (
+              <Text className="text-red-400 text-sm mt-1">
+                {errors.confirmPassword}
+              </Text>
             ) : null}
 
             <InputField

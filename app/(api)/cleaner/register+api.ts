@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { jsonResponse, errorResponse, AppError } from "@/lib/api-error";
+import { hashPassword, validatePassword } from "@/lib/passwords";
 import { rateLimit, clientIp } from "@/lib/server-auth";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -12,10 +13,13 @@ export async function POST(request: Request) {
       last_name,
       email,
       phone,
+      password,
       specialties,
       years_experience,
       bio,
     } = body ?? {};
+
+    const passwordValue = validatePassword(password);
 
     if (
       typeof first_name !== "string" ||
@@ -89,13 +93,13 @@ export async function POST(request: Request) {
 
     const inserted = await sql`
       INSERT INTO cleaners (
-        first_name, last_name, email, phone,
+        first_name, last_name, email, phone, password_hash,
         specialties, years_experience, bio,
         is_available, is_active,
         background_check_status, insurance_status
       ) VALUES (
         ${first_name.trim()}, ${last_name.trim()}, ${email.trim().toLowerCase()}, ${phone.trim()},
-        ${specialties}, ${years}, ${typeof bio === "string" ? bio.trim() : null},
+        ${hashPassword(passwordValue)}, ${specialties}, ${years}, ${typeof bio === "string" ? bio.trim() : null},
         true, false,
         'pending', 'pending'
       )

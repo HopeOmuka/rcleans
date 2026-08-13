@@ -135,6 +135,12 @@ export default function Layout() {
           }}
         />
         <Tabs.Screen
+          name="set-password"
+          options={{
+            href: null,
+          }}
+        />
+        <Tabs.Screen
           name="availability"
           options={{
             href: null,

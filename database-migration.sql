@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS cleaners (
     languages TEXT[] DEFAULT '{"English"}',
     background_check_status TEXT DEFAULT 'pending' CHECK (background_check_status IN ('pending', 'approved', 'rejected')),
     insurance_status TEXT DEFAULT 'pending' CHECK (insurance_status IN ('pending', 'approved', 'rejected')),
-    license_number TEXT,
+    password_hash TEXT,    license_number TEXT,
     emergency_contact_name TEXT,
     emergency_contact_phone TEXT,
     bank_account_details JSONB, -- Encrypted/stored securely

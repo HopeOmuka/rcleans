@@ -1,14 +1,19 @@
 import { neon } from "@neondatabase/serverless";
 import { jsonResponse, errorResponse, AppError } from "@/lib/api-error";
+import { verifyPassword } from "@/lib/passwords";
 import { rateLimit, clientIp, issueCleanerToken } from "@/lib/server-auth";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, phone } = body;
+    const { email, phone, password } = body;
 
-    if (!email || !phone) {
-      throw new AppError(400, "Email and phone required", "VALIDATION_ERROR");
+    if (!email || !phone || !password) {
+      throw new AppError(
+        400,
+        "Email, phone and password required",
+        "VALIDATION_ERROR",
+      );
     }
 
     if (typeof email !== "string" || !email.includes("@")) {
@@ -42,6 +47,19 @@ export async function POST(request: Request) {
     }
 
     const cleaner = cleaners[0];
+
+    if (!cleaner.password_hash) {
+      throw new AppError(
+        403,
+        "Set a password to sign in from now on",
+        "SET_PASSWORD_REQUIRED",
+      );
+    }
+
+    if (!verifyPassword(password, cleaner.password_hash)) {
+      throw new AppError(401, "Invalid credentials", "AUTH_ERROR");
+    }
+
     if (!cleaner.is_active) {
       throw new AppError(
         403,

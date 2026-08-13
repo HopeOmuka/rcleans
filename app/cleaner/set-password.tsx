@@ -1,4 +1,4 @@
-import { Link, router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import {
   Alert,
@@ -9,92 +9,73 @@ import {
   Text,
   View,
 } from "react-native";
-import * as SecureStore from "expo-secure-store";
 
 import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
 import { images } from "@/constants";
-import { fetchAPI, setAuthToken, ApiResponse } from "@/lib/fetch";
-import { CleanerSession } from "@/types/type";
+import { ApiResponse, fetchAPI } from "@/lib/fetch";
 
-const SignIn = () => {
+const SetPassword = () => {
+  const params = useLocalSearchParams<{ email?: string; phone?: string }>();
   const [form, setForm] = useState({
-    email: "",
-    phone: "",
+    email: params.email ?? "",
+    phone: params.phone ?? "",
     password: "",
+    confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({ email: "", phone: "", password: "" });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validate = useCallback((): boolean => {
-    const newErrors = { email: "", phone: "", password: "" };
-    let valid = true;
+    const newErrors: Record<string, string> = {};
 
-    const email = form.email.trim();
-    if (!email) {
-      newErrors.email = "Email is required";
-      valid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
       newErrors.email = "Enter a valid email address";
-      valid = false;
     }
-
     const digits = form.phone.replace(/\D/g, "");
-    if (!form.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-      valid = false;
-    } else if (digits.length < 7 || digits.length > 15) {
+    if (digits.length < 7 || digits.length > 15) {
       newErrors.phone = "Enter a valid phone number";
-      valid = false;
     }
-
-    if (!form.password) {
-      newErrors.password = "Password is required";
-      valid = false;
+    if (form.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+    }
+    if (form.confirmPassword !== form.password) {
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
     setErrors(newErrors);
-    return valid;
-  }, [form.email, form.phone, form.password]);
+    return Object.keys(newErrors).length === 0;
+  }, [form.email, form.phone, form.password, form.confirmPassword]);
 
-  const onSignInPress = useCallback(async () => {
-    if (!validate()) {
-      return;
-    }
+  const onSetPassword = useCallback(async () => {
+    if (!validate()) return;
 
     setLoading(true);
     try {
-      const result = await fetchAPI<
-        ApiResponse<{ cleaner: CleanerSession; token: string }>
-      >("/(api)/cleaner/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email.trim(),
-          phone: form.phone.trim(),
-          password: form.password,
-        }),
-      });
+      const result = await fetchAPI<ApiResponse<{ success: boolean }>>(
+        "/(api)/cleaner/set-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: form.email.trim(),
+            phone: form.phone.trim(),
+            password: form.password,
+          }),
+        },
+      );
 
-      if ("code" in result && result.code === "SET_PASSWORD_REQUIRED") {
-        router.replace({
-          pathname: "/cleaner/set-password",
-          params: { email: form.email.trim(), phone: form.phone.trim() },
-        });
-      } else if (result.data && result.data.cleaner) {
-        await SecureStore.setItemAsync(
-          "cleaner_session",
-          JSON.stringify(result.data.cleaner),
+      if (result.data) {
+        Alert.alert(
+          "Password set",
+          "Sign in with your email, phone number and new password.",
         );
-        await SecureStore.setItemAsync("cleaner_token", result.data.token);
-        setAuthToken(result.data.token);
-        router.replace("/cleaner/dashboard");
+        router.replace("/cleaner/sign-in");
       } else {
-        Alert.alert("Error", result.error || "Invalid credentials");
+        setErrors({ form: result.error || "Could not set password" });
       }
-    } catch (err) {
-      console.error("Login error:", err);
-      Alert.alert("Error", "Failed to sign in. Please try again.");
+    } catch {
+      setErrors({ form: "Could not set password. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -121,13 +102,17 @@ const SignIn = () => {
                 />
               </View>
               <Text className="text-white text-3xl font-JakartaBold">
-                Cleaner Portal
+                Set a password
               </Text>
-              <Text className="text-gray-400 text-center mt-2 px-8">
-                Sign in with your registered email, phone number and password to
-                access your jobs
+              <Text className="text-gray-400 text-center mt-2 px-8 leading-6">
+                Cleaner accounts now require a password. Verify your email and
+                phone number to choose one.
               </Text>
             </View>
+
+            {errors.form ? (
+              <Text className="text-red-400 text-sm mb-3">{errors.form}</Text>
+            ) : null}
 
             <View className="bg-dark-200 rounded-2xl p-5 border border-gray-800">
               <InputField
@@ -139,7 +124,7 @@ const SignIn = () => {
                 value={form.email}
                 onChangeText={(value) => {
                   setForm({ ...form, email: value });
-                  if (errors.email) setErrors({ ...errors, email: "" });
+                  if (errors.email) setErrors((e) => ({ ...e, email: "" }));
                 }}
                 labelStyle="text-white"
                 containerStyle="bg-dark-300 border-dark-300"
@@ -162,7 +147,7 @@ const SignIn = () => {
                 value={form.phone}
                 onChangeText={(value) => {
                   setForm({ ...form, phone: value });
-                  if (errors.phone) setErrors({ ...errors, phone: "" });
+                  if (errors.phone) setErrors((e) => ({ ...e, phone: "" }));
                 }}
                 labelStyle="text-white"
                 containerStyle="bg-dark-300 border-dark-300"
@@ -177,26 +162,52 @@ const SignIn = () => {
               ) : null}
 
               <InputField
-                label="Password"
-                placeholder="Enter your password"
+                label="New password"
+                placeholder="At least 8 characters"
                 icon="lock-fill"
                 tintColor="#9CA3AF"
                 secureTextEntry
-                textContentType="password"
+                textContentType="newPassword"
                 value={form.password}
                 onChangeText={(value) => {
                   setForm({ ...form, password: value });
-                  if (errors.password) setErrors({ ...errors, password: "" });
+                  if (errors.password)
+                    setErrors((e) => ({ ...e, password: "" }));
                 }}
                 labelStyle="text-white"
                 containerStyle="bg-dark-300 border-dark-300"
                 inputStyle="text-white placeholder:text-gray-500"
                 iconStyle="opacity-80"
-                accessibilityLabel="Password"
+                accessibilityLabel="New password"
               />
               {errors.password ? (
                 <Text className="text-red-400 text-sm mt-1">
                   {errors.password}
+                </Text>
+              ) : null}
+
+              <InputField
+                label="Confirm new password"
+                placeholder="Re-enter your password"
+                icon="shield-lock"
+                tintColor="#9CA3AF"
+                secureTextEntry
+                textContentType="newPassword"
+                value={form.confirmPassword}
+                onChangeText={(value) => {
+                  setForm({ ...form, confirmPassword: value });
+                  if (errors.confirmPassword)
+                    setErrors((e) => ({ ...e, confirmPassword: "" }));
+                }}
+                labelStyle="text-white"
+                containerStyle="bg-dark-300 border-dark-300"
+                inputStyle="text-white placeholder:text-gray-500"
+                iconStyle="opacity-80"
+                accessibilityLabel="Confirm new password"
+              />
+              {errors.confirmPassword ? (
+                <Text className="text-red-400 text-sm mt-1">
+                  {errors.confirmPassword}
                 </Text>
               ) : null}
             </View>
@@ -204,31 +215,13 @@ const SignIn = () => {
 
           <View>
             <CustomButton
-              title={loading ? "Signing in..." : "Sign In"}
-              onPress={onSignInPress}
+              title={loading ? "Saving..." : "Set Password"}
+              onPress={onSetPassword}
               disabled={loading}
               bgVariant="success"
               className="mt-6"
-              accessibilityLabel="Sign in"
+              accessibilityLabel="Set password"
             />
-
-            <Link
-              href="/cleaner/sign-up"
-              className="text-center text-gray-400 mt-8"
-            >
-              New to rcleans?{" "}
-              <Text className="text-primary-500">
-                Apply to become a cleaner
-              </Text>
-            </Link>
-
-            <Link
-              href="/(auth)/sign-in"
-              className="text-center text-gray-400 mt-6"
-            >
-              Are you a customer?{" "}
-              <Text className="text-primary-500">Sign in as customer</Text>
-            </Link>
           </View>
         </View>
       </ScrollView>
@@ -236,4 +229,4 @@ const SignIn = () => {
   );
 };
 
-export default SignIn;
+export default SetPassword;
