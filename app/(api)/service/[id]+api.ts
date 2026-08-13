@@ -21,6 +21,7 @@ export async function GET(request: Request, params: { id?: string } = {}) {
         s.started_at, s.completed_at, s.matched_at,
         s.discount_amount, s.promo_code_id,
         s.special_instructions, s.rating, s.review,
+        s.recurrence, s.recurring_parent_id,
         pc.code AS promo_code,
         json_build_object(
           'id', c.id, 'first_name', c.first_name, 'last_name', c.last_name,

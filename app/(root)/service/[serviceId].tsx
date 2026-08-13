@@ -591,6 +591,25 @@ const ServiceDetails = () => {
                 : "As soon as possible"}
             </Text>
           </View>
+          {service.recurrence && service.recurrence !== "none" ? (
+            <View className="flex-row items-center mt-1.5">
+              <BootstrapIcon
+                name="recycle"
+                size={16}
+                color={theme.colors.textMuted}
+              />
+              <Text
+                className="text-sm ml-2"
+                style={{ color: theme.colors.textSecondary }}
+              >
+                {service.recurrence === "weekly"
+                  ? "Part of a weekly series"
+                  : service.recurrence === "biweekly"
+                    ? "Part of a bi-weekly series"
+                    : "Part of a monthly series"}
+              </Text>
+            </View>
+          ) : null}
           <View className="flex-row items-center mt-1.5">
             <BootstrapIcon
               name="geo-alt"

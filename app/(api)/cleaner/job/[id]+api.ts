@@ -20,6 +20,7 @@ export async function GET(request: Request, { id }: { id?: string } = {}) {
         s.location_address, s.location_lat, s.location_lng,
         s.special_instructions, s.created_at, s.matched_at,
         s.started_at, s.completed_at, s.discount_amount, s.promo_code_id,
+        s.recurrence, s.recurring_parent_id,
         st.name AS service_type_name,
         st.description AS service_type_description,
         u.id AS user_id, u.name AS user_name,

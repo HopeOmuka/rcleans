@@ -54,7 +54,7 @@ const Payment = ({
   const [loading, setLoading] = useState<boolean>(false);
   const { serviceAddress, serviceLatitude, serviceLongitude } =
     useLocationStore();
-  const { specialInstructions } = useBookingStore();
+  const { specialInstructions, recurrence } = useBookingStore();
 
   const isPayLaterBooking = paymentMode === "later" && !serviceId;
   const isPayingExisting = Boolean(serviceId);
@@ -81,6 +81,7 @@ const Payment = ({
           payment_mode: paymentIntentId ? "now" : "later",
           payment_intent_id: paymentIntentId,
           special_instructions: specialInstructions || undefined,
+          recurrence: recurrence || "none",
         }),
       },
     );

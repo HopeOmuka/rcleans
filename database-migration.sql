@@ -103,6 +103,8 @@ CREATE TABLE IF NOT EXISTS services (
     completed_at TIMESTAMP WITH TIME ZONE,
     cancelled_at TIMESTAMP WITH TIME ZONE,
     cancellation_reason TEXT,
+    recurrence TEXT NOT NULL DEFAULT 'none' CHECK (recurrence IN ('none', 'weekly', 'biweekly', 'monthly')),
+    recurring_parent_id TEXT REFERENCES services(id) ON DELETE SET NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -297,6 +299,7 @@ CREATE INDEX IF NOT EXISTS idx_services_cleaner_id ON services(cleaner_id);
 CREATE INDEX IF NOT EXISTS idx_services_status ON services(status);
 CREATE INDEX IF NOT EXISTS idx_services_created_at ON services(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_services_scheduled_date ON services(scheduled_date) WHERE scheduled_date IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_services_recurring_parent ON services(recurring_parent_id);
 CREATE INDEX IF NOT EXISTS idx_services_location ON services(location_lat, location_lng);
 
 -- Ratings indexes

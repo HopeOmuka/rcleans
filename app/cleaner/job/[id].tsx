@@ -452,6 +452,18 @@ const JobDetails = () => {
                 : "As soon as possible"}
             </Text>
           </View>
+          {job.recurrence && job.recurrence !== "none" ? (
+            <View className="flex-row items-center mt-1.5">
+              <BootstrapIcon name="recycle" size={16} color="#9CA3AF" />
+              <Text className="text-gray-400 text-sm ml-2">
+                {job.recurrence === "weekly"
+                  ? "Part of a weekly series"
+                  : job.recurrence === "biweekly"
+                    ? "Part of a bi-weekly series"
+                    : "Part of a monthly series"}
+              </Text>
+            </View>
+          ) : null}
           <View className="flex-row items-center mt-1.5">
             <BootstrapIcon name="geo-alt" size={16} color="#9CA3AF" />
             <Text className="text-gray-400 text-sm ml-2 flex-1">

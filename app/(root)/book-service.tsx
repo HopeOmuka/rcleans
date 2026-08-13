@@ -74,6 +74,7 @@ const BookService = () => {
     appliedPromoCode,
     appliedPromoDiscount,
     scheduledDate,
+    recurrence,
   } = useBookingStore();
 
   const cleanerDetails = cleaners?.filter(
@@ -207,6 +208,19 @@ const BookService = () => {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
+                </Text>
+              </View>
+            ) : null}
+
+            {recurrence && recurrence !== "none" ? (
+              <View className="flex flex-row items-center justify-between w-full border-b border-white py-3">
+                <Text className="text-lg font-JakartaRegular">Repeats</Text>
+                <Text className="text-lg font-JakartaRegular text-primary-500">
+                  {recurrence === "weekly"
+                    ? "Weekly"
+                    : recurrence === "biweekly"
+                      ? "Bi-weekly"
+                      : "Monthly"}
                 </Text>
               </View>
             ) : null}

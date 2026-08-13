@@ -90,6 +90,9 @@ const Home = () => {
 
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
+  const [recurrence, setRecurrence] = useState<
+    "none" | "weekly" | "biweekly" | "monthly"
+  >("none");
   const [selectedAddons, setSelectedAddons] = useState<SelectedAddon[]>([]);
   const [showAddons, setShowAddons] = useState(false);
   const [specialNotes, setSpecialNotes] = useState("");
@@ -115,6 +118,7 @@ const Home = () => {
       setAppliedPromo(null);
       setIsScheduled(false);
       setScheduledDate(null);
+      setRecurrence("none");
       setSpecialNotes("");
     }
   }, [
@@ -123,6 +127,7 @@ const Home = () => {
     bookingStore.specialInstructions,
     bookingStore.isScheduled,
     bookingStore.scheduledDate,
+    bookingStore.recurrence,
   ]);
 
   const {
@@ -271,6 +276,7 @@ const Home = () => {
       appliedPromoDiscount: appliedPromo?.discountAmount ?? 0,
       isScheduled,
       scheduledDate: scheduledDate?.toISOString() ?? null,
+      recurrence,
       specialInstructions: specialNotes.trim() || null,
     });
   };
@@ -1018,6 +1024,7 @@ const Home = () => {
                 onPress={() => {
                   setIsScheduled(false);
                   setScheduledDate(null);
+                  setRecurrence("none");
                 }}
                 style={{
                   backgroundColor: !isScheduled
@@ -1076,6 +1083,74 @@ const Home = () => {
                   onSelect={setScheduledDate}
                   onToggleSchedule={setIsScheduled}
                 />
+              </View>
+            )}
+
+            {isScheduled && (
+              <View className="mb-5">
+                <Text
+                  className="text-sm font-JakartaMedium mb-2"
+                  style={{ color: theme.colors.textSecondary }}
+                >
+                  Repeat
+                </Text>
+                <View className="flex-row flex-wrap">
+                  {(
+                    [
+                      { value: "none", label: "One time" },
+                      { value: "weekly", label: "Weekly" },
+                      { value: "biweekly", label: "Bi-weekly" },
+                      { value: "monthly", label: "Monthly" },
+                    ] as const
+                  ).map(({ value, label }) => {
+                    const active = recurrence === value;
+                    return (
+                      <TouchableOpacity
+                        key={value}
+                        onPress={() => {
+                          setRecurrence(value);
+                          bookingStore.setBooking({ recurrence: value });
+                        }}
+                        style={{
+                          backgroundColor: active
+                            ? theme.colors.primary
+                            : theme.colors.surface,
+                          borderColor: active
+                            ? theme.colors.primary
+                            : theme.colors.border,
+                        }}
+                        className="mr-2 mb-2 px-4 py-2 rounded-full border"
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                        accessibilityLabel={`${label} recurrence`}
+                      >
+                        <Text
+                          className="text-sm font-JakartaMedium"
+                          style={{
+                            color: active
+                              ? "#FFFFFF"
+                              : theme.colors.textSecondary,
+                          }}
+                        >
+                          {label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                {recurrence !== "none" ? (
+                  <Text
+                    className="text-xs mt-1"
+                    style={{ color: theme.colors.textMuted }}
+                  >
+                    {recurrence === "weekly"
+                      ? "Repeats every week — 4 future visits are booked."
+                      : recurrence === "biweekly"
+                        ? "Repeats every 2 weeks — 4 future visits are booked."
+                        : "Repeats every month — 4 future visits are booked."}{" "}
+                    Future visits are pay-later; you pay each when it is due.
+                  </Text>
+                ) : null}
               </View>
             )}
 

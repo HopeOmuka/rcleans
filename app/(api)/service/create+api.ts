@@ -7,6 +7,25 @@ import { randomUUID } from "node:crypto";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
+const RECURRENCES = ["none", "weekly", "biweekly", "monthly"] as const;
+const RECURRING_OCCURRENCES = 4;
+
+function nextOccurrence(date: Date, recurrence: string): Date {
+  const next = new Date(date);
+  if (recurrence === "weekly") {
+    next.setDate(next.getDate() + 7);
+  } else if (recurrence === "biweekly") {
+    next.setDate(next.getDate() + 14);
+  } else {
+    const month = next.getMonth();
+    next.setMonth(month + 1);
+    if (next.getMonth() === (month + 1) % 12) {
+      next.setDate(0);
+    }
+  }
+  return next;
+}
+
 export async function POST(request: Request) {
   try {
     const auth = await requireUserAuth(request);
@@ -26,6 +45,7 @@ export async function POST(request: Request) {
       payment_mode,
       payment_intent_id,
       special_instructions,
+      recurrence,
     } = body;
 
     if (!service_type_id || !location_address || !estimated_duration) {
@@ -81,6 +101,22 @@ export async function POST(request: Request) {
           "VALIDATION_ERROR",
         );
       }
+    }
+
+    const recur = typeof recurrence === "string" ? recurrence : "none";
+    if (!(RECURRENCES as readonly string[]).includes(recur)) {
+      throw new AppError(
+        400,
+        "recurrence must be one of: none, weekly, biweekly, monthly",
+        "VALIDATION_ERROR",
+      );
+    }
+    if (recur !== "none" && !scheduled) {
+      throw new AppError(
+        400,
+        "Scheduled date is required for recurring bookings",
+        "VALIDATION_ERROR",
+      );
     }
 
     const addonList = Array.isArray(addons)
@@ -225,42 +261,66 @@ export async function POST(request: Request) {
     // creates a reserved, requested job that only they can accept.
     const status = "requested";
 
-    const queries: ReturnType<typeof sql>[] = [
-      sql`
-        INSERT INTO services (
-          id, service_type_id, location_address, location_lat, location_lng,
-          scheduled_date, estimated_duration, total_price, discount_amount,
-          promo_code_id, status, payment_status, cleaner_id, user_id,
-          stripe_payment_intent_id, special_instructions
-        ) VALUES (
-          ${serviceId}, ${service_type_id}, ${location_address.trim()}, ${lat}, ${lng},
-          ${scheduled}, ${duration}, ${total}, ${promoDiscount},
-          ${promoId}, ${status}, ${paymentStatus}, ${cleaner?.id || null}, ${auth.userId},
-          ${stripeIntentId}, ${specialInstructions}
-        )
-        RETURNING *
-      `,
-      ...addonPrices.map(
-        (a) => sql`
-          INSERT INTO service_addon_selections (service_id, addon_id, quantity, price_at_time)
-          VALUES (${serviceId}, ${a.id}, ${a.quantity}, ${a.price})
+    // Recurring bookings create a series: the parent service the customer
+    // just paid for, plus future occurrences (same cleaner, location,
+    // price, addons) that are booked pay-later. Each occurrence is a
+    // separate service row the user pays when it comes due.
+    const series: {
+      id: string;
+      scheduled: Date | null;
+      parent: string | null;
+    }[] = [{ id: serviceId, scheduled, parent: null }];
+    if (recur !== "none" && scheduled) {
+      let next = scheduled;
+      for (let i = 0; i < RECURRING_OCCURRENCES; i++) {
+        next = nextOccurrence(next, recur);
+        series.push({ id: randomUUID(), scheduled: next, parent: serviceId });
+      }
+    }
+
+    const queries: ReturnType<typeof sql>[] = series.flatMap((entry) => {
+      const rows = [
+        sql`
+          INSERT INTO services (
+            id, service_type_id, location_address, location_lat, location_lng,
+            scheduled_date, estimated_duration, total_price, discount_amount,
+            promo_code_id, status, payment_status, cleaner_id, user_id,
+            stripe_payment_intent_id, special_instructions,
+            recurrence, recurring_parent_id
+          ) VALUES (
+            ${entry.id}, ${service_type_id}, ${location_address.trim()}, ${lat}, ${lng},
+            ${entry.scheduled}, ${duration}, ${total}, ${promoDiscount},
+            ${promoId}, ${status}, ${
+              entry.parent ? "pending" : paymentStatus
+            }, ${cleaner?.id || null}, ${auth.userId},
+            ${entry.parent ? null : stripeIntentId}, ${specialInstructions},
+            ${recur}, ${entry.parent}
+          )
+          RETURNING *
         `,
-      ),
-      ...(promoId
-        ? [
-            sql`
-              INSERT INTO promo_redemptions (promo_code_id, user_id, service_id)
-              VALUES (${promoId}, ${auth.userId}, ${serviceId})
-              ON CONFLICT (promo_code_id, user_id) DO NOTHING
-            `,
-            sql`
-              UPDATE promo_codes SET usage_count = usage_count + 1
-              WHERE id = ${promoId}
-                AND (usage_limit IS NULL OR usage_count < usage_limit)
-            `,
-          ]
-        : []),
-    ];
+        ...addonPrices.map(
+          (a) => sql`
+            INSERT INTO service_addon_selections (service_id, addon_id, quantity, price_at_time)
+            VALUES (${entry.id}, ${a.id}, ${a.quantity}, ${a.price})
+          `,
+        ),
+      ];
+      if (entry.parent === null && promoId) {
+        rows.push(
+          sql`
+            INSERT INTO promo_redemptions (promo_code_id, user_id, service_id)
+            VALUES (${promoId}, ${auth.userId}, ${serviceId})
+            ON CONFLICT (promo_code_id, user_id) DO NOTHING
+          `,
+          sql`
+            UPDATE promo_codes SET usage_count = usage_count + 1
+            WHERE id = ${promoId}
+              AND (usage_limit IS NULL OR usage_count < usage_limit)
+          `,
+        );
+      }
+      return rows;
+    });
 
     const results = await sql.transaction(queries);
     const service = results[0][0];

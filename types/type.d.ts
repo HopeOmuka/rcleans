@@ -79,6 +79,8 @@ declare interface Service {
   discount_amount?: number;
   promo_code_id?: string;
   payment_status: "pending" | "authorized" | "paid" | "refunded" | "failed";
+  recurrence?: "none" | "weekly" | "biweekly" | "monthly";
+  recurring_parent_id?: string | null;
   created_at: string;
   started_at?: string;
   completed_at?: string;
@@ -122,6 +124,8 @@ declare interface CleanerJobDetail {
   promo_code_id: string | null;
   service_type_name: string;
   service_type_description: string | null;
+  recurrence?: "none" | "weekly" | "biweekly" | "monthly";
+  recurring_parent_id?: string | null;
   user_id: string;
   user_name: string;
   user_phone: string;
@@ -287,6 +291,7 @@ declare interface BookingStore {
   appliedPromoDiscount: number;
   isScheduled: boolean;
   scheduledDate: string | null;
+  recurrence: "none" | "weekly" | "biweekly" | "monthly";
   specialInstructions: string | null;
   setBooking: (partial: Partial<{
     selectedAddons: SelectedAddon[];
@@ -294,6 +299,7 @@ declare interface BookingStore {
     appliedPromoDiscount: number;
     isScheduled: boolean;
     scheduledDate: string | null;
+    recurrence: "none" | "weekly" | "biweekly" | "monthly";
     specialInstructions: string | null;
   }>) => void;
   resetBooking: () => void;

@@ -18,6 +18,7 @@ export async function GET(request: Request) {
         s.status, s.total_price, s.payment_status, s.created_at,
         s.started_at, s.completed_at, s.discount_amount, s.promo_code_id,
         s.special_instructions, s.rating, s.review,
+        s.recurrence, s.recurring_parent_id,
         json_build_object(
           'id', c.id, 'first_name', c.first_name, 'last_name', c.last_name,
           'profile_image_url', c.profile_image_url, 'rating', c.rating,

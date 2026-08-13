@@ -66,6 +66,7 @@ export const useBookingStore = create<BookingStore>((set) => ({
   appliedPromoDiscount: 0,
   isScheduled: false,
   scheduledDate: null,
+  recurrence: "none",
   specialInstructions: null,
   setBooking: (partial) => set((state) => ({ ...state, ...partial })),
   resetBooking: () =>
@@ -75,6 +76,7 @@ export const useBookingStore = create<BookingStore>((set) => ({
       appliedPromoDiscount: 0,
       isScheduled: false,
       scheduledDate: null,
+      recurrence: "none",
       specialInstructions: null,
     })),
 }));
