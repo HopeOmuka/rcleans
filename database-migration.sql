@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
     preferred_language TEXT DEFAULT 'en',
     notification_preferences JSONB DEFAULT '{"email": true, "push": true, "sms": false}',
     is_active BOOLEAN DEFAULT true,
+    is_admin BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -63,7 +64,8 @@ CREATE TABLE IF NOT EXISTS cleaners (
     languages TEXT[] DEFAULT '{"English"}',
     background_check_status TEXT DEFAULT 'pending' CHECK (background_check_status IN ('pending', 'approved', 'rejected')),
     insurance_status TEXT DEFAULT 'pending' CHECK (insurance_status IN ('pending', 'approved', 'rejected')),
-    password_hash TEXT,    license_number TEXT,
+    password_hash TEXT,
+    license_number TEXT,
     emergency_contact_name TEXT,
     emergency_contact_phone TEXT,
     bank_account_details JSONB, -- Encrypted/stored securely
@@ -184,6 +186,22 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 
 -- =========================================
+-- 8b. PUSH TOKENS TABLE
+-- =========================================
+-- Device push tokens for both users and cleaners
+CREATE TABLE IF NOT EXISTS push_tokens (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+    cleaner_id TEXT REFERENCES cleaners(id) ON DELETE CASCADE,
+    token TEXT NOT NULL UNIQUE,
+    platform TEXT NOT NULL DEFAULT 'unknown',
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+
+    CHECK (user_id IS NOT NULL OR cleaner_id IS NOT NULL)
+);
+
+-- =========================================
 -- 9. MESSAGES TABLE
 -- =========================================
 -- Chat messages between users and cleaners for a service
@@ -257,12 +275,27 @@ CREATE TABLE IF NOT EXISTS promo_codes (
     valid_until TIMESTAMP WITH TIME ZONE,
     is_active BOOLEAN DEFAULT true,
     applicable_service_types TEXT[], -- NULL means all service types
+    max_uses_per_user INTEGER DEFAULT 1,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- =========================================
--- 10. SERVICE ADD-ONS TABLE
+-- 10b. PROMO REDEMPTIONS TABLE
+-- =========================================
+-- Tracks which user redeemed which promo code
+CREATE TABLE IF NOT EXISTS promo_redemptions (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    promo_code_id TEXT NOT NULL REFERENCES promo_codes(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    service_id TEXT REFERENCES services(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    UNIQUE (promo_code_id, user_id)
+);
+
+-- =========================================
+-- 11. SERVICE ADD-ONS TABLE
 -- =========================================
 -- Additional services that can be added to bookings
 CREATE TABLE IF NOT EXISTS service_addons (
