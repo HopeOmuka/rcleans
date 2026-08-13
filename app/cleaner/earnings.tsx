@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import type { Href } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -36,11 +36,12 @@ const Earnings = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [period, setPeriod] = useState<"all" | "week" | "month">("all");
 
   const fetchEarnings = useCallback(async () => {
     try {
       const result = await get<{ data: EarningSummary }>(
-        "/(api)/cleaner/earnings",
+        `/(api)/cleaner/earnings?period=${period}`,
       );
       setData(
         result && typeof result === "object" && "data" in result
@@ -53,7 +54,12 @@ const Earnings = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [period]);
+
+  useEffect(() => {
+    setLoading(true);
+    void fetchEarnings();
+  }, [fetchEarnings]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -106,7 +112,7 @@ const Earnings = () => {
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
           <View className="px-5">
-            <View className="bg-primary-500 rounded-xl p-5 mb-5">
+            <View className="bg-primary-500 rounded-xl p-5 mb-4">
               <Text className="text-primary-50/80 text-sm">Total Earnings</Text>
               <Text className="text-white font-JakartaExtraBold text-3xl mt-1">
                 ${(data?.total_earned ?? 0).toFixed(2)}
@@ -115,6 +121,39 @@ const Earnings = () => {
                 {data?.paid_jobs ?? 0} paid{" "}
                 {data?.paid_jobs === 1 ? "job" : "jobs"}
               </Text>
+            </View>
+
+            <View className="flex-row mb-4">
+              {(
+                [
+                  { value: "week", label: "Last 7 days" },
+                  { value: "month", label: "Last 30 days" },
+                  { value: "all", label: "All time" },
+                ] as const
+              ).map(({ value, label }) => {
+                const active = period === value;
+                return (
+                  <TouchableOpacity
+                    key={value}
+                    onPress={() => setPeriod(value)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={`${label} earnings`}
+                    className={`mr-2 px-4 py-2 rounded-full border ${
+                      active ? "bg-primary-500 border-primary-500" : ""
+                    }`}
+                    style={active ? undefined : { borderColor: "#374151" }}
+                  >
+                    <Text
+                      className={`text-sm font-JakartaMedium ${
+                        active ? "text-white" : "text-gray-400"
+                      }`}
+                    >
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
             <View className="flex-row items-center justify-between mb-3">
