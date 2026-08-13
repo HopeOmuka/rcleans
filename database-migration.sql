@@ -203,6 +203,17 @@ CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id, sender_typ
 CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(created_at DESC);
 
 -- =========================================
+-- 9b. CHAT TYPING TABLE
+-- =========================================
+-- Last-typed timestamps so clients can show "is typing" indicators
+CREATE TABLE IF NOT EXISTS chat_typing (
+    service_id TEXT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+    sender_type TEXT NOT NULL CHECK (sender_type IN ('user', 'cleaner')),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    PRIMARY KEY (service_id, sender_type)
+);
+
+-- =========================================
 -- 9b. SUPPORT MESSAGES TABLE
 -- =========================================
 -- Customer support inquiries submitted from the app

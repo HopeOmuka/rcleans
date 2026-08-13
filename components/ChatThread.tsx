@@ -17,6 +17,7 @@ import { formatChatTime } from "@/lib/utils";
 import { ChatMessage } from "@/types/type";
 
 const POLL_MS = 5000;
+const TYPING_HEARTBEAT_MS = 3000;
 
 interface ChatThreadProps {
   serviceId: string;
@@ -39,7 +40,9 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [otherTyping, setOtherTyping] = useState(false);
   const isMountedRef = useRef(true);
+  const lastTypingSentRef = useRef(0);
 
   const markRead = useCallback(async () => {
     try {
@@ -84,19 +87,61 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     [serviceId, role, markRead],
   );
 
+  // Poll whether the other participant is currently typing.
+  const loadTyping = useCallback(async () => {
+    try {
+      const result = await fetchAPI<
+        ApiResponse<{ typing: ("user" | "cleaner")[] }>
+      >(`/(api)/chat/typing?serviceId=${serviceId}`);
+      if (!isMountedRef.current) return;
+      if (result.data) {
+        setOtherTyping(
+          result.data.typing.includes(role === "user" ? "cleaner" : "user"),
+        );
+      }
+    } catch {
+      // Typing presence is best-effort; ignore failures.
+    }
+  }, [serviceId, role]);
+
+  // Stamp "I am typing" on a heartbeat while the input has text, but never
+  // more often than TYPING_HEARTBEAT_MS.
+  const emitTyping = useCallback(() => {
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < TYPING_HEARTBEAT_MS) return;
+    lastTypingSentRef.current = now;
+    fetchAPI
+      .post<ApiResponse<{ success: boolean }>>("/(api)/chat/typing", {
+        serviceId,
+      })
+      .catch(() => {
+        // Best-effort; presence is ephemeral anyway.
+      });
+  }, [serviceId]);
+
+  const onInputChange = useCallback(
+    (text: string) => {
+      setInput(text);
+      if (text.trim()) emitTyping();
+    },
+    [emitTyping],
+  );
+
   useEffect(() => {
     isMountedRef.current = true;
     void loadMessages(false);
+    void loadTyping();
 
     const interval = setInterval(() => {
       void loadMessages(true);
+      void loadTyping();
     }, POLL_MS);
 
     return () => {
       isMountedRef.current = false;
       clearInterval(interval);
     };
-  }, [loadMessages]);
+  }, [loadMessages, loadTyping]);
 
   const handleSend = useCallback(async () => {
     const content = input.trim();
@@ -246,6 +291,35 @@ const ChatThread: React.FC<ChatThreadProps> = ({
               </Text>
             </View>
           }
+          ListFooterComponent={
+            otherTyping ? (
+              <View
+                className="flex-row items-center self-start px-4 py-2.5 rounded-2xl mb-2"
+                style={{
+                  backgroundColor: isDark ? "#1F2937" : "#F1F5F9",
+                }}
+                accessibilityLabel={`${otherName} is typing`}
+              >
+                <View className="flex-row items-center mr-2">
+                  {[0, 1, 2].map((dot) => (
+                    <View
+                      key={dot}
+                      className="w-1.5 h-1.5 rounded-full mx-0.5"
+                      style={{ backgroundColor: "#9CA3AF" }}
+                    />
+                  ))}
+                </View>
+                <Text
+                  className="text-sm"
+                  style={{
+                    color: isDark ? "#D1D5DB" : "#6B7280",
+                  }}
+                >
+                  {otherName} is typing
+                </Text>
+              </View>
+            ) : null
+          }
         />
       )}
 
@@ -263,7 +337,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           placeholder="Type a message..."
           placeholderTextColor={isDark ? "#9CA3AF" : "#94A3B8"}
           value={input}
-          onChangeText={setInput}
+          onChangeText={onInputChange}
           onSubmitEditing={handleSend}
           returnKeyType="send"
           accessibilityLabel="Message input"
