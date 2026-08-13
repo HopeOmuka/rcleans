@@ -41,6 +41,7 @@ export const { ThemeTransitionProvider, useTheme } = createThemeTransition({
       accent: "#60A5FA",
       success: "#4ADE80",
       warning: "#FBBF24",
+      warningSoft: "#3A2A12",
       danger: "#F87171",
       dangerSoft: "#3B1520",
       tabBar: "#0E1120",
