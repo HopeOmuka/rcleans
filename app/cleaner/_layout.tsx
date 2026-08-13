@@ -61,6 +61,7 @@ export default function Layout() {
       <Tabs
         initialRouteName="dashboard"
         screenOptions={{
+          animation: "fade",
           tabBarActiveTintColor: "#4ADE80",
           tabBarInactiveTintColor: "#666",
           tabBarShowLabel: true,

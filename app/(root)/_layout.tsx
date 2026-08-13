@@ -2,8 +2,10 @@ import { Stack } from "expo-router";
 
 const Layout = () => {
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    <Stack
+      screenOptions={{ headerShown: false, animation: "slide_from_right" }}
+    >
+      <Stack.Screen name="(tabs)" />
       <Stack.Screen name="find-service" options={{ headerShown: false }} />
       <Stack.Screen
         name="confirm-service"
