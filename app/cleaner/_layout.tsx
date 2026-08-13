@@ -129,6 +129,12 @@ export default function Layout() {
           }}
         />
         <Tabs.Screen
+          name="sign-up"
+          options={{
+            href: null,
+          }}
+        />
+        <Tabs.Screen
           name="availability"
           options={{
             href: null,

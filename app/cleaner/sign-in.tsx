@@ -177,8 +177,18 @@ const SignIn = () => {
             />
 
             <Link
-              href="/(auth)/sign-in"
+              href="/cleaner/sign-up"
               className="text-center text-gray-400 mt-8"
+            >
+              New to rcleans?{" "}
+              <Text className="text-primary-500">
+                Apply to become a cleaner
+              </Text>
+            </Link>
+
+            <Link
+              href="/(auth)/sign-in"
+              className="text-center text-gray-400 mt-6"
             >
               Are you a customer?{" "}
               <Text className="text-primary-500">Sign in as customer</Text>

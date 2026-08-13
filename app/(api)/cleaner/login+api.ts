@@ -42,6 +42,13 @@ export async function POST(request: Request) {
     }
 
     const cleaner = cleaners[0];
+    if (!cleaner.is_active) {
+      throw new AppError(
+        403,
+        "Your application is still under review. You will be able to sign in once an admin approves your registration.",
+        "AUTH_ERROR",
+      );
+    }
     const token = await issueCleanerToken({
       id: String(cleaner.id),
       email: cleaner.email,
