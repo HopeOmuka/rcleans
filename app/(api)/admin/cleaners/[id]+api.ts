@@ -2,7 +2,14 @@ import { neon } from "@neondatabase/serverless";
 import { jsonResponse, errorResponse, AppError } from "@/lib/api-error";
 import { requireAdminAuth } from "@/lib/admin-auth";
 
-const ACTIONS = ["approve", "reject", "activate", "deactivate"] as const;
+const ACTIONS = [
+  "approve",
+  "reject",
+  "activate",
+  "deactivate",
+  "set_available",
+  "set_unavailable",
+] as const;
 
 export async function GET(request: Request, { id }: { id?: string } = {}) {
   try {
@@ -121,6 +128,20 @@ export async function POST(request: Request, { id }: { id?: string } = {}) {
         SET is_active = true, updated_at = NOW()
         WHERE id = ${id}
         RETURNING id, first_name, last_name, is_active, background_check_status, insurance_status
+      `;
+    } else if (action === "set_available") {
+      result = await sql`
+        UPDATE cleaners
+        SET is_available = true, updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING id, first_name, last_name, is_active, is_available, background_check_status, insurance_status
+      `;
+    } else if (action === "set_unavailable") {
+      result = await sql`
+        UPDATE cleaners
+        SET is_available = false, updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING id, first_name, last_name, is_active, is_available, background_check_status, insurance_status
       `;
     } else {
       result = await sql`

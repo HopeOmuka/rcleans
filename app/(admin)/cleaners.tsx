@@ -251,6 +251,43 @@ const Cleaners = () => {
                 </View>
 
                 <View className="flex-row mt-3 gap-2">
+                  <TouchableOpacity
+                    onPress={() =>
+                      void runAction(
+                        cleaner.id,
+                        cleaner.is_available
+                          ? "set_unavailable"
+                          : "set_available",
+                        cleaner.is_available
+                          ? "Cleaner marked unavailable"
+                          : "Cleaner marked available",
+                      )
+                    }
+                    disabled={busy}
+                    className={`flex-1 rounded-lg py-2 items-center ${cleaner.is_available ? "" : "border border-amber-400"}`}
+                    style={
+                      cleaner.is_available
+                        ? { backgroundColor: theme.colors.primarySoft }
+                        : undefined
+                    }
+                    accessibilityRole="button"
+                    accessibilityLabel={`${cleaner.is_available ? "Mark unavailable" : "Mark available"} ${cleaner.first_name}`}
+                  >
+                    <Text
+                      className={`text-sm font-JakartaSemiBold ${cleaner.is_available ? "" : "text-amber-500"}`}
+                      style={
+                        cleaner.is_available
+                          ? { color: theme.colors.success }
+                          : undefined
+                      }
+                    >
+                      {busy
+                        ? "Updating..."
+                        : cleaner.is_available
+                          ? "Set unavailable"
+                          : "Set available"}
+                    </Text>
+                  </TouchableOpacity>
                   {needsApproval ? (
                     <TouchableOpacity
                       onPress={() =>

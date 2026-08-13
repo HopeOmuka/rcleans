@@ -95,9 +95,13 @@ const CleanerDetail = () => {
             ? "Cleaner approved"
             : action === "reject"
               ? "Cleaner rejected"
-              : res.data.is_active
-                ? "Cleaner activated"
-                : "Cleaner deactivated",
+              : action === "set_available"
+                ? "Cleaner marked available"
+                : action === "set_unavailable"
+                  ? "Cleaner marked unavailable"
+                  : res.data.is_active
+                    ? "Cleaner activated"
+                    : "Cleaner deactivated",
           "success",
         );
         void refetch();
@@ -424,6 +428,39 @@ const CleanerDetail = () => {
         </View>
 
         <View className="flex-row mt-4">
+          <TouchableOpacity
+            onPress={() =>
+              void handleAction(
+                cleaner!.is_available ? "set_unavailable" : "set_available",
+              )
+            }
+            disabled={busyAction !== null}
+            accessibilityRole="button"
+            className={`flex-1 py-3 rounded-xl items-center mr-2 ${
+              cleaner!.is_available ? "" : "border border-amber-400"
+            }`}
+            style={
+              cleaner!.is_available
+                ? { backgroundColor: theme.colors.primarySoft }
+                : undefined
+            }
+          >
+            <Text
+              className={`font-JakartaSemiBold ${cleaner!.is_available ? "" : "text-amber-500"}`}
+              style={
+                cleaner!.is_available
+                  ? { color: theme.colors.success }
+                  : undefined
+              }
+            >
+              {busyAction === "set_available" ||
+              busyAction === "set_unavailable"
+                ? "..."
+                : cleaner!.is_available
+                  ? "Set unavailable"
+                  : "Set available"}
+            </Text>
+          </TouchableOpacity>
           {cleaner!.is_active ? (
             <TouchableOpacity
               onPress={() => void handleAction("deactivate")}
