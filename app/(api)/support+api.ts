@@ -33,6 +33,33 @@ export async function GET(request: Request) {
     const sql = neon(`${process.env.DATABASE_URL}`);
     const { searchParams } = new URL(request.url);
     const all = searchParams.get("all") === "true";
+    const ticketId = searchParams.get("replies");
+
+    if (ticketId) {
+      const [ticket] = await sql`
+        SELECT id, user_id, subject, message, status, created_at
+        FROM support_messages
+        WHERE id = ${ticketId}::text
+      `;
+      if (!ticket) {
+        throw new AppError(404, "Ticket not found", "NOT_FOUND");
+      }
+      const requester =
+        await sql`SELECT is_admin FROM users WHERE id = ${auth.userId}`;
+      const isAdmin = Boolean(requester[0]?.is_admin);
+      if (ticket.user_id !== auth.userId && !isAdmin) {
+        throw new AppError(403, "Access denied", "FORBIDDEN");
+      }
+      const replies = await sql`
+        SELECT r.id, r.sender_type, r.message, r.created_at,
+               u.name AS sender_name
+        FROM support_replies r
+        INNER JOIN users u ON u.id = r.sender_id
+        WHERE r.support_message_id = ${ticket.id}
+        ORDER BY r.created_at ASC
+      `;
+      return jsonResponse({ data: { ticket, replies } });
+    }
 
     if (all) {
       const admin =
@@ -93,6 +120,82 @@ export async function POST(request: Request) {
     const { action } = body;
 
     const sql = neon(`${process.env.DATABASE_URL}`);
+
+    if (action === "reply") {
+      const { ticketId, message } = body;
+      if (!ticketId) {
+        throw new AppError(400, "Ticket ID required", "VALIDATION_ERROR");
+      }
+      if (typeof message !== "string" || message.trim().length === 0) {
+        throw new AppError(400, "Message is required", "VALIDATION_ERROR");
+      }
+      if (message.trim().length > 5000) {
+        throw new AppError(
+          400,
+          "Message too long (max 5000 characters)",
+          "VALIDATION_ERROR",
+        );
+      }
+
+      const [ticket] = await sql`
+        SELECT user_id, status FROM support_messages
+        WHERE id = ${ticketId}::text
+      `;
+      if (!ticket) {
+        throw new AppError(404, "Ticket not found", "NOT_FOUND");
+      }
+
+      const [requester] =
+        await sql`SELECT is_admin FROM users WHERE id = ${auth.userId}`;
+      const isAdmin = Boolean(requester?.is_admin);
+      if (ticket.user_id !== auth.userId && !isAdmin) {
+        throw new AppError(403, "Access denied", "FORBIDDEN");
+      }
+
+      const senderType = isAdmin ? "admin" : "user";
+      const [reply] = await sql`
+        INSERT INTO support_replies (support_message_id, sender_id, sender_type, message)
+        VALUES (${ticketId}::text, ${auth.userId}, ${senderType}, ${message.trim()})
+        RETURNING id, sender_type, message, created_at
+      `;
+
+      const newStatus =
+        senderType === "admin"
+          ? ticket.status === "open"
+            ? "in_progress"
+            : null
+          : ticket.status === "resolved"
+            ? "in_progress"
+            : null;
+      if (newStatus) {
+        await sql`
+          UPDATE support_messages SET status = ${newStatus}::text
+          WHERE id = ${ticketId}::text
+        `;
+      }
+
+      if (senderType === "admin") {
+        await sql.query(
+          `INSERT INTO notifications (user_id, type, title, message, data)
+           VALUES ($1, $2, $3, $4, $5::jsonb)`,
+          [
+            ticket.user_id,
+            "system_message",
+            "New reply on your support ticket",
+            "Our team responded. Check the support section for details.",
+            JSON.stringify({ ticket_id: ticketId }),
+          ],
+        );
+        void sendPush({
+          userId: ticket.user_id,
+          title: "Support reply",
+          body: "Our team responded to your support ticket.",
+          data: { ticket_id: ticketId },
+        });
+      }
+
+      return jsonResponse({ data: reply }, 201);
+    }
 
     if (action === "updateStatus") {
       await requireAdmin(request, sql);

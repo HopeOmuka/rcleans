@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from "expo-router";
+import { Href, router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import {
   FlatList,
@@ -95,12 +95,15 @@ const Support = () => {
   const renderTicket = ({ item }: { item: SupportTicket }) => {
     const style = STATUS_STYLES[item.status] ?? STATUS_STYLES.open;
     return (
-      <View
+      <TouchableOpacity
+        onPress={() => router.push(`/(root)/support/${item.id}` as Href)}
         className="rounded-2xl border p-4 mb-3"
         style={{
           backgroundColor: theme.colors.surface,
           borderColor: theme.colors.border,
         }}
+        accessibilityRole="button"
+        accessibilityLabel={`Open ticket ${SUBJECT_LABELS[item.subject] ?? item.subject}`}
       >
         <View className="flex-row items-center justify-between">
           <Text
@@ -118,6 +121,7 @@ const Support = () => {
         <Text
           className="text-sm mt-1.5"
           style={{ color: theme.colors.textSecondary }}
+          numberOfLines={2}
         >
           {item.message}
         </Text>
@@ -127,7 +131,7 @@ const Support = () => {
         >
           {formatDateTime(item.created_at)}
         </Text>
-      </View>
+      </TouchableOpacity>
     );
   };
 

@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from "expo-router";
+import { Href, router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
@@ -150,13 +150,18 @@ const AdminSupport = () => {
             const style = STATUS_STYLES[ticket.status] ?? STATUS_STYLES.open;
             const busy = busyId === ticket.id;
             return (
-              <View
+              <TouchableOpacity
                 key={ticket.id}
+                onPress={() =>
+                  router.push(`/(admin)/support/${ticket.id}` as Href)
+                }
                 className="rounded-2xl border p-4 mb-3"
                 style={{
                   backgroundColor: theme.colors.surface,
                   borderColor: theme.colors.border,
                 }}
+                accessibilityRole="button"
+                accessibilityLabel={`Open ticket from ${ticket.user_name}`}
               >
                 <View className="flex-row items-center justify-between">
                   <Text
@@ -176,6 +181,7 @@ const AdminSupport = () => {
                 <Text
                   className="text-sm mt-1.5"
                   style={{ color: theme.colors.textSecondary }}
+                  numberOfLines={2}
                 >
                   {ticket.message}
                 </Text>
@@ -219,7 +225,7 @@ const AdminSupport = () => {
                     ) : null}
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             );
           })
         )}
