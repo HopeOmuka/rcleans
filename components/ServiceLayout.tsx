@@ -12,6 +12,7 @@ import {
   StatusBar,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BootstrapIcon from "@/components/BootstrapIcon";
 import Map from "@/components/Map";
@@ -27,6 +28,7 @@ const ServiceLayout = ({
   children: React.ReactNode;
 }) => {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const isChooseServicer = title === "Choose a Servicer";
@@ -82,6 +84,7 @@ const ServiceLayout = ({
           ref={bottomSheetRef}
           snapPoints={snapPoints || ["40%", "85%"]}
           index={0}
+          bottomInset={insets.bottom}
           handleIndicatorStyle={{ backgroundColor: theme.colors.border }}
           backgroundStyle={{ backgroundColor: theme.colors.surface }}
         >

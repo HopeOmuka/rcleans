@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
@@ -105,133 +106,135 @@ const SignIn = () => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       className="flex-1 bg-dark-500"
     >
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="flex-1 px-6 pt-16 pb-8 justify-between">
-          <View>
-            <View className="items-center mb-10">
-              <View className="w-20 h-20 rounded-2xl bg-primary-gradient items-center justify-center mb-5 shadow-lg shadow-primary-500/30 overflow-hidden">
-                <Image
-                  source={images.logo}
-                  className="w-full h-full"
-                  resizeMode="cover"
-                />
+      <SafeAreaView className="flex-1" edges={["bottom"]}>
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="flex-1 px-6 pt-16 pb-8 justify-between">
+            <View>
+              <View className="items-center mb-10">
+                <View className="w-20 h-20 rounded-2xl bg-primary-gradient items-center justify-center mb-5 shadow-lg shadow-primary-500/30 overflow-hidden">
+                  <Image
+                    source={images.logo}
+                    className="w-full h-full"
+                    resizeMode="cover"
+                  />
+                </View>
+                <Text className="text-white text-3xl font-JakartaBold">
+                  Cleaner Portal
+                </Text>
+                <Text className="text-gray-400 text-center mt-2 px-8">
+                  Sign in with your registered email, phone number and password
+                  to access your jobs
+                </Text>
               </View>
-              <Text className="text-white text-3xl font-JakartaBold">
-                Cleaner Portal
-              </Text>
-              <Text className="text-gray-400 text-center mt-2 px-8">
-                Sign in with your registered email, phone number and password to
-                access your jobs
-              </Text>
+
+              <View className="bg-dark-200 rounded-2xl p-5 border border-gray-800">
+                <InputField
+                  label="Email"
+                  placeholder="Enter your email"
+                  icon="envelope"
+                  tintColor="#9CA3AF"
+                  textContentType="emailAddress"
+                  value={form.email}
+                  onChangeText={(value) => {
+                    setForm({ ...form, email: value });
+                    if (errors.email) setErrors({ ...errors, email: "" });
+                  }}
+                  labelStyle="text-white"
+                  containerStyle="bg-dark-300 border-dark-300"
+                  inputStyle="text-white placeholder:text-gray-500"
+                  iconStyle="opacity-80"
+                  accessibilityLabel="Email address"
+                />
+                {errors.email ? (
+                  <Text className="text-red-400 text-sm mt-1">
+                    {errors.email}
+                  </Text>
+                ) : null}
+
+                <InputField
+                  label="Phone"
+                  placeholder="Enter your phone number"
+                  icon="telephone-fill"
+                  tintColor="#9CA3AF"
+                  textContentType="telephoneNumber"
+                  value={form.phone}
+                  onChangeText={(value) => {
+                    setForm({ ...form, phone: value });
+                    if (errors.phone) setErrors({ ...errors, phone: "" });
+                  }}
+                  labelStyle="text-white"
+                  containerStyle="bg-dark-300 border-dark-300"
+                  inputStyle="text-white placeholder:text-gray-500"
+                  iconStyle="opacity-80"
+                  accessibilityLabel="Phone number"
+                />
+                {errors.phone ? (
+                  <Text className="text-red-400 text-sm mt-1">
+                    {errors.phone}
+                  </Text>
+                ) : null}
+
+                <InputField
+                  label="Password"
+                  placeholder="Enter your password"
+                  icon="lock-fill"
+                  tintColor="#9CA3AF"
+                  secureTextEntry
+                  textContentType="password"
+                  value={form.password}
+                  onChangeText={(value) => {
+                    setForm({ ...form, password: value });
+                    if (errors.password) setErrors({ ...errors, password: "" });
+                  }}
+                  labelStyle="text-white"
+                  containerStyle="bg-dark-300 border-dark-300"
+                  inputStyle="text-white placeholder:text-gray-500"
+                  iconStyle="opacity-80"
+                  accessibilityLabel="Password"
+                />
+                {errors.password ? (
+                  <Text className="text-red-400 text-sm mt-1">
+                    {errors.password}
+                  </Text>
+                ) : null}
+              </View>
             </View>
 
-            <View className="bg-dark-200 rounded-2xl p-5 border border-gray-800">
-              <InputField
-                label="Email"
-                placeholder="Enter your email"
-                icon="envelope"
-                tintColor="#9CA3AF"
-                textContentType="emailAddress"
-                value={form.email}
-                onChangeText={(value) => {
-                  setForm({ ...form, email: value });
-                  if (errors.email) setErrors({ ...errors, email: "" });
-                }}
-                labelStyle="text-white"
-                containerStyle="bg-dark-300 border-dark-300"
-                inputStyle="text-white placeholder:text-gray-500"
-                iconStyle="opacity-80"
-                accessibilityLabel="Email address"
+            <View>
+              <CustomButton
+                title={loading ? "Signing in..." : "Sign In"}
+                onPress={onSignInPress}
+                disabled={loading}
+                bgVariant="success"
+                className="mt-6"
+                accessibilityLabel="Sign in"
               />
-              {errors.email ? (
-                <Text className="text-red-400 text-sm mt-1">
-                  {errors.email}
-                </Text>
-              ) : null}
 
-              <InputField
-                label="Phone"
-                placeholder="Enter your phone number"
-                icon="telephone-fill"
-                tintColor="#9CA3AF"
-                textContentType="telephoneNumber"
-                value={form.phone}
-                onChangeText={(value) => {
-                  setForm({ ...form, phone: value });
-                  if (errors.phone) setErrors({ ...errors, phone: "" });
-                }}
-                labelStyle="text-white"
-                containerStyle="bg-dark-300 border-dark-300"
-                inputStyle="text-white placeholder:text-gray-500"
-                iconStyle="opacity-80"
-                accessibilityLabel="Phone number"
-              />
-              {errors.phone ? (
-                <Text className="text-red-400 text-sm mt-1">
-                  {errors.phone}
+              <Link
+                href="/cleaner/sign-up"
+                className="text-center text-gray-400 mt-8"
+              >
+                New to rcleans?{" "}
+                <Text className="text-primary-500">
+                  Apply to become a cleaner
                 </Text>
-              ) : null}
+              </Link>
 
-              <InputField
-                label="Password"
-                placeholder="Enter your password"
-                icon="lock-fill"
-                tintColor="#9CA3AF"
-                secureTextEntry
-                textContentType="password"
-                value={form.password}
-                onChangeText={(value) => {
-                  setForm({ ...form, password: value });
-                  if (errors.password) setErrors({ ...errors, password: "" });
-                }}
-                labelStyle="text-white"
-                containerStyle="bg-dark-300 border-dark-300"
-                inputStyle="text-white placeholder:text-gray-500"
-                iconStyle="opacity-80"
-                accessibilityLabel="Password"
-              />
-              {errors.password ? (
-                <Text className="text-red-400 text-sm mt-1">
-                  {errors.password}
-                </Text>
-              ) : null}
+              <Link
+                href="/(auth)/sign-in"
+                className="text-center text-gray-400 mt-6"
+              >
+                Are you a customer?{" "}
+                <Text className="text-primary-500">Sign in as customer</Text>
+              </Link>
             </View>
           </View>
-
-          <View>
-            <CustomButton
-              title={loading ? "Signing in..." : "Sign In"}
-              onPress={onSignInPress}
-              disabled={loading}
-              bgVariant="success"
-              className="mt-6"
-              accessibilityLabel="Sign in"
-            />
-
-            <Link
-              href="/cleaner/sign-up"
-              className="text-center text-gray-400 mt-8"
-            >
-              New to rcleans?{" "}
-              <Text className="text-primary-500">
-                Apply to become a cleaner
-              </Text>
-            </Link>
-
-            <Link
-              href="/(auth)/sign-in"
-              className="text-center text-gray-400 mt-6"
-            >
-              Are you a customer?{" "}
-              <Text className="text-primary-500">Sign in as customer</Text>
-            </Link>
-          </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </KeyboardAvoidingView>
   );
 };

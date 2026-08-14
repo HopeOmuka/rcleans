@@ -14,6 +14,7 @@ import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
 import { images } from "@/constants";
 import { ApiResponse, fetchAPI } from "@/lib/fetch";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const SetPassword = () => {
   const params = useLocalSearchParams<{ email?: string; phone?: string }>();
@@ -86,145 +87,147 @@ const SetPassword = () => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       className="flex-1 bg-dark-500"
     >
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="flex-1 px-6 pt-16 pb-8 justify-between">
-          <View>
-            <View className="items-center mb-10">
-              <View className="w-20 h-20 rounded-2xl bg-primary-gradient items-center justify-center mb-5 shadow-lg shadow-primary-500/30 overflow-hidden">
-                <Image
-                  source={images.logo}
-                  className="w-full h-full"
-                  resizeMode="cover"
-                />
+      <SafeAreaView className="flex-1" edges={["bottom"]}>
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="flex-1 px-6 pt-16 pb-8 justify-between">
+            <View>
+              <View className="items-center mb-10">
+                <View className="w-20 h-20 rounded-2xl bg-primary-gradient items-center justify-center mb-5 shadow-lg shadow-primary-500/30 overflow-hidden">
+                  <Image
+                    source={images.logo}
+                    className="w-full h-full"
+                    resizeMode="cover"
+                  />
+                </View>
+                <Text className="text-white text-3xl font-JakartaBold">
+                  Set a password
+                </Text>
+                <Text className="text-gray-400 text-center mt-2 px-8 leading-6">
+                  Cleaner accounts now require a password. Verify your email and
+                  phone number to choose one.
+                </Text>
               </View>
-              <Text className="text-white text-3xl font-JakartaBold">
-                Set a password
-              </Text>
-              <Text className="text-gray-400 text-center mt-2 px-8 leading-6">
-                Cleaner accounts now require a password. Verify your email and
-                phone number to choose one.
-              </Text>
+
+              {errors.form ? (
+                <Text className="text-red-400 text-sm mb-3">{errors.form}</Text>
+              ) : null}
+
+              <View className="bg-dark-200 rounded-2xl p-5 border border-gray-800">
+                <InputField
+                  label="Email"
+                  placeholder="Enter your email"
+                  icon="envelope"
+                  tintColor="#9CA3AF"
+                  textContentType="emailAddress"
+                  value={form.email}
+                  onChangeText={(value) => {
+                    setForm({ ...form, email: value });
+                    if (errors.email) setErrors((e) => ({ ...e, email: "" }));
+                  }}
+                  labelStyle="text-white"
+                  containerStyle="bg-dark-300 border-dark-300"
+                  inputStyle="text-white placeholder:text-gray-500"
+                  iconStyle="opacity-80"
+                  accessibilityLabel="Email address"
+                />
+                {errors.email ? (
+                  <Text className="text-red-400 text-sm mt-1">
+                    {errors.email}
+                  </Text>
+                ) : null}
+
+                <InputField
+                  label="Phone"
+                  placeholder="Enter your phone number"
+                  icon="telephone-fill"
+                  tintColor="#9CA3AF"
+                  textContentType="telephoneNumber"
+                  value={form.phone}
+                  onChangeText={(value) => {
+                    setForm({ ...form, phone: value });
+                    if (errors.phone) setErrors((e) => ({ ...e, phone: "" }));
+                  }}
+                  labelStyle="text-white"
+                  containerStyle="bg-dark-300 border-dark-300"
+                  inputStyle="text-white placeholder:text-gray-500"
+                  iconStyle="opacity-80"
+                  accessibilityLabel="Phone number"
+                />
+                {errors.phone ? (
+                  <Text className="text-red-400 text-sm mt-1">
+                    {errors.phone}
+                  </Text>
+                ) : null}
+
+                <InputField
+                  label="New password"
+                  placeholder="At least 8 characters"
+                  icon="lock-fill"
+                  tintColor="#9CA3AF"
+                  secureTextEntry
+                  textContentType="newPassword"
+                  value={form.password}
+                  onChangeText={(value) => {
+                    setForm({ ...form, password: value });
+                    if (errors.password)
+                      setErrors((e) => ({ ...e, password: "" }));
+                  }}
+                  labelStyle="text-white"
+                  containerStyle="bg-dark-300 border-dark-300"
+                  inputStyle="text-white placeholder:text-gray-500"
+                  iconStyle="opacity-80"
+                  accessibilityLabel="New password"
+                />
+                {errors.password ? (
+                  <Text className="text-red-400 text-sm mt-1">
+                    {errors.password}
+                  </Text>
+                ) : null}
+
+                <InputField
+                  label="Confirm new password"
+                  placeholder="Re-enter your password"
+                  icon="shield-lock"
+                  tintColor="#9CA3AF"
+                  secureTextEntry
+                  textContentType="newPassword"
+                  value={form.confirmPassword}
+                  onChangeText={(value) => {
+                    setForm({ ...form, confirmPassword: value });
+                    if (errors.confirmPassword)
+                      setErrors((e) => ({ ...e, confirmPassword: "" }));
+                  }}
+                  labelStyle="text-white"
+                  containerStyle="bg-dark-300 border-dark-300"
+                  inputStyle="text-white placeholder:text-gray-500"
+                  iconStyle="opacity-80"
+                  accessibilityLabel="Confirm new password"
+                />
+                {errors.confirmPassword ? (
+                  <Text className="text-red-400 text-sm mt-1">
+                    {errors.confirmPassword}
+                  </Text>
+                ) : null}
+              </View>
             </View>
 
-            {errors.form ? (
-              <Text className="text-red-400 text-sm mb-3">{errors.form}</Text>
-            ) : null}
-
-            <View className="bg-dark-200 rounded-2xl p-5 border border-gray-800">
-              <InputField
-                label="Email"
-                placeholder="Enter your email"
-                icon="envelope"
-                tintColor="#9CA3AF"
-                textContentType="emailAddress"
-                value={form.email}
-                onChangeText={(value) => {
-                  setForm({ ...form, email: value });
-                  if (errors.email) setErrors((e) => ({ ...e, email: "" }));
-                }}
-                labelStyle="text-white"
-                containerStyle="bg-dark-300 border-dark-300"
-                inputStyle="text-white placeholder:text-gray-500"
-                iconStyle="opacity-80"
-                accessibilityLabel="Email address"
+            <View>
+              <CustomButton
+                title={loading ? "Saving..." : "Set Password"}
+                onPress={onSetPassword}
+                disabled={loading}
+                bgVariant="success"
+                className="mt-6"
+                accessibilityLabel="Set password"
               />
-              {errors.email ? (
-                <Text className="text-red-400 text-sm mt-1">
-                  {errors.email}
-                </Text>
-              ) : null}
-
-              <InputField
-                label="Phone"
-                placeholder="Enter your phone number"
-                icon="telephone-fill"
-                tintColor="#9CA3AF"
-                textContentType="telephoneNumber"
-                value={form.phone}
-                onChangeText={(value) => {
-                  setForm({ ...form, phone: value });
-                  if (errors.phone) setErrors((e) => ({ ...e, phone: "" }));
-                }}
-                labelStyle="text-white"
-                containerStyle="bg-dark-300 border-dark-300"
-                inputStyle="text-white placeholder:text-gray-500"
-                iconStyle="opacity-80"
-                accessibilityLabel="Phone number"
-              />
-              {errors.phone ? (
-                <Text className="text-red-400 text-sm mt-1">
-                  {errors.phone}
-                </Text>
-              ) : null}
-
-              <InputField
-                label="New password"
-                placeholder="At least 8 characters"
-                icon="lock-fill"
-                tintColor="#9CA3AF"
-                secureTextEntry
-                textContentType="newPassword"
-                value={form.password}
-                onChangeText={(value) => {
-                  setForm({ ...form, password: value });
-                  if (errors.password)
-                    setErrors((e) => ({ ...e, password: "" }));
-                }}
-                labelStyle="text-white"
-                containerStyle="bg-dark-300 border-dark-300"
-                inputStyle="text-white placeholder:text-gray-500"
-                iconStyle="opacity-80"
-                accessibilityLabel="New password"
-              />
-              {errors.password ? (
-                <Text className="text-red-400 text-sm mt-1">
-                  {errors.password}
-                </Text>
-              ) : null}
-
-              <InputField
-                label="Confirm new password"
-                placeholder="Re-enter your password"
-                icon="shield-lock"
-                tintColor="#9CA3AF"
-                secureTextEntry
-                textContentType="newPassword"
-                value={form.confirmPassword}
-                onChangeText={(value) => {
-                  setForm({ ...form, confirmPassword: value });
-                  if (errors.confirmPassword)
-                    setErrors((e) => ({ ...e, confirmPassword: "" }));
-                }}
-                labelStyle="text-white"
-                containerStyle="bg-dark-300 border-dark-300"
-                inputStyle="text-white placeholder:text-gray-500"
-                iconStyle="opacity-80"
-                accessibilityLabel="Confirm new password"
-              />
-              {errors.confirmPassword ? (
-                <Text className="text-red-400 text-sm mt-1">
-                  {errors.confirmPassword}
-                </Text>
-              ) : null}
             </View>
           </View>
-
-          <View>
-            <CustomButton
-              title={loading ? "Saving..." : "Set Password"}
-              onPress={onSetPassword}
-              disabled={loading}
-              bgVariant="success"
-              className="mt-6"
-              accessibilityLabel="Set password"
-            />
-          </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </KeyboardAvoidingView>
   );
 };

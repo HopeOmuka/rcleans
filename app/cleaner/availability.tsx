@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Text, View } from "react-native";
 import * as SecureStore from "expo-secure-store";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import AvailabilityManager from "@/components/AvailabilityManager";
 import CustomButton from "@/components/CustomButton";
@@ -107,7 +108,7 @@ const CleanerAvailability = () => {
   }
 
   return (
-    <View className="flex-1 bg-dark-500">
+    <SafeAreaView className="flex-1 bg-dark-500" edges={["bottom"]}>
       <AvailabilityManager
         cleanerId={cleanerId}
         onDataChange={handleDataChange}
@@ -123,7 +124,7 @@ const CleanerAvailability = () => {
           bgVariant="success"
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

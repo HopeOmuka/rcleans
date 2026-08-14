@@ -11,6 +11,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
@@ -77,109 +78,113 @@ const SignIn = () => {
       style={{ backgroundColor: theme.colors.background }}
     >
       <StatusBar style="light" />
-      <ScrollView
-        className="flex-1"
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ flexGrow: 1 }}
-      >
-        <View
+      <SafeAreaView className="flex-1" edges={["bottom"]}>
+        <ScrollView
           className="flex-1"
-          style={{ backgroundColor: theme.colors.background }}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ flexGrow: 1 }}
         >
-          <View className="relative w-full h-[260px] bg-primary-gradient items-center justify-center rounded-b-[36px]">
-            <View className="w-20 h-20 rounded-2xl bg-white/15 border border-white/25 items-center justify-center mb-4 overflow-hidden">
-              <Image
-                source={images.logo}
-                className="w-full h-full"
-                resizeMode="cover"
+          <View
+            className="flex-1"
+            style={{ backgroundColor: theme.colors.background }}
+          >
+            <View className="relative w-full h-[260px] bg-primary-gradient items-center justify-center rounded-b-[36px]">
+              <View className="w-20 h-20 rounded-2xl bg-white/15 border border-white/25 items-center justify-center mb-4 overflow-hidden">
+                <Image
+                  source={images.logo}
+                  className="w-full h-full"
+                  resizeMode="cover"
+                />
+              </View>
+              <Text className="text-3xl text-white font-JakartaExtraBold">
+                Welcome Back
+              </Text>
+              <Text className="text-white/85 mt-2 font-JakartaMedium text-base">
+                Sign in to book a cleaner
+              </Text>
+            </View>
+
+            <View className="p-6">
+              <InputField
+                label="Email"
+                placeholder="Enter email"
+                icon={icons.email}
+                textContentType="emailAddress"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={form.email}
+                onChangeText={(value) => setForm({ ...form, email: value })}
               />
-            </View>
-            <Text className="text-3xl text-white font-JakartaExtraBold">
-              Welcome Back
-            </Text>
-            <Text className="text-white/85 mt-2 font-JakartaMedium text-base">
-              Sign in to book a cleaner
-            </Text>
-          </View>
 
-          <View className="p-6">
-            <InputField
-              label="Email"
-              placeholder="Enter email"
-              icon={icons.email}
-              textContentType="emailAddress"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={form.email}
-              onChangeText={(value) => setForm({ ...form, email: value })}
-            />
+              <InputField
+                label="Password"
+                placeholder="Enter password"
+                icon={icons.lock}
+                secureTextEntry={true}
+                textContentType="password"
+                value={form.password}
+                onChangeText={(value) => setForm({ ...form, password: value })}
+              />
 
-            <InputField
-              label="Password"
-              placeholder="Enter password"
-              icon={icons.lock}
-              secureTextEntry={true}
-              textContentType="password"
-              value={form.password}
-              onChangeText={(value) => setForm({ ...form, password: value })}
-            />
+              <View className="flex-row justify-end mt-1">
+                <Link
+                  href={"/(auth)/forgot-password" as Href}
+                  className="text-sm text-primary-600 font-JakartaSemiBold"
+                >
+                  Forgot password?
+                </Link>
+              </View>
 
-            <View className="flex-row justify-end mt-1">
-              <Link
-                href={"/(auth)/forgot-password" as Href}
-                className="text-sm text-primary-600 font-JakartaSemiBold"
+              <CustomButton
+                title={loading ? "Signing In..." : "Sign In"}
+                onPress={onSignInPress}
+                loading={loading}
+                className="mt-4"
+              />
+
+              <View
+                className="mt-4 rounded-xl px-4 py-3"
+                style={{ backgroundColor: theme.colors.surfaceMuted }}
               >
-                Forgot password?
-              </Link>
-            </View>
+                <Text
+                  className="text-sm font-Jakarta text-center"
+                  style={{ color: theme.colors.surfaceMuted }}
+                >
+                  Signed up with Google only? Tap{" "}
+                  <Text className="text-primary-600 font-JakartaBold">
+                    Forgot password?
+                  </Text>{" "}
+                  above to set an email password and log in without Google.
+                </Text>
+              </View>
 
-            <CustomButton
-              title={loading ? "Signing In..." : "Sign In"}
-              onPress={onSignInPress}
-              loading={loading}
-              className="mt-4"
-            />
+              <OAuth />
 
-            <View
-              className="mt-4 rounded-xl px-4 py-3"
-              style={{ backgroundColor: theme.colors.surfaceMuted }}
-            >
-              <Text
-                className="text-sm font-Jakarta text-center"
+              <Link
+                href="/(auth)/sign-up"
+                className="text-lg text-center mt-8 font-JakartaMedium"
                 style={{ color: theme.colors.textSecondary }}
               >
-                Signed up with Google only? Tap{" "}
+                Don&apos;t have an account?{" "}
                 <Text className="text-primary-600 font-JakartaBold">
-                  Forgot password?
-                </Text>{" "}
-                above to set an email password and log in without Google.
-              </Text>
+                  Sign Up
+                </Text>
+              </Link>
+
+              <Link
+                href="/cleaner/sign-in"
+                className="text-lg text-center mt-3 font-JakartaMedium"
+                style={{ color: theme.colors.textSecondary }}
+              >
+                Are you a cleaner?{" "}
+                <Text className="text-primary-600 font-JakartaBold">
+                  Sign in as cleaner
+                </Text>
+              </Link>
             </View>
-
-            <OAuth />
-
-            <Link
-              href="/(auth)/sign-up"
-              className="text-lg text-center mt-8 font-JakartaMedium"
-              style={{ color: theme.colors.textSecondary }}
-            >
-              Don&apos;t have an account?{" "}
-              <Text className="text-primary-600 font-JakartaBold">Sign Up</Text>
-            </Link>
-
-            <Link
-              href="/cleaner/sign-in"
-              className="text-lg text-center mt-3 font-JakartaMedium"
-              style={{ color: theme.colors.textSecondary }}
-            >
-              Are you a cleaner?{" "}
-              <Text className="text-primary-600 font-JakartaBold">
-                Sign in as cleaner
-              </Text>
-            </Link>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </KeyboardAvoidingView>
   );
 };
