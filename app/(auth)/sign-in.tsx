@@ -148,7 +148,7 @@ const SignIn = () => {
               >
                 <Text
                   className="text-sm font-Jakarta text-center"
-                  style={{ color: theme.colors.surfaceMuted }}
+                  style={{ color: theme.colors.textSecondary }}
                 >
                   Signed up with Google only? Tap{" "}
                   <Text className="text-primary-600 font-JakartaBold">

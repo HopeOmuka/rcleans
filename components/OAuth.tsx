@@ -47,11 +47,10 @@ const OAuth = () => {
           <Image
             source={icons.google}
             resizeMode="contain"
-            className="w-5 h-5 mx-2"
+            className="w-5 h-5"
           />
         )}
         bgVariant="outline"
-        textVariant="primary"
         onPress={handleGoogleSignIn}
       />
     </View>
