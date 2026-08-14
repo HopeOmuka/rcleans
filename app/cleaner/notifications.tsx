@@ -102,7 +102,7 @@ const Notifications = () => {
         keyExtractor={(item) => item.id}
         className="flex-1 px-5 pt-4"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
         refreshControl={
           <RefreshControl
             refreshing={false}

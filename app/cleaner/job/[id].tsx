@@ -372,13 +372,15 @@ const JobDetails = () => {
             </Text>
           </View>
         </View>
-        <ChatThread
-          serviceId={job.id}
-          otherName={job.user_name}
-          recipientId={job.user_id}
-          role="cleaner"
-          theme="dark"
-        />
+        <View style={{ paddingBottom: 116 }}>
+          <ChatThread
+            serviceId={job.id}
+            otherName={job.user_name}
+            recipientId={job.user_id}
+            role="cleaner"
+            theme="dark"
+          />
+        </View>
       </SafeAreaView>
     );
   }
@@ -431,7 +433,7 @@ const JobDetails = () => {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
       >
         <JobLocationMap lat={job.location_lat} lng={job.location_lng} />
 

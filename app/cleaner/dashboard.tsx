@@ -456,7 +456,7 @@ const Dashboard = () => {
         data={jobs}
         renderItem={renderJobCard}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

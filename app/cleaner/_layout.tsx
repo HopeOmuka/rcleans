@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import * as SecureStore from "expo-secure-store";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BootstrapIcon, {
   type BootstrapIconProps,
@@ -30,6 +31,7 @@ const TabIcon = ({
 
 export default function Layout() {
   const [tokenReady, setTokenReady] = useState(false);
+  const insets = useSafeAreaInsets();
 
   // Gate every screen behind the auth token: tab screens fetch as soon as
   // they mount, so they must never run before the SecureStore token is
@@ -72,13 +74,13 @@ export default function Layout() {
             paddingBottom: 4,
             overflow: "hidden",
             marginHorizontal: 20,
-            marginBottom: 20,
             height: 90,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             flexDirection: "row",
             position: "absolute",
+            bottom: insets.bottom + 20,
           },
         }}
       >
@@ -126,18 +128,21 @@ export default function Layout() {
           name="sign-in"
           options={{
             href: null,
+            tabBarStyle: { display: "none" },
           }}
         />
         <Tabs.Screen
           name="sign-up"
           options={{
             href: null,
+            tabBarStyle: { display: "none" },
           }}
         />
         <Tabs.Screen
           name="set-password"
           options={{
             href: null,
+            tabBarStyle: { display: "none" },
           }}
         />
         <Tabs.Screen

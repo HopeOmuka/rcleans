@@ -388,13 +388,15 @@ const CleanerJobs = () => {
           </View>
         </View>
 
-        <ChatThread
-          serviceId={active.id}
-          otherName={active.user_name}
-          recipientId={active.user_id}
-          role="cleaner"
-          theme="dark"
-        />
+        <View style={{ paddingBottom: 116 }}>
+          <ChatThread
+            serviceId={active.id}
+            otherName={active.user_name}
+            recipientId={active.user_id}
+            role="cleaner"
+            theme="dark"
+          />
+        </View>
       </SafeAreaView>
     );
   }
@@ -412,7 +414,7 @@ const CleanerJobs = () => {
         data={jobs}
         renderItem={renderJobCard}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

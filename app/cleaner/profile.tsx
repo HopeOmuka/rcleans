@@ -145,7 +145,7 @@ const CleanerProfile = () => {
   return (
     <SafeAreaView className="flex-1 bg-dark-500">
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
         className="px-5"
       >
         <Text className="text-2xl font-JakartaBold text-white my-5">

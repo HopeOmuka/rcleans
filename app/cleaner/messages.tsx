@@ -116,13 +116,15 @@ const Messages = () => {
           </View>
         </View>
 
-        <ChatThread
-          serviceId={active.service_id}
-          otherName={active.other_name}
-          recipientId={active.other_id}
-          role="cleaner"
-          theme="dark"
-        />
+        <View style={{ paddingBottom: 116 }}>
+          <ChatThread
+            serviceId={active.service_id}
+            otherName={active.other_name}
+            recipientId={active.other_id}
+            role="cleaner"
+            theme="dark"
+          />
+        </View>
       </SafeAreaView>
     );
   }
@@ -142,7 +144,7 @@ const Messages = () => {
         keyExtractor={(item) => item.service_id}
         className="flex-1 px-5 pt-4"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
         refreshControl={
           <RefreshControl
             refreshing={false}
